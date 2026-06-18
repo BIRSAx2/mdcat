@@ -10,6 +10,18 @@ Use `cargo release` to create a new release.
 
 ## [2.8.0] – 2026-06-18
 
+### Changed
+- Project is now maintained by [BIRSAx2](https://github.com/BIRSAx2).
+- Update all dependencies.
+
+### Fixed
+- Fix clippy lints for Rust 1.96.
+- Fix broken intra-doc link in resource handler documentation.
+- Remove unused `Osc8Links` struct that caused a build error.
+
+### Removed
+- Remove `cargo-vet` supply chain auditing from CI.
+
 ## [2.7.1] – 2024-12-14
 
 ### Removed
