@@ -81,7 +81,10 @@ pub fn process_file(
     );
     let parser = Parser::new_ext(
         &input,
-        Options::ENABLE_TASKLISTS | Options::ENABLE_STRIKETHROUGH | Options::ENABLE_TABLES,
+        Options::ENABLE_TASKLISTS
+            | Options::ENABLE_STRIKETHROUGH
+            | Options::ENABLE_TABLES
+            | Options::ENABLE_FOOTNOTES,
     );
     let env = Environment::for_local_directory(&base_dir)?;
 
