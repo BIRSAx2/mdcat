@@ -29,6 +29,8 @@ pub struct Theme {
     pub(crate) code_block_border_color: Color,
     /// Color for headings
     pub(crate) heading_style: Style,
+    /// Style for footnote references and definitions.
+    pub(crate) footnote_style: Style,
 }
 
 impl Default for Theme {
@@ -43,6 +45,7 @@ impl Default for Theme {
             rule_color: AnsiColor::Green.into(),
             code_block_border_color: AnsiColor::Green.into(),
             heading_style: Style::new().fg_color(Some(AnsiColor::Blue.into())).bold(),
+            footnote_style: Style::new().fg_color(Some(AnsiColor::Cyan.into())),
         }
     }
 }

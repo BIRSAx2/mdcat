@@ -943,6 +943,66 @@ pub fn write_event<'a, W: Write>(
             stack.pop().and_data(data).ok()
         }
 
+        // Footnotes
+        (state, Start(Tag::FootnoteDefinition(label))) => {
+            let mut data = data;
+            data.start_footnote_definition(&label);
+            match state {
+                TopLevel(attrs) => State::stack_onto(attrs)
+                    .current(FootnoteDefinition)
+                    .and_data(data)
+                    .ok(),
+                Stacked(stack, current) => stack
+                    .push(current)
+                    .current(FootnoteDefinition)
+                    .and_data(data)
+                    .ok(),
+            }
+        }
+        (Stacked(stack, FootnoteDefinition), End(TagEnd::FootnoteDefinition)) => {
+            let mut data = data;
+            data.end_footnote_definition();
+            stack.pop().and_data(data).ok()
+        }
+        (Stacked(stack, FootnoteDefinition), Text(text)) => {
+            let mut data = data;
+            data.append_footnote_text(&text);
+            Stacked(stack, FootnoteDefinition).and_data(data).ok()
+        }
+        (Stacked(stack, FootnoteDefinition), SoftBreak) => {
+            let mut data = data;
+            data.append_footnote_text(" ");
+            Stacked(stack, FootnoteDefinition).and_data(data).ok()
+        }
+        (Stacked(stack, FootnoteDefinition), HardBreak) => {
+            let mut data = data;
+            data.append_footnote_text("\n");
+            Stacked(stack, FootnoteDefinition).and_data(data).ok()
+        }
+        (Stacked(stack, FootnoteDefinition), Code(code)) => {
+            let mut data = data;
+            data.append_footnote_text(&code);
+            Stacked(stack, FootnoteDefinition).and_data(data).ok()
+        }
+        // Ignore structural events inside footnote definitions (paragraphs, etc.)
+        (Stacked(stack, FootnoteDefinition), Start(_) | End(_)) => {
+            Stacked(stack, FootnoteDefinition).and_data(data).ok()
+        }
+        (Stacked(stack, FootnoteDefinition), _) => {
+            Stacked(stack, FootnoteDefinition).and_data(data).ok()
+        }
+        (Stacked(stack, Inline(state, attrs)), FootnoteReference(label)) => {
+            let mut data = data;
+            let idx = data.footnote_index(&label);
+            write_styled(
+                writer,
+                &settings.terminal_capabilities,
+                &settings.theme.footnote_style,
+                format!("[{idx}]"),
+            )?;
+            Stacked(stack, Inline(state, attrs)).and_data(data).ok()
+        }
+
         // Impossible events
         (s, e) => panic!("Event {e:?} impossible in state {s:?}"),
     }
@@ -969,6 +1029,21 @@ pub fn finish<'a, W: Write>(
                 &settings.terminal_capabilities,
                 data.pending_link_definitions,
             )?;
+            if !data.footnote_definitions.is_empty() {
+                let mut defs = data.footnote_definitions;
+                defs.sort_by_key(|(idx, _)| *idx);
+                writeln!(writer)?;
+                for (idx, body) in &defs {
+                    let body = body.trim();
+                    write_styled(
+                        writer,
+                        &settings.terminal_capabilities,
+                        &settings.theme.footnote_style,
+                        format!("[{idx}]: {body}"),
+                    )?;
+                    writeln!(writer)?;
+                }
+            }
             Ok(())
         }
         _ => {

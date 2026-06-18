@@ -201,6 +201,8 @@ pub enum StackedState {
     RenderedImage,
     /// A table block.
     TableBlock,
+    /// A footnote definition block (collecting body text, not rendering).
+    FootnoteDefinition,
     /// Some inline markup.
     Inline(InlineState, InlineAttrs),
 }

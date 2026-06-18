@@ -1,0 +1,12 @@
+---
+source: pulldown-cmark-mdcat/tests/render.rs
+assertion_line: 114
+expression: "render_to_string(markdown_file, &iterm2_settings)"
+input_file: pulldown-cmark-mdcat/tests/markdown/samples/footnotes.md
+---
+A paragraph with a footnote[36m[1][0m and another[36m[2][0m.
+
+Some text with a repeated reference[36m[1][0m to the first footnote.
+
+[36m[1]: First footnote.[0m
+[36m[2]: Second footnote with code in it.[0m

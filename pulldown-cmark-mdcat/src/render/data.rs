@@ -4,6 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use std::collections::HashMap;
+
 use anstyle::Style;
 use pulldown_cmark::{Alignment, CowStr, LinkType};
 
@@ -159,6 +161,14 @@ pub struct StateData<'a> {
     pub(super) current_line: CurrentLine,
     /// The state of the current table.
     pub(super) current_table: CurrentTable<'a>,
+    /// Map from footnote label to numeric index (order of first reference).
+    pub(super) footnote_indices: HashMap<String, u16>,
+    /// Counter for footnote numbering.
+    pub(super) next_footnote: u16,
+    /// Collected footnote definitions: (index, body text).
+    pub(super) footnote_definitions: Vec<(u16, String)>,
+    /// Buffer for the footnote definition currently being collected.
+    pub(super) current_footnote: Option<(u16, String)>,
 }
 
 impl<'a> StateData<'a> {
@@ -226,6 +236,35 @@ impl<'a> StateData<'a> {
     }
 }
 
+impl<'a> StateData<'a> {
+    pub(super) fn footnote_index(&mut self, label: &str) -> u16 {
+        if let Some(&idx) = self.footnote_indices.get(label) {
+            return idx;
+        }
+        let idx = self.next_footnote;
+        self.next_footnote += 1;
+        self.footnote_indices.insert(label.to_owned(), idx);
+        idx
+    }
+
+    pub(super) fn start_footnote_definition(&mut self, label: &str) {
+        let idx = self.footnote_index(label);
+        self.current_footnote = Some((idx, String::new()));
+    }
+
+    pub(super) fn append_footnote_text(&mut self, text: &str) {
+        if let Some((_, ref mut body)) = self.current_footnote {
+            body.push_str(text);
+        }
+    }
+
+    pub(super) fn end_footnote_definition(&mut self) {
+        if let Some((idx, body)) = self.current_footnote.take() {
+            self.footnote_definitions.push((idx, body));
+        }
+    }
+}
+
 impl Default for StateData<'_> {
     fn default() -> Self {
         StateData {
@@ -234,6 +273,10 @@ impl Default for StateData<'_> {
             next_link: 1,
             current_line: CurrentLine::empty(),
             current_table: CurrentTable::empty(),
+            footnote_indices: HashMap::new(),
+            next_footnote: 1,
+            footnote_definitions: Vec::new(),
+            current_footnote: None,
         }
     }
 }
