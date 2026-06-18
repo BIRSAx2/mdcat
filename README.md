@@ -1,6 +1,3 @@
-> [!IMPORTANT]
-> No longer maintained.  If you wish to take over, send a mail to <sebastian@swsnr.de>.
-
 # mdcat
 
 Fancy `cat` for Markdown (that is, [CommonMark][]):
@@ -26,31 +23,31 @@ mdcat in [WezTerm], with "One Light (base16)", "Gruvbox Light", and "Darcula
 `mdcat` works best with [iTerm2], [WezTerm], and [kitty], and a good terminal font with italic characters.
 Then it
 
-* nicely renders all basic CommonMark syntax,
-* highlights code blocks with [syntect],
-* shows [links][osc8], and also images inline in supported terminals (see above, where "Rust" is a clickable link!),
-* adds jump marks for headings in [iTerm2] (jump forwards and backwards with <key>⇧⌘↓</key> and <key>⇧⌘↑</key>).
+- nicely renders all basic CommonMark syntax,
+- highlights code blocks with [syntect],
+- shows [links][osc8], and also images inline in supported terminals (see above, where "Rust" is a clickable link!),
+- adds jump marks for headings in [iTerm2] (jump forwards and backwards with <key>⇧⌘↓</key> and <key>⇧⌘↑</key>).
 
-| Terminal                   |  Basic syntax | Syntax highlighting | Images | Jump marks |
-| :------------------------- | :-----------: | :-----------------: | :----: | :--------: |
-| Basic ANSI¹                | ✓             | ✓                   |        |            |
-| Windows 10 console         | ✓             | ✓                   |        |            |
-| [Terminology]              | ✓             | ✓                   | ✓      |            |
-| [iTerm2]                   | ✓             | ✓                   | ✓²     | ✓          |
-| [kitty]                    | ✓             | ✓                   | ✓²     |            |
-| [WezTerm]                  | ✓             | ✓                   | ✓²     |            |
-| [VSCode]                   | ✓             | ✓                   | ✓²     |            |
-| [Ghostty]                  | ✓             | ✓                   | ✓²     |            |
+| Terminal           | Basic syntax | Syntax highlighting | Images | Jump marks |
+| :----------------- | :----------: | :-----------------: | :----: | :--------: |
+| Basic ANSI¹        |      ✓       |          ✓          |        |            |
+| Windows 10 console |      ✓       |          ✓          |        |            |
+| [Terminology]      |      ✓       |          ✓          |   ✓    |            |
+| [iTerm2]           |      ✓       |          ✓          |   ✓²   |     ✓      |
+| [kitty]            |      ✓       |          ✓          |   ✓²   |            |
+| [WezTerm]          |      ✓       |          ✓          |   ✓²   |            |
+| [VSCode]           |      ✓       |          ✓          |   ✓²   |            |
+| [Ghostty]          |      ✓       |          ✓          |   ✓²   |            |
 
-1) mdcat requires that the terminal supports strikethrough formatting and [inline links][osc8].
-    This includes most modern terminal emulators, such as Windows Terminal, KDE Konsole, or anything based on VTE, GNOME's terminal emulation library.
-    But mdcat likely won't work well on old terminals that lack these features (e.g. the Linux text console).
-2) SVG images are rendered with [resvg], see [SVG support].
+1. mdcat requires that the terminal supports strikethrough formatting and [inline links][osc8].
+   This includes most modern terminal emulators, such as Windows Terminal, KDE Konsole, or anything based on VTE, GNOME's terminal emulation library.
+   But mdcat likely won't work well on old terminals that lack these features (e.g. the Linux text console).
+2. SVG images are rendered with [resvg], see [SVG support].
 
 Not supported:
 
-* CommonMark extension for footnotes.
-* Inline markup and text wrapping in table cells.
+- CommonMark extension for footnotes.
+- Inline markup and text wrapping in table cells.
 
 [syntect]: https://github.com/trishume/syntect
 [osc8]: https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda
@@ -69,10 +66,10 @@ Try `mdcat --help` or read the [mdcat(1)](./mdcat.1.adoc) manpage.
 
 ## Installation
 
-* [Release binaries](https://github.com/swsnr/mdcat/releases/) built on Github Actions.
-  - These binaries are build from Git source on Github actions; you find provenance attestations at <https://github.com/swsnr/mdcat/attestations>.
-* 3rd party packages at [Repology](https://repology.org/project/mdcat/versions)
-* You can also build `mdcat` manually with `cargo install mdcat` (see below for details).
+- [Release binaries](https://github.com/BIRSAx2/mdcat/releases/) built on Github Actions.
+  - These binaries are built from Git source on Github Actions; you find provenance attestations at <https://github.com/BIRSAx2/mdcat/attestations>.
+- 3rd party packages at [Repology](https://repology.org/project/mdcat/versions)
+- You can also build `mdcat` manually with `cargo install mdcat` (see below for details).
 
 `mdcat` can be linked or copied to `mdless`; if invoked as `mdless` it automatically uses pagination.
 
@@ -118,6 +115,8 @@ Run `mdcat` with `$MDCAT_LOG=trace` for complete tracing information, or with `$
 ## License
 
 Copyright Sebastian Wiesner <sebastian@swsnr.de>
+
+Currently maintained by [Mouhieddine](https://github.com/BIRSAx2).
 
 Binaries are subject to the terms of the Mozilla Public
 License, v. 2.0, see [LICENSE](LICENSE).
