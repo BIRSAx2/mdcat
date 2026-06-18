@@ -35,7 +35,7 @@ impl Handler for CollectBuffer {
     }
 }
 
-/// A [`curl`]-based resource handler for [`pulldown-cmark-mdcat`].
+/// A [`curl`]-based resource handler for `pulldown-cmark-mdcat`.
 pub struct CurlResourceHandler {
     easy: RefCell<Easy2<CollectBuffer>>,
 }
