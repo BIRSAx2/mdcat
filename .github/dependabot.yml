@@ -6,12 +6,12 @@ updates:
     directory: "/"
     schedule:
       interval: monthly
-    assignees: [swsnr]
+    assignees: [BIRSAx2]
   - package-ecosystem: "cargo"
     directory: "/"
     schedule:
       interval: monthly
-    assignees: [swsnr]
+    assignees: [BIRSAx2]
     # Ignore minor and patch updates; downstream consumers
     # can do these; we only need to check for semver
     # incompatible updates.

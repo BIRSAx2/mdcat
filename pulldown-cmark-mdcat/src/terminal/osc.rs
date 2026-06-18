@@ -20,9 +20,6 @@ pub fn write_osc<W: Write + ?Sized>(writer: &mut W, command: &str) -> Result<()>
     Ok(())
 }
 
-#[derive(Debug, PartialEq, Eq, Copy, Clone)]
-pub struct Osc8Links;
-
 /// Whether the given `url` needs to get an explicit host.
 ///
 /// [OSC 8] links require that `file://` URLs give an explicit hostname, as

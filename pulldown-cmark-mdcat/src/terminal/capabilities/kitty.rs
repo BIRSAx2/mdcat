@@ -15,7 +15,9 @@
 
 //! Kitty terminal extensions.
 use std::fmt::Display;
-use std::io::{Error, ErrorKind, Write};
+#[cfg(not(feature = "image-processing"))]
+use std::io::ErrorKind;
+use std::io::{Error, Write};
 use std::str;
 
 use base64::engine::general_purpose::STANDARD;
@@ -60,7 +62,7 @@ impl std::error::Error for KittyImageError {
 
 impl From<KittyImageError> for std::io::Error {
     fn from(value: KittyImageError) -> Self {
-        std::io::Error::new(ErrorKind::Other, value)
+        std::io::Error::other(value)
     }
 }
 

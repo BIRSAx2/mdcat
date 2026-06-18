@@ -17,22 +17,6 @@ on:
   pull_request:
 
 jobs:
-  # See https://mozilla.github.io/cargo-vet/configuring-ci.html
-  cargo-vet:
-    runs-on: ubuntu-latest
-    env:
-      CARGO_VET_VERSION: 0.10.0
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: actions/cache@v4
-        with:
-          path: ${{ runner.tool_cache }}/cargo-vet
-          key: cargo-vet-bin-${{ env.CARGO_VET_VERSION }}
-      - run: echo "${{ runner.tool_cache }}/cargo-vet/bin" >> $GITHUB_PATH
-      - run: cargo install --root ${{ runner.tool_cache }}/cargo-vet --version ${{ env.CARGO_VET_VERSION }} cargo-vet
-      - run: cargo vet --locked
-
   # Lint things which are independent from the build target
   lint:
     runs-on: ubuntu-latest

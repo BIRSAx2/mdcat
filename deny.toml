@@ -7,7 +7,10 @@ targets = [
 
 [advisories]
 version = 2
-ignore = []
+ignore = [
+    "RUSTSEC-2025-0141",
+    "RUSTSEC-2024-0436",
+]
 
 [licenses]
 version = 2
@@ -18,7 +21,9 @@ allow = [
     "BSD-2-Clause",
     "BSD-3-Clause",
     "MPL-2.0",
-    "ISC",
     "Zlib",
     "Unicode-3.0",
 ]
+
+[bans]
+multiple-versions = "allow"

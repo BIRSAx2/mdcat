@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "Running pre-commit checks..."
+
+echo "  cargo fmt"
+cargo fmt --all
+git add -u
+
+echo "  cargo clippy (no-default-features)"
+cargo clippy -p pulldown-cmark-mdcat --all-targets --no-default-features -- -D warnings
+
+echo "  cargo clippy (default features)"
+cargo clippy --workspace --all-targets -- -D warnings
+
+echo "  cargo deny"
+cargo deny check
+
+echo "All checks passed."
