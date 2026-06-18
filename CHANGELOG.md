@@ -8,6 +8,8 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+## [2.8.0] – 2026-06-18
+
 ## [2.7.1] – 2024-12-14
 
 ### Removed
@@ -848,7 +850,8 @@ Use `cargo release` to create a new release.
 - Support ordered and unordered lists, with nest.
 - Show links, with references grouped by section.
 
-[Unreleased]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.7.1...HEAD
+[Unreleased]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.8.0...HEAD
+[2.8.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.7.1...mdcat-2.8.0
 [2.7.1]: https://github.com/swsnr/mdcat/compare/mdcat-2.7.0...mdcat-2.7.1
 [2.7.0]: https://github.com/swsnr/mdcat/compare/mdcat-2.6.2...mdcat-2.7.0
 [2.6.2]: https://github.com/swsnr/mdcat/compare/mdcat-2.6.1...mdcat-2.6.2
