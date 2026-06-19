@@ -1378,6 +1378,7 @@ dependencies = [
  "terminal_size",
  "textwrap",
  "tracing",
+ "unicodeit",
  "url",
 ]
 
@@ -2173,6 +2174,18 @@ name = "unicode-width"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4ac048d71ede7ee76d585517add45da530660ef4390e49b098733c6e897f254"
+
+[[package]]
+name = "unicodeit"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1c58ef1816c0901804d0e1e4df281cd4e3d7eb12a0616fd19ec851f5a48bcf4b"
+dependencies = [
+ "aho-corasick",
+ "cfg-if",
+ "memchr",
+ "regex",
+]
 
 [[package]]
 name = "url"

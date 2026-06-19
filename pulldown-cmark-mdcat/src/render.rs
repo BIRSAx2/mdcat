@@ -938,6 +938,75 @@ pub fn write_event<'a, W: Write>(
             Stacked(stack, TableBlock).and_data(data).ok()
         }
 
+        // Inline math
+        (Stacked(stack, Inline(state, attrs)), InlineMath(math)) => {
+            let rendered = unicodeit::replace(&math);
+            let current_line = write_styled_and_wrapped(
+                writer,
+                &settings.terminal_capabilities,
+                &settings.theme.math_style.on_top_of(&attrs.style),
+                settings.terminal_size.columns,
+                attrs.indent,
+                data.current_line,
+                &rendered,
+            )?;
+            Ok(stack.current(Inline(state, attrs)).and_data(StateData {
+                current_line,
+                ..data
+            }))
+        }
+        // Display math as an indented block
+        (TopLevel(attrs), DisplayMath(math)) => {
+            if attrs.margin_before != NoMargin {
+                writeln!(writer)?;
+            }
+            let rendered = unicodeit::replace(&math);
+            write_indent(writer, 4)?;
+            write_styled(
+                writer,
+                &settings.terminal_capabilities,
+                &settings.theme.math_style,
+                rendered,
+            )?;
+            writeln!(writer)?;
+            TopLevel(TopLevelAttrs::margin_before()).and_data(data).ok()
+        }
+        (Stacked(stack, StyledBlock(attrs)), DisplayMath(math)) => {
+            if attrs.margin_before != NoMargin {
+                writeln!(writer)?;
+            }
+            let rendered = unicodeit::replace(&math);
+            write_indent(writer, attrs.indent + 4)?;
+            write_styled(
+                writer,
+                &settings.terminal_capabilities,
+                &settings.theme.math_style.on_top_of(&attrs.style),
+                rendered,
+            )?;
+            writeln!(writer)?;
+            stack
+                .current(attrs.with_margin_before().into())
+                .and_data(data)
+                .ok()
+        }
+
+        // Display math inside inline context (e.g. paragraph)
+        (Stacked(stack, Inline(state, attrs)), DisplayMath(math)) => {
+            writeln!(writer)?;
+            let rendered = unicodeit::replace(&math);
+            write_indent(writer, attrs.indent + 4)?;
+            write_styled(
+                writer,
+                &settings.terminal_capabilities,
+                &settings.theme.math_style.on_top_of(&attrs.style),
+                rendered,
+            )?;
+            writeln!(writer)?;
+            Ok(stack
+                .current(Inline(state, attrs))
+                .and_data(data.current_line(CurrentLine::empty())))
+        }
+
         // Unconditional returns to previous states
         (Stacked(stack, _), End(TagEnd::BlockQuote(_) | TagEnd::List(_) | TagEnd::HtmlBlock)) => {
             stack.pop().and_data(data).ok()

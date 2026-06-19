@@ -1,0 +1,14 @@
+---
+source: pulldown-cmark-mdcat/tests/render.rs
+assertion_line: 114
+expression: "render_to_string(markdown_file, &ansi_settings)"
+input_file: pulldown-cmark-mdcat/tests/markdown/samples/math.md
+---
+Inline math:[33m α + β = γ[0m.
+
+Einstein's famous[33m E = mc²[0m equation.
+
+Display math:
+
+
+    [33m∑ᵢ₌₁ⁿ i²[0m

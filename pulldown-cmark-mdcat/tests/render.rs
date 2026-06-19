@@ -45,7 +45,8 @@ fn render_to_string<P: AsRef<Path>>(markdown_file: P, settings: &Settings) -> St
         Options::ENABLE_TASKLISTS
             | Options::ENABLE_STRIKETHROUGH
             | Options::ENABLE_TABLES
-            | Options::ENABLE_FOOTNOTES,
+            | Options::ENABLE_FOOTNOTES
+            | Options::ENABLE_MATH,
     );
     let abs_path = std::fs::canonicalize(&markdown_file).unwrap();
     let base_dir = abs_path
