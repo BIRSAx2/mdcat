@@ -1,14 +1,30 @@
 ---
 source: pulldown-cmark-mdcat/tests/render.rs
-assertion_line: 114
+assertion_line: 118
 expression: "render_to_string(markdown_file, &ansi_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/samples/math.md
 ---
-Inline math:[33m α + β = γ[0m.
+Inline:[33m α + β = γ[0m and[33m E = mc²[0m.
 
-Einstein's famous[33m E = mc²[0m equation.
+Fractions:[33m a+b/c[0m and[33m 1/2[0m.
+
+Roots:[33m √(x² + y²)[0m.
+
+Subscripts and superscripts:[33m xᵢ²[0m and[33m aₙ₊₁[0m.
+
+Greek:[33m Σ[0m,[33m Π[0m,[33m Δ[0m,[33m Ω[0m.
+
+Operators:[33m ∑ᵢ₌₁ⁿ i[0m and[33m ∫₀^∞ e⁻ˣ dx[0m.
+
+Blackboard bold:[33m ℝ[0m,[33m ℤ[0m,[33m ℕ[0m.
+
+Font commands:[33m id[0m and[33m Set[0m and[33m hello[0m.
 
 Display math:
 
 
-    [33m∑ᵢ₌₁ⁿ i²[0m
+    [33m∑ᵢ₌₁ⁿ i² = n(n+1)(2n+1)/6[0m
+
+
+
+    [33m∫₀^∞ e^{−x²} dx = √(π)/2[0m

@@ -1,14 +1,30 @@
 ---
 source: pulldown-cmark-mdcat/tests/render.rs
-assertion_line: 113
+assertion_line: 117
 expression: "render_to_string(markdown_file, &dumb_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/samples/math.md
 ---
-Inline math: α + β = γ.
+Inline: α + β = γ and E = mc².
 
-Einstein's famous E = mc² equation.
+Fractions: a+b/c and 1/2.
+
+Roots: √(x² + y²).
+
+Subscripts and superscripts: xᵢ² and aₙ₊₁.
+
+Greek: Σ, Π, Δ, Ω.
+
+Operators: ∑ᵢ₌₁ⁿ i and ∫₀^∞ e⁻ˣ dx.
+
+Blackboard bold: ℝ, ℤ, ℕ.
+
+Font commands: id and Set and hello.
 
 Display math:
 
 
-    ∑ᵢ₌₁ⁿ i²
+    ∑ᵢ₌₁ⁿ i² = n(n+1)(2n+1)/6
+
+
+
+    ∫₀^∞ e^{−x²} dx = √(π)/2

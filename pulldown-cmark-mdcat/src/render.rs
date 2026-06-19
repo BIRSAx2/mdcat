@@ -28,6 +28,7 @@ use crate::{Environment, Settings};
 
 mod data;
 mod highlighting;
+mod math;
 mod state;
 mod write;
 
@@ -37,11 +38,50 @@ use write::*;
 
 use crate::render::data::{CurrentLine, CurrentTable};
 use crate::render::state::MarginControl::NoMargin;
-use crate::terminal::capabilities::StyleCapability;
+use crate::terminal::capabilities::{ImageCapability, StyleCapability};
 use crate::terminal::osc::{clear_link, set_link_url};
 pub use data::StateData;
 pub use state::State;
 pub use state::StateAndData;
+
+fn render_math_image(
+    settings: &Settings,
+    math: &str,
+    display_mode: bool,
+) -> Option<math::MathImage> {
+    match settings.terminal_capabilities.image.as_ref()? {
+        ImageCapability::Kitty(_) | ImageCapability::ITerm2(_) => {}
+        ImageCapability::Terminology(_) => return None,
+    }
+    math::render_math_png(
+        math,
+        display_mode,
+        &settings.terminal_size,
+        &settings.theme.math_style,
+    )
+}
+
+/// Write a prepared math PNG image. Returns (width_cols, height_rows) on success.
+fn write_math_image<W: Write>(
+    writer: &mut W,
+    settings: &Settings,
+    img: math::MathImage,
+    move_cursor: bool,
+) -> Result<(u16, u16, bool)> {
+    let dims = (img.width_columns, img.height_rows);
+    let cursor_moved = match settings.terminal_capabilities.image.as_ref() {
+        Some(ImageCapability::Kitty(k)) => {
+            k.write_png_data(writer, img.png, move_cursor)?;
+            move_cursor
+        }
+        Some(ImageCapability::ITerm2(i)) => {
+            i.write_png_data(writer, &img.png)?;
+            false
+        }
+        Some(ImageCapability::Terminology(_)) | None => return Ok((0, 0, false)),
+    };
+    Ok((dims.0, dims.1, cursor_moved))
+}
 
 #[allow(clippy::cognitive_complexity)]
 #[instrument(level = "trace", skip(writer, settings, environment, resource_handler))]
@@ -940,7 +980,26 @@ pub fn write_event<'a, W: Write>(
 
         // Inline math
         (Stacked(stack, Inline(state, attrs)), InlineMath(math)) => {
-            let rendered = unicodeit::replace(&math);
+            if let Some(img) = render_math_image(settings, &math, false) {
+                let mut length = data.current_line.length;
+                if let Some(space) = data.current_line.trailing_space.as_ref() {
+                    write!(writer, "{}", space)?;
+                    length += 1;
+                }
+                write!(writer, "\x1b7")?;
+                let (img_cols, _img_rows, _) = write_math_image(writer, settings, img, false)?;
+                write!(writer, "\x1b8")?;
+                if img_cols > 0 {
+                    write!(writer, "\x1b[{}C", img_cols)?;
+                }
+                return Ok(stack
+                    .current(Inline(state, attrs))
+                    .and_data(data.current_line(CurrentLine {
+                        length: length + img_cols,
+                        trailing_space: None,
+                    })));
+            }
+            let rendered = math::render_math_unicode(&math);
             let current_line = write_styled_and_wrapped(
                 writer,
                 &settings.terminal_capabilities,
@@ -960,7 +1019,14 @@ pub fn write_event<'a, W: Write>(
             if attrs.margin_before != NoMargin {
                 writeln!(writer)?;
             }
-            let rendered = unicodeit::replace(&math);
+            if let Some(img) = render_math_image(settings, &math, true) {
+                let (_, _, cursor_moved) = write_math_image(writer, settings, img, true)?;
+                if !cursor_moved {
+                    writeln!(writer)?;
+                }
+                return TopLevel(TopLevelAttrs::margin_before()).and_data(data).ok();
+            }
+            let rendered = math::render_math_unicode(&math);
             write_indent(writer, 4)?;
             write_styled(
                 writer,
@@ -975,7 +1041,17 @@ pub fn write_event<'a, W: Write>(
             if attrs.margin_before != NoMargin {
                 writeln!(writer)?;
             }
-            let rendered = unicodeit::replace(&math);
+            if let Some(img) = render_math_image(settings, &math, true) {
+                let (_, _, cursor_moved) = write_math_image(writer, settings, img, true)?;
+                if !cursor_moved {
+                    writeln!(writer)?;
+                }
+                return stack
+                    .current(attrs.with_margin_before().into())
+                    .and_data(data)
+                    .ok();
+            }
+            let rendered = math::render_math_unicode(&math);
             write_indent(writer, attrs.indent + 4)?;
             write_styled(
                 writer,
@@ -993,7 +1069,16 @@ pub fn write_event<'a, W: Write>(
         // Display math inside inline context (e.g. paragraph)
         (Stacked(stack, Inline(state, attrs)), DisplayMath(math)) => {
             writeln!(writer)?;
-            let rendered = unicodeit::replace(&math);
+            if let Some(img) = render_math_image(settings, &math, true) {
+                let (_, _, cursor_moved) = write_math_image(writer, settings, img, true)?;
+                if !cursor_moved {
+                    writeln!(writer)?;
+                }
+                return Ok(stack
+                    .current(Inline(state, attrs))
+                    .and_data(data.current_line(CurrentLine::empty())));
+            }
+            let rendered = math::render_math_unicode(&math);
             write_indent(writer, attrs.indent + 4)?;
             write_styled(
                 writer,

@@ -38,20 +38,15 @@ fn resource_handler() -> DispatchingResourceHandler {
     DispatchingResourceHandler::new(handlers)
 }
 
-fn render_to_string<P: AsRef<Path>>(markdown_file: P, settings: &Settings) -> String {
-    let markdown = std::fs::read_to_string(&markdown_file).unwrap();
+fn render_markdown_to_string(markdown: &str, base_dir: &Path, settings: &Settings) -> String {
     let parser = Parser::new_ext(
-        &markdown,
+        markdown,
         Options::ENABLE_TASKLISTS
             | Options::ENABLE_STRIKETHROUGH
             | Options::ENABLE_TABLES
             | Options::ENABLE_FOOTNOTES
             | Options::ENABLE_MATH,
     );
-    let abs_path = std::fs::canonicalize(&markdown_file).unwrap();
-    let base_dir = abs_path
-        .parent()
-        .expect("Absolute file name must have a parent!");
     let mut sink = Vec::new();
     let env = Environment {
         hostname: "HOSTNAME".to_string(),
@@ -59,6 +54,15 @@ fn render_to_string<P: AsRef<Path>>(markdown_file: P, settings: &Settings) -> St
     };
     pulldown_cmark_mdcat::push_tty(settings, &env, &resource_handler(), &mut sink, parser).unwrap();
     String::from_utf8(sink).unwrap()
+}
+
+fn render_to_string<P: AsRef<Path>>(markdown_file: P, settings: &Settings) -> String {
+    let markdown = std::fs::read_to_string(&markdown_file).unwrap();
+    let abs_path = std::fs::canonicalize(&markdown_file).unwrap();
+    let base_dir = abs_path
+        .parent()
+        .expect("Absolute file name must have a parent!");
+    render_markdown_to_string(&markdown, base_dir, settings)
 }
 
 #[test]
@@ -115,4 +119,49 @@ fn test_render() {
         assert_snapshot!("iterm2", render_to_string(markdown_file, &iterm2_settings));
         drop(_guard);
     });
+}
+
+#[test]
+fn inline_math_image_fallback_preserves_single_pending_space() {
+    let settings = Settings {
+        terminal_capabilities: TerminalProgram::ITerm2.capabilities(),
+        terminal_size: TerminalSize::default(),
+        theme: Theme::default(),
+        syntax_set: syntax_set(),
+    };
+    let cwd = std::env::current_dir().expect("Require working directory");
+    let output = render_markdown_to_string(r"Text $\unknown$ end", &cwd, &settings);
+
+    assert_eq!(output, "Text\u{1b}[33m \\unknown\u{1b}[0m end\n");
+}
+
+#[test]
+fn inline_math_kitty_placement_does_not_move_cursor() {
+    let settings = Settings {
+        terminal_capabilities: TerminalProgram::Kitty.capabilities(),
+        terminal_size: TerminalSize::default(),
+        theme: Theme::default(),
+        syntax_set: syntax_set(),
+    };
+    let cwd = std::env::current_dir().expect("Require working directory");
+    let output = render_markdown_to_string(r"Text $\alpha$, $\beta$.", &cwd, &settings);
+
+    assert!(output.contains("\u{1b}_Ga=T,t=d,I=1,f=100,C=1,m=0,q=2;"));
+    assert!(!output.contains(",s="));
+    assert!(!output.contains(",v="));
+}
+
+#[test]
+fn display_math_kitty_placement_does_not_add_extra_newline() {
+    let settings = Settings {
+        terminal_capabilities: TerminalProgram::Kitty.capabilities(),
+        terminal_size: TerminalSize::default(),
+        theme: Theme::default(),
+        syntax_set: syntax_set(),
+    };
+    let cwd = std::env::current_dir().expect("Require working directory");
+    let output = render_markdown_to_string("$$x$$\n$$y$$", &cwd, &settings);
+
+    assert!(output.contains("\u{1b}\\\n\u{1b}_Ga=T,t=d,I=1,f=100,m=0,q=2;"));
+    assert!(!output.contains("\u{1b}\\\n\n\u{1b}_Ga=T,t=d,I=1,f=100,m=0,q=2;"));
 }

@@ -39,6 +39,21 @@ impl ITerm2Protocol {
 /// it writes data opportunistically and hopes iTerm2 copes.  For rare formats which are not
 /// supported by macOS, this may yield false positives, i.e. this implementation might not return
 /// an error even though iTerm2 cannot actually display the image.
+impl ITerm2Protocol {
+    /// Write raw PNG bytes inline to the terminal.
+    pub(crate) fn write_png_data(
+        &self,
+        writer: &mut dyn Write,
+        png_data: &[u8],
+    ) -> std::io::Result<()> {
+        let data = STANDARD.encode(png_data);
+        write_osc(
+            writer,
+            &format!("1337;File=size={};inline=1:{}", png_data.len(), data),
+        )
+    }
+}
+
 impl InlineImageProtocol for ITerm2Protocol {
     #[instrument(skip(self, writer, _terminal_size, resource_handler), fields(url = %url))]
     fn write_inline_image(
