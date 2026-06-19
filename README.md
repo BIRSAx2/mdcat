@@ -24,29 +24,32 @@ mdcat in [WezTerm], with "One Light (base16)", "Gruvbox Light", and "Darcula
 Then it
 
 - nicely renders all basic CommonMark syntax,
+- renders footnotes,
 - highlights code blocks with [syntect],
+- renders inline and display math, as PNGs through the iTerm2 or kitty image protocol, and as Unicode substitutions otherwise,
 - shows [links][osc8], and also images inline in supported terminals (see above, where "Rust" is a clickable link!),
 - adds jump marks for headings in [iTerm2] (jump forwards and backwards with <key>⇧⌘↓</key> and <key>⇧⌘↑</key>).
 
-| Terminal           | Basic syntax | Syntax highlighting | Images | Jump marks |
-| :----------------- | :----------: | :-----------------: | :----: | :--------: |
-| Basic ANSI¹        |      ✓       |          ✓          |        |            |
-| Windows 10 console |      ✓       |          ✓          |        |            |
-| [Terminology]      |      ✓       |          ✓          |   ✓    |            |
-| [iTerm2]           |      ✓       |          ✓          |   ✓²   |     ✓      |
-| [kitty]            |      ✓       |          ✓          |   ✓²   |            |
-| [WezTerm]          |      ✓       |          ✓          |   ✓²   |            |
-| [VSCode]           |      ✓       |          ✓          |   ✓²   |            |
-| [Ghostty]          |      ✓       |          ✓          |   ✓²   |            |
+| Terminal           | Basic syntax | Syntax highlighting | Images | Math | Jump marks |
+| :----------------- | :----------: | :-----------------: | :----: | :--: | :--------: |
+| Basic ANSI¹        |      ✓       |          ✓          |        |  ✓³  |            |
+| Windows 10 console |      ✓       |          ✓          |        |  ✓³  |            |
+| [Terminology]      |      ✓       |          ✓          |   ✓    |  ✓³  |            |
+| [iTerm2]           |      ✓       |          ✓          |   ✓²   |  ✓³  |     ✓      |
+| [kitty]            |      ✓       |          ✓          |   ✓²   |  ✓³  |            |
+| [WezTerm]          |      ✓       |          ✓          |   ✓²   |  ✓³  |            |
+| [VSCode]           |      ✓       |          ✓          |   ✓²   |  ✓³  |            |
+| [Ghostty]          |      ✓       |          ✓          |   ✓²   |  ✓³  |            |
 
 1. mdcat requires that the terminal supports strikethrough formatting and [inline links][osc8].
    This includes most modern terminal emulators, such as Windows Terminal, KDE Konsole, or anything based on VTE, GNOME's terminal emulation library.
    But mdcat likely won't work well on old terminals that lack these features (e.g. the Linux text console).
 2. SVG images are rendered with [resvg], see [SVG support].
+3. On terminals with the iTerm2 or kitty image protocol, math is rendered as PNG images.
+   Otherwise mdcat uses Unicode substitutions.
 
 Not supported:
 
-- CommonMark extension for footnotes.
 - Inline markup and text wrapping in table cells.
 
 [syntect]: https://github.com/trishume/syntect
@@ -63,6 +66,7 @@ Not supported:
 ## Usage
 
 Try `mdcat --help` or read the [mdcat(1)](./mdcat.1.adoc) manpage.
+See [sample/math.md](./sample/math.md) for math rendering examples.
 
 ## Installation
 
