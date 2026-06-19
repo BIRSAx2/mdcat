@@ -11,7 +11,7 @@ It supports:
 
 - All common mark syntax.
 - Standard ANSI formatting with OCS-8 hyperlinks.
-- Inline images on terminal emulators with either the iTerm2 or the Kitty protocol, as well as on Terminology.
+- Inline images on terminal emulators with either the iTerm2 or the Kitty protocol.
 - Footnotes.
 - Math events, rendered as PNGs with the iTerm2 or Kitty protocol and as Unicode substitutions otherwise.
 - Jump marks in iTerm2.

@@ -36,9 +36,6 @@ To enable formatting extensions such as inline images, `mdcat` needs to detect t
 
 1. `$TERM`
 2. `$TERM_PROGRAM`
-3. `$TERMINOLOGY`
-
-For some terminals `mdcat` also checks `$TERM_PROGRAM_VERSION` to determine whether the terminal supports the expected feature set.
 
 See section <<Environment>> below for a detailed description of each environment variable.
 
@@ -53,7 +50,7 @@ Math rendering remains enabled, but uses Unicode substitutions instead of PNG im
 
 === Image support
 
-In iTerm2, kitty, Terminology, WezTerm, VSCode (1.80 or newer), and Ghostty mdcat prints inline images.
+In iTerm2, kitty, WezTerm, and Ghostty mdcat prints inline images.
 mdcat supports most standard pixel formats by default.
 
 mdcat silently ignores images larger than 100 MiB, under the assumption that images of that size cannot reasonably be rendered in a terminal.
@@ -69,9 +66,7 @@ If an expression cannot be rendered as an image, mdcat uses the Unicode fallback
 
 === SVG support
 
-In Terminology mdcat also renders SVG images, using the built-in support of Terminology.
-
-In iTerm2, kitty, VSCode, and WezTerm mdcat renders SVG images into pixel graphics using the https://github.com/RazrFalcon/resvg[resvg] library.
+In iTerm2, kitty, WezTerm, and Ghostty mdcat renders SVG images into pixel graphics using the https://github.com/RazrFalcon/resvg[resvg] library.
 Currently this library only supports SVG 1, and only the static subset thereof; see https://github.com/RazrFalcon/resvg#svg-support[SVG support] for details.
 While this is sufficient for most simple SVG images, complex SVG images may fail to render or render incompletely.
 
@@ -83,9 +78,6 @@ For remote images from HTTP(S) URLs mdcat inspects the `Content-Type` header to 
 mdcat fetches images from HTTP(S) URLs for rendering if the underlying terminal supports image rendering;
 pass `--local` to disable this and force mdcat to only use images from the local filesystem.
 In this case remote images render as hyperlinks.
-
-Note that some terminals (e.g. Terminology) directly render images from URLs and do not require that mdcat fetches the image data first.
-In this case `--local` has no effect: mdcat always passes the URL to the terminal, and leaves it up to the terminal to fetch it.
 
 == Options
 
@@ -166,20 +158,10 @@ TERM_PROGRAM::
 +
     * `iTerm.app`: iTerm2
     * `WezTerm`: WezTerm
-    * `vscode`: VSCode integrated terminal, but only if `$TERM_PROGRAM_VERSION` indicates a sufficient version to support all required features..
+    * `vscode`: VSCode integrated terminal.
     * `ghostty`: Ghostty
 +
-For all other values `mdcat` proceeds to check `$TERMINOLOGY`.
-
-TERM_PROGRAM_VERSION::
-
-    If `$TERM_PROGRAM` is `vscode`, `mdcat` checks this variable to determine whether VSCode has a sufficient version to support all required features.
-
-TERMINOLOGY::
-
-    If this variable is `1`, mdcat assumes that the terminal is Terminology.
-+
-Otherwise `mdcat` ends terminal detection and assumes that the terminal is only capable of standard ANSI formatting.
+For all other values `mdcat` ends terminal detection and assumes that the terminal is only capable of standard ANSI formatting.
 
 COLUMNS::
     The number of character columns on screen.
@@ -244,9 +226,7 @@ Additionally, it uses proprietary escape codes if it detects one of the followin
 * https://iterm2.com/[iTerm2]: Inline images (https://iterm2.com/documentation-images.html[iTerm2 protocol]) and
 https://iterm2.com/documentation-escape-codes.html[Marks].
 * https://github.com/kovidgoyal/kitty[kitty]: Inline images (https://sw.kovidgoyal.net/kitty/graphics-protocol.html[kitty Graphics protocol]).
-* http://terminolo.gy[Terminology]: Inline images (terminology protocol).
 * https://wezfurlong.org/wezterm/[WezTerm]: Inline images (kitty graphics protocol, see above).
-* https://code.visualstudio.com/[VSCode] 1.80 or newer, integrated terminal: Inline images (iTerm2 protocol, see above)
 * https://mitchellh.com/ghostty[Ghostty]: Inline images (kitty graphics protocol, see above).
 
 == Bugs

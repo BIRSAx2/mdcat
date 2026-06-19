@@ -34,11 +34,10 @@ Then it
 | :----------------- | :----------: | :-----------------: | :----: | :--: | :--------: |
 | Basic ANSI¹        |      ✓       |          ✓          |        |  ✓³  |            |
 | Windows 10 console |      ✓       |          ✓          |        |  ✓³  |            |
-| [Terminology]      |      ✓       |          ✓          |   ✓    |  ✓³  |            |
 | [iTerm2]           |      ✓       |          ✓          |   ✓²   |  ✓³  |     ✓      |
 | [kitty]            |      ✓       |          ✓          |   ✓²   |  ✓³  |            |
 | [WezTerm]          |      ✓       |          ✓          |   ✓²   |  ✓³  |            |
-| [VSCode]           |      ✓       |          ✓          |   ✓²   |  ✓³  |            |
+| [VSCode]           |      ✓       |          ✓          |        |  ✓³  |            |
 | [Ghostty]          |      ✓       |          ✓          |   ✓²   |  ✓³  |            |
 
 1. mdcat requires that the terminal supports strikethrough formatting and [inline links][osc8].
@@ -54,7 +53,6 @@ Not supported:
 
 [syntect]: https://github.com/trishume/syntect
 [osc8]: https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda
-[Terminology]: http://terminolo.gy
 [iterm2]: https://www.iterm2.com
 [WezTerm]: https://wezfurlong.org/wezterm/
 [kitty]: https://sw.kovidgoyal.net/kitty/
