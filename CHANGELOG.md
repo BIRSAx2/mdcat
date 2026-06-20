@@ -8,6 +8,9 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+### Changed
+- Update project links.
+
 ## [2.9.0] – 2026-06-20
 
 ### Added

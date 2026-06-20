@@ -18,12 +18,12 @@ It supports:
 
 Math image rendering falls back to Unicode substitutions when the terminal or expression is not supported.
 
-[mdcat]: https://github.com/swsnr/mdcat
+[mdcat]: https://github.com/BIRSAx2/mdcat
 [pulldown-cmark]: https://github.com/raphlinus/pulldown-cmark
 
 ## License
 
-Copyright Sebastian Wiesner <sebastian@swsnr.de>
+Copyright Sebastian Wiesner <sebastian@swsnr.de> and Mouhieddine Sabir <me@mouhieddine.dev>
 
 Binaries are subject to the terms of the Mozilla Public
 License, v. 2.0, see [LICENSE](LICENSE).

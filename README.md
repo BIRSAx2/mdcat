@@ -116,7 +116,7 @@ Run `mdcat` with `$MDCAT_LOG=trace` for complete tracing information, or with `$
 
 ## License
 
-Copyright Sebastian Wiesner <sebastian@swsnr.de>
+Copyright Sebastian Wiesner <sebastian@swsnr.de> and Mouhieddine Sabir <me@mouhieddine.dev>
 
 Currently maintained by [BIRSAx2](https://github.com/BIRSAx2).
 

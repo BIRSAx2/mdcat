@@ -13,14 +13,14 @@ fn after_help() -> &'static str {
 mdcat can be installed as or linked to mdless,
 for automatic pagination.
 
-Report issues to <https://github.com/swsnr/mdcat>."
+Report issues to <https://github.com/BIRSAx2/mdcat>."
 }
 
 fn long_version() -> &'static str {
     concat!(
         env!("CARGO_PKG_VERSION"),
         "
-Copyright (C) Sebastian Wiesner and contributors
+Copyright (C) Sebastian Wiesner, Mouhieddine Sabir, and contributors
 
 This program is subject to the terms of the Mozilla Public License,
 v. 2.0. If a copy of the MPL was not distributed with this file,

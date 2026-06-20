@@ -231,7 +231,7 @@ https://iterm2.com/documentation-escape-codes.html[Marks].
 
 == Bugs
 
-Please report bugs to https://github.com/swsnr/mdcat/issues.
+Please report bugs to https://github.com/BIRSAx2/mdcat/issues.
 
 Currently does not provide means to customize styles and colours.
 
@@ -248,10 +248,10 @@ mdless hello:: Render markdown from `mdless` through a pager.
 
 == Copyright
 
-Copyright Sebastian Wiesner <sebastian@swsnr.de> and contributors
+Copyright Sebastian Wiesner <sebastian@swsnr.de>, Mouhieddine Sabir <me@mouhieddine.dev>, and contributors
 
 Binaries are subject to the terms of the Mozilla Public License, v. 2.0.
-See https://github.com/swsnr/mdcat/blob/main/LICENSE.
+See https://github.com/BIRSAx2/mdcat/blob/main/LICENSE.
 
 Most of the source is subject to the terms of the Mozilla Public License, v. 2.0, unless otherwise noted;
 some files are subject to the terms of the Apache 2.0 license, see http://www.apache.org/licenses/LICENSE-2.0.

@@ -49,12 +49,12 @@ pre-release-replacements = [
 members = ["pulldown-cmark-mdcat"]
 
 [workspace.package]
-homepage = "https://github.com/swsnr/mdcat"
-repository = "https://github.com/swsnr/mdcat"
+homepage = "https://github.com/BIRSAx2/mdcat"
+repository = "https://github.com/BIRSAx2/mdcat"
 version = "2.9.0"
 categories = ["command-line-utilities", "text-processing"]
 license = "MPL-2.0 AND Apache-2.0"
-authors = ["Sebastian Wiesner <sebastian@swsnr.de>"]
+authors = ["Sebastian Wiesner <sebastian@swsnr.de>", "Mouhieddine Sabir <me@mouhieddine.dev>"]
 edition = "2021"
 rust-version = "1.83"
 
