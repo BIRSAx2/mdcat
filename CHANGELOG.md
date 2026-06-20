@@ -8,6 +8,16 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+### Added
+- Render footnotes.
+- Render inline and display math.
+  On terminals with the iTerm2 or kitty image protocol mdcat prints PNG math;
+  otherwise it uses Unicode substitutions.
+
+### Changed
+- Do not enable inline images in VSCode.
+- Stop detecting Terminology as a supported terminal.
+
 ## [2.8.0] – 2026-06-18
 
 ### Changed

@@ -15,4 +15,6 @@ pub mod capabilities;
 mod detect;
 
 pub use self::detect::TerminalProgram;
+#[cfg(test)]
+pub(crate) use self::size::PixelSize;
 pub use self::size::TerminalSize;

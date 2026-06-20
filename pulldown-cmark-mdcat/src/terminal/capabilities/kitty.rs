@@ -85,7 +85,10 @@ impl From<image::ImageError> for KittyImageError {
 ///
 /// [1]: https://sw.kovidgoyal.net/kitty/graphics-protocol/
 enum KittyImageData {
-    Png(Vec<u8>),
+    Png {
+        data: Vec<u8>,
+        pixel_size: Option<PixelSize>,
+    },
     #[cfg(feature = "image-processing")]
     Rgb(PixelSize, Vec<u8>),
     #[cfg(feature = "image-processing")]
@@ -100,7 +103,7 @@ impl KittyImageData {
     /// [1]: https://sw.kovidgoyal.net/kitty/graphics-protocol.html#transferring-pixel-data
     fn f_format_code(&self) -> &str {
         match self {
-            KittyImageData::Png(_) => "100",
+            KittyImageData::Png { .. } => "100",
             #[cfg(feature = "image-processing")]
             KittyImageData::Rgb(_, _) => "24",
             #[cfg(feature = "image-processing")]
@@ -111,7 +114,7 @@ impl KittyImageData {
     /// Get the actual data.
     fn data(&self) -> &[u8] {
         match self {
-            KittyImageData::Png(ref contents) => contents,
+            KittyImageData::Png { data, .. } => data,
             #[cfg(feature = "image-processing")]
             KittyImageData::Rgb(_, ref contents) => contents,
             #[cfg(feature = "image-processing")]
@@ -125,27 +128,17 @@ impl KittyImageData {
     /// format).
     fn size(&self) -> Option<PixelSize> {
         match self {
-            KittyImageData::Png(_) => None,
+            KittyImageData::Png { pixel_size, .. } => *pixel_size,
             #[cfg(feature = "image-processing")]
             KittyImageData::Rgb(size, _) => Some(*size),
             #[cfg(feature = "image-processing")]
             KittyImageData::Rgba(size, _) => Some(*size),
         }
     }
-
-    /// The width of the image for the `s` control data field.
-    fn s_width(&self) -> u32 {
-        self.size().map_or(0, |s| s.x)
-    }
-
-    /// The height of the image for the `v` control data field.
-    fn v_height(&self) -> u32 {
-        self.size().map_or(0, |s| s.y)
-    }
 }
 
 impl KittyImageData {
-    fn write_to(&self, writer: &mut dyn Write) -> Result<(), Error> {
+    fn write_to(&self, writer: &mut dyn Write, move_cursor: bool) -> Result<(), Error> {
         let image_data = STANDARD.encode(self.data());
         let image_data_chunks = image_data.as_bytes().chunks(4096);
         let number_of_chunks = image_data_chunks.len();
@@ -168,17 +161,20 @@ impl KittyImageData {
                 //
                 // f tells kitty about the data format.
                 //
-                // s and v tell kitty about the size of our image.
-                //
                 // m tells kitty whether to expect more chunks or whether this is the last one.
                 //
                 // q=2 tells kitty never to respond to our image sequence; we're not reading these
                 // responses anyway.
                 //
                 let f = self.f_format_code();
-                let s = self.s_width();
-                let v = self.v_height();
-                write!(writer, "\x1b_Ga=T,t=d,I=1,f={f},s={s},v={v},m={m},q=2;")?;
+                write!(writer, "\x1b_Ga=T,t=d,I=1,f={f}")?;
+                if let Some(size) = self.size() {
+                    write!(writer, ",s={},v={}", size.x, size.y)?;
+                }
+                if !move_cursor {
+                    write!(writer, ",C=1")?;
+                }
+                write!(writer, ",m={m},q=2;")?;
             } else {
                 // For follow up chunks we must not repeat the header, but only indicate whether we
                 // expect a response and whether more data is to follow.
@@ -280,7 +276,10 @@ impl KittyGraphicsProtocol {
 
     /// Wrap the image bytes as PNG format in `KittyImage`.
     fn render_as_png(self, data: Vec<u8>) -> KittyImageData {
-        KittyImageData::Png(data)
+        KittyImageData::Png {
+            data,
+            pixel_size: None,
+        }
     }
 
     /// Render the image as RGB/RGBA format and wrap the image bytes in `KittyImage`.
@@ -341,6 +340,22 @@ impl KittyGraphicsProtocol {
 ///
 /// See <https://sw.kovidgoyal.net/kitty/graphics-protocol.html#control-data-reference>
 /// for reference.
+impl KittyGraphicsProtocol {
+    /// Write raw PNG bytes inline to the terminal.
+    pub(crate) fn write_png_data(
+        &self,
+        writer: &mut dyn Write,
+        png_data: Vec<u8>,
+        move_cursor: bool,
+    ) -> std::io::Result<()> {
+        KittyImageData::Png {
+            data: png_data,
+            pixel_size: None,
+        }
+        .write_to(writer, move_cursor)
+    }
+}
+
 impl InlineImageProtocol for KittyGraphicsProtocol {
     #[instrument(skip(self, writer, resource_handler, terminal_size))]
     fn write_inline_image(
@@ -357,6 +372,6 @@ impl InlineImageProtocol for KittyGraphicsProtocol {
             mime_data.mime_type
         );
         let image = self.render(mime_data, terminal_size)?;
-        image.write_to(writer)
+        image.write_to(writer, true)
     }
 }

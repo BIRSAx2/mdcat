@@ -43,8 +43,6 @@ pub enum TerminalProgram {
     /// See <https://wezfurlong.org/wezterm/> for more information.
     WezTerm,
     /// The built-in terminal in VSCode.
-    ///
-    /// Since version 1.80 it supports images with the iTerm2 protocol.
     VSCode,
     /// Ghostty.
     ///
@@ -68,18 +66,6 @@ impl Display for TerminalProgram {
     }
 }
 
-/// Extract major and minor version from `$TERM_PROGRAM_VERSION`.
-///
-/// Return `None` if the variable doesn't exist, or has invalid contents, such as
-/// non-numeric parts, insufficient parts for a major.minor version, etc.
-fn get_term_program_major_minor_version() -> Option<(u16, u16)> {
-    let value = std::env::var("TERM_PROGRAM_VERSION").ok()?;
-    let mut parts = value.split('.').take(2);
-    let major = parts.next()?.parse().ok()?;
-    let minor = parts.next()?.parse().ok()?;
-    Some((major, minor))
-}
-
 impl TerminalProgram {
     fn detect_term() -> Option<Self> {
         match std::env::var("TERM").ok().as_deref() {
@@ -95,12 +81,7 @@ impl TerminalProgram {
             Some("WezTerm") => Some(Self::WezTerm),
             Some("iTerm.app") => Some(Self::ITerm2),
             Some("ghostty") => Some(Self::Ghostty),
-            Some("vscode")
-                if get_term_program_major_minor_version()
-                    .is_some_and(|version| (1, 80) <= version) =>
-            {
-                Some(Self::VSCode)
-            }
+            Some("vscode") => Some(Self::VSCode),
             _ => None,
         }
     }
@@ -109,8 +90,7 @@ impl TerminalProgram {
     ///
     /// This function looks at various environment variables to identify the terminal program.
     ///
-    /// It first looks at `$TERM` to determine the terminal program, then at `$TERM_PROGRAM`, and
-    /// finally at `$TERMINOLOGY`.
+    /// It first looks at `$TERM` to determine the terminal program, then at `$TERM_PROGRAM`.
     ///
     /// If `$TERM` is set to anything other than `xterm-256colors` it's definitely accurate, since
     /// it points to the terminfo entry to use.  `$TERM` also propagates across most boundaries
@@ -130,15 +110,10 @@ impl TerminalProgram {
     /// - [`TerminalProgram::ITerm2`] if `$TERM_PROGRAM` is `iTerm.app`.
     /// - [`TerminalProgram::Ghostty`] if `$TERM` is `xterm-ghostty`.
     /// - [`TerminalProgram::Ghostty`] if `$TERM_PROGRAM` is `ghostty`.
-    /// - [`TerminalProgram::Terminology`] if `$TERMINOLOGY` is `1`.
     /// - [`TerminalProgram::Ansi`] otherwise.
     pub fn detect() -> Self {
         Self::detect_term()
             .or_else(Self::detect_term_program)
-            .or_else(|| match std::env::var("TERMINOLOGY").ok().as_deref() {
-                Some("1") => Some(Self::Terminology),
-                _ => None,
-            })
             .unwrap_or(Self::Ansi)
     }
 
@@ -155,16 +130,12 @@ impl TerminalProgram {
             TerminalProgram::ITerm2 => ansi
                 .with_mark_capability(MarkCapability::ITerm2(ITerm2Protocol))
                 .with_image_capability(ImageCapability::ITerm2(ITerm2Protocol)),
-            TerminalProgram::Terminology => {
-                ansi.with_image_capability(ImageCapability::Terminology(terminology::Terminology))
-            }
+            TerminalProgram::Terminology => ansi,
             TerminalProgram::Kitty => ansi
                 .with_image_capability(ImageCapability::Kitty(self::kitty::KittyGraphicsProtocol)),
             TerminalProgram::WezTerm => ansi
                 .with_image_capability(ImageCapability::Kitty(self::kitty::KittyGraphicsProtocol)),
-            TerminalProgram::VSCode => {
-                ansi.with_image_capability(ImageCapability::ITerm2(ITerm2Protocol))
-            }
+            TerminalProgram::VSCode => ansi,
             TerminalProgram::Ghostty => ansi
                 .with_image_capability(ImageCapability::Kitty(self::kitty::KittyGraphicsProtocol)),
         }
@@ -214,14 +185,14 @@ mod tests {
     }
 
     #[test]
-    pub fn detect_terminology() {
+    pub fn does_not_detect_terminology() {
         with_vars(
             vec![
                 ("TERM", Some("xterm-256color")),
                 ("TERM_PROGRAM", None),
                 ("TERMINOLOGY", Some("1")),
             ],
-            || assert_eq!(TerminalProgram::detect(), TerminalProgram::Terminology),
+            || assert_eq!(TerminalProgram::detect(), TerminalProgram::Ansi),
         );
         with_vars(
             vec![
@@ -231,6 +202,23 @@ mod tests {
             ],
             || assert_eq!(TerminalProgram::detect(), TerminalProgram::Ansi),
         );
+    }
+
+    #[test]
+    pub fn detect_term_program_vscode() {
+        with_vars(
+            vec![
+                ("TERM", Some("xterm-256color")),
+                ("TERM_PROGRAM", Some("vscode")),
+            ],
+            || assert_eq!(TerminalProgram::detect(), TerminalProgram::VSCode),
+        )
+    }
+
+    #[test]
+    pub fn vscode_and_terminology_have_no_image_capability() {
+        assert!(TerminalProgram::VSCode.capabilities().image.is_none());
+        assert!(TerminalProgram::Terminology.capabilities().image.is_none());
     }
 
     #[test]
