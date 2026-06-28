@@ -30,22 +30,26 @@ Then it
 - shows [links][osc8], and also images inline in supported terminals (see above, where "Rust" is a clickable link!),
 - adds jump marks for headings in [iTerm2] (jump forwards and backwards with <key>⇧⌘↓</key> and <key>⇧⌘↑</key>).
 
-| Terminal           | Basic syntax | Syntax highlighting | Images | Math | Jump marks |
-| :----------------- | :----------: | :-----------------: | :----: | :--: | :--------: |
-| Basic ANSI¹        |      ✓       |          ✓          |        |  ✓³  |            |
-| Windows 10 console |      ✓       |          ✓          |        |  ✓³  |            |
-| [iTerm2]           |      ✓       |          ✓          |   ✓²   |  ✓³  |     ✓      |
-| [kitty]            |      ✓       |          ✓          |   ✓²   |  ✓³  |            |
-| [WezTerm]          |      ✓       |          ✓          |   ✓²   |  ✓³  |            |
-| [VSCode]           |      ✓       |          ✓          |        |  ✓³  |            |
-| [Ghostty]          |      ✓       |          ✓          |   ✓²   |  ✓³  |            |
+| Terminal           | Basic syntax | Syntax highlighting | Images | Math  | Jump marks |
+| :----------------- | :----------: | :-----------------: | :----: | :---: | :--------: |
+| Basic ANSI¹        |      ✓       |          ✓          |        |  ✓³   |            |
+| Windows 10 console |      ✓       |          ✓          |        |  ✓³   |            |
+| [iTerm2]           |      ✓       |          ✓          |   ✓²   |  ✓³   |     ✓      |
+| [kitty]            |      ✓       |          ✓          |   ✓²   |  ✓³   |            |
+| [WezTerm]          |      ✓       |          ✓          |   ✓²   |  ✓³   |            |
+| [VSCode]           |      ✓       |          ✓          |        |  ✓³   |            |
+| [Ghostty]          |      ✓       |          ✓          |   ✓²   |  ✓³   |            |
+| [foot]⁴            |      ✓       |          ✓          |   ✓²   |  ✓³‧⁵ |            |
 
 1. mdcat requires that the terminal supports strikethrough formatting and [inline links][osc8].
    This includes most modern terminal emulators, such as Windows Terminal, KDE Konsole, or anything based on VTE, GNOME's terminal emulation library.
    But mdcat likely won't work well on old terminals that lack these features (e.g. the Linux text console).
 2. SVG images are rendered with [resvg], see [SVG support].
-3. On terminals with the iTerm2 or kitty image protocol, math is rendered as PNG images.
+3. On terminals with the iTerm2, kitty, or Sixel image protocol, math is rendered as PNG images.
    Otherwise mdcat uses Unicode substitutions.
+4. Uses Sixel for images, which is also supported by many other terminals.
+   The capability detection logic would need to be extended to also provide the feature on other terminals, though.
+5. Inline math with Sixel breaks the layout, as it causes vertical scrolling that is not taking into account.
 
 Not supported:
 
@@ -60,6 +64,7 @@ Not supported:
 [SVG support]: https://github.com/RazrFalcon/resvg#svg-support
 [VSCode]: https://code.visualstudio.com/
 [Ghostty]: https://mitchellh.com/ghostty
+[foot]: https://codeberg.org/dnkl/foot
 
 ## Usage
 

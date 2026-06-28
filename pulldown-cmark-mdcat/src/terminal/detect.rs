@@ -48,6 +48,10 @@ pub enum TerminalProgram {
     ///
     /// See <https://mitchellh.com/ghostty> for more information.
     Ghostty,
+    /// foot.
+    ///
+    /// See <https://codeberg.org/dnkl/foot> for mor information.
+    Foot,
 }
 
 impl Display for TerminalProgram {
@@ -61,6 +65,7 @@ impl Display for TerminalProgram {
             TerminalProgram::WezTerm => "WezTerm",
             TerminalProgram::VSCode => "vscode",
             TerminalProgram::Ghostty => "ghostty",
+            TerminalProgram::Foot => "foot",
         };
         write!(f, "{name}")
     }
@@ -72,6 +77,7 @@ impl TerminalProgram {
             Some("wezterm") => Some(Self::WezTerm),
             Some("xterm-kitty") => Some(Self::Kitty),
             Some("xterm-ghostty") => Some(Self::Ghostty),
+            Some("foot") => Some(Self::Foot),
             _ => None,
         }
     }
@@ -138,6 +144,11 @@ impl TerminalProgram {
             TerminalProgram::VSCode => ansi,
             TerminalProgram::Ghostty => ansi
                 .with_image_capability(ImageCapability::Kitty(self::kitty::KittyGraphicsProtocol)),
+            #[cfg(feature = "sixel")]
+            TerminalProgram::Foot => ansi
+                .with_image_capability(ImageCapability::Sixel(self::sixel::SixelProtocol)),
+            #[cfg(not(feature = "sixel"))]
+            TerminalProgram::Foot => ansi,
         }
     }
 }
@@ -262,5 +273,12 @@ mod tests {
             ],
             || assert_eq!(TerminalProgram::detect(), TerminalProgram::Kitty),
         )
+    }
+
+    #[test]
+    pub fn detect_term_foot() {
+        with_vars(vec![("TERM", Some("foot"))], || {
+            assert_eq!(TerminalProgram::detect(), TerminalProgram::Foot)
+        })
     }
 }

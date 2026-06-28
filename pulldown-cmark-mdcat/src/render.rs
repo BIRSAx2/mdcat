@@ -51,6 +51,8 @@ fn render_math_image(
 ) -> Option<math::MathImage> {
     match settings.terminal_capabilities.image.as_ref()? {
         ImageCapability::Kitty(_) | ImageCapability::ITerm2(_) => {}
+        #[cfg(feature = "sixel")]
+        ImageCapability::Sixel(_) => {}
         ImageCapability::Terminology(_) => return None,
     }
     math::render_math_png(
@@ -76,6 +78,11 @@ fn write_math_image<W: Write>(
         }
         Some(ImageCapability::ITerm2(i)) => {
             i.write_png_data(writer, &img.png)?;
+            false
+        }
+        #[cfg(feature = "sixel")]
+        Some(ImageCapability::Sixel(s)) => {
+            s.write_png_data(writer, &img.png)?;
             false
         }
         Some(ImageCapability::Terminology(_)) | None => return Ok((0, 0, false)),
