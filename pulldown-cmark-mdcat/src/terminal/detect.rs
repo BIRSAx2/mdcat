@@ -52,6 +52,10 @@ pub enum TerminalProgram {
     ///
     /// See <https://codeberg.org/dnkl/foot> for mor information.
     Foot,
+    /// xterm.
+    ///
+    /// See <https://invisible-island.net/xterm/xterm.html> for mor information.
+    Xterm,
 }
 
 impl Display for TerminalProgram {
@@ -66,6 +70,7 @@ impl Display for TerminalProgram {
             TerminalProgram::VSCode => "vscode",
             TerminalProgram::Ghostty => "ghostty",
             TerminalProgram::Foot => "foot",
+            TerminalProgram::Xterm => "xterm",
         };
         write!(f, "{name}")
     }
@@ -78,6 +83,7 @@ impl TerminalProgram {
             Some("xterm-kitty") => Some(Self::Kitty),
             Some("xterm-ghostty") => Some(Self::Ghostty),
             Some("foot") => Some(Self::Foot),
+            Some("xterm") => Some(Self::Xterm),
             _ => None,
         }
     }
@@ -149,6 +155,11 @@ impl TerminalProgram {
                 .with_image_capability(ImageCapability::Sixel(self::sixel::SixelProtocol)),
             #[cfg(not(feature = "sixel"))]
             TerminalProgram::Foot => ansi,
+            #[cfg(feature = "sixel")]
+            TerminalProgram::Xterm => ansi
+                .with_image_capability(ImageCapability::Sixel(self::sixel::SixelProtocol)),
+            #[cfg(not(feature = "sixel"))]
+            TerminalProgram::Xterm => ansi,
         }
     }
 }
@@ -279,6 +290,13 @@ mod tests {
     pub fn detect_term_foot() {
         with_vars(vec![("TERM", Some("foot"))], || {
             assert_eq!(TerminalProgram::detect(), TerminalProgram::Foot)
+        })
+    }
+
+    #[test]
+    pub fn detect_term_xterm() {
+        with_vars(vec![("TERM", Some("xterm"))], || {
+            assert_eq!(TerminalProgram::detect(), TerminalProgram::Xterm)
         })
     }
 }

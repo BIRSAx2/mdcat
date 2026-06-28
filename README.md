@@ -40,6 +40,7 @@ Then it
 | [VSCode]           |      ✓       |          ✓          |        |  ✓³   |            |
 | [Ghostty]          |      ✓       |          ✓          |   ✓²   |  ✓³   |            |
 | [foot]⁴            |      ✓       |          ✓          |   ✓²   |  ✓³‧⁵ |            |
+| [xterm]⁴           |      ✓       |          ✓          |   ✓²   |  ✓³‧⁵ |            |
 
 1. mdcat requires that the terminal supports strikethrough formatting and [inline links][osc8].
    This includes most modern terminal emulators, such as Windows Terminal, KDE Konsole, or anything based on VTE, GNOME's terminal emulation library.
@@ -65,6 +66,7 @@ Not supported:
 [VSCode]: https://code.visualstudio.com/
 [Ghostty]: https://mitchellh.com/ghostty
 [foot]: https://codeberg.org/dnkl/foot
+[xterm]: https://invisible-island.net/xterm/xterm.html
 
 ## Usage
 
