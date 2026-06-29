@@ -78,12 +78,17 @@ impl Display for TerminalProgram {
 
 impl TerminalProgram {
     fn detect_term() -> Option<Self> {
+        if let Ok(v) = std::env::var("XTERM_VERSION") {
+            if !v.is_empty() {
+                return Some(Self::Xterm);
+            }
+        }
+
         match std::env::var("TERM").ok().as_deref() {
             Some("wezterm") => Some(Self::WezTerm),
             Some("xterm-kitty") => Some(Self::Kitty),
             Some("xterm-ghostty") => Some(Self::Ghostty),
             Some("foot") => Some(Self::Foot),
-            Some("xterm") => Some(Self::Xterm),
             _ => None,
         }
     }
@@ -295,7 +300,7 @@ mod tests {
 
     #[test]
     pub fn detect_term_xterm() {
-        with_vars(vec![("TERM", Some("xterm"))], || {
+        with_vars(vec![("XTERM_VERSION", Some("XTerm(410)"))], || {
             assert_eq!(TerminalProgram::detect(), TerminalProgram::Xterm)
         })
     }
