@@ -50,7 +50,7 @@ impl ImageCapability {
             ImageCapability::Kitty(t) => t,
             #[cfg(feature = "sixel")]
             ImageCapability::Sixel(t) => t,
-         }
+        }
     }
 }
 

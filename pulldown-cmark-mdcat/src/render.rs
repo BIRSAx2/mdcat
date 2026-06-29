@@ -993,6 +993,15 @@ pub fn write_event<'a, W: Write>(
                     write!(writer, "{}", space)?;
                     length += 1;
                 }
+
+                // pre-allocate rows according to the image height to avoid that
+                // the image causes scrolling
+                for _ in 0..img.height_rows {
+                    writeln!(writer)?;
+                }
+                // then move the cursor back to its original position
+                write!(writer, "\x1b[{}A", img.height_rows)?;
+                write!(writer, "\x1b[{}G", u32::from(length) + 1)?;
                 write!(writer, "\x1b7")?;
                 let (img_cols, _img_rows, _) = write_math_image(writer, settings, img, false)?;
                 write!(writer, "\x1b8")?;

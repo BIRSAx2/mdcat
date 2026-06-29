@@ -162,8 +162,9 @@ impl TerminalProgram {
             #[cfg(not(feature = "sixel"))]
             TerminalProgram::Foot => ansi,
             #[cfg(feature = "sixel")]
-            TerminalProgram::Xterm => ansi
-                .with_image_capability(ImageCapability::Sixel(self::sixel::SixelProtocol)),
+            TerminalProgram::Xterm => {
+                ansi.with_image_capability(ImageCapability::Sixel(self::sixel::SixelProtocol))
+            }
             #[cfg(not(feature = "sixel"))]
             TerminalProgram::Xterm => ansi,
         }

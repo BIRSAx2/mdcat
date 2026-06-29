@@ -46,7 +46,7 @@ impl SixelProtocol {
     }
 
     /// Write raw PNG bytes inline to the terminal.
-    pub fn write_png_data(&self, writer: &mut dyn Write, png_data: &[u8]) -> io::Result<()> {
+    pub(crate) fn write_png_data(&self, writer: &mut dyn Write, png_data: &[u8]) -> io::Result<()> {
         let img = image::load_from_memory_with_format(png_data, image::ImageFormat::Png)
             .map_err(io::Error::other)?;
 
