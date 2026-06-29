@@ -40,6 +40,36 @@ pub mod resources;
 /// Default read size limit for resources.
 pub static DEFAULT_RESOURCE_READ_LIMIT: u64 = 104_857_600;
 
+/// Strip YAML/TOML frontmatter from the beginning of a markdown document.
+///
+/// Frontmatter is a `---` block at the very start of the file, closed by
+/// another `---` or `...` line.  If no valid frontmatter block is found the
+/// input is returned unchanged.
+fn strip_frontmatter(input: &str) -> &str {
+    let after_open = match input
+        .strip_prefix("---\n")
+        .or_else(|| input.strip_prefix("---\r\n"))
+    {
+        Some(s) => s,
+        None => return input,
+    };
+
+    let mut start = 0;
+    while start < after_open.len() {
+        let end = after_open[start..]
+            .find('\n')
+            .map_or(after_open.len(), |i| start + i);
+        let line = after_open[start..end].trim_end_matches('\r');
+        let next = (end + 1).min(after_open.len());
+        if line == "---" || line == "..." {
+            return &after_open[next..];
+        }
+        start = end + 1;
+    }
+
+    input
+}
+
 /// Read input for `filename`.
 ///
 /// If `filename` is `-` read from standard input, otherwise try to open and
@@ -74,13 +104,14 @@ pub fn process_file(
     output: &mut Output,
 ) -> Result<()> {
     let (base_dir, input) = read_input(filename)?;
+    let input = strip_frontmatter(&input);
     event!(
         Level::TRACE,
         "Read input, using {} as base directory",
         base_dir.display()
     );
     let parser = Parser::new_ext(
-        &input,
+        input,
         Options::ENABLE_TASKLISTS
             | Options::ENABLE_STRIKETHROUGH
             | Options::ENABLE_TABLES
