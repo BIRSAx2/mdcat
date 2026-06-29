@@ -156,8 +156,9 @@ impl TerminalProgram {
             TerminalProgram::Ghostty => ansi
                 .with_image_capability(ImageCapability::Kitty(self::kitty::KittyGraphicsProtocol)),
             #[cfg(feature = "sixel")]
-            TerminalProgram::Foot => ansi
-                .with_image_capability(ImageCapability::Sixel(self::sixel::SixelProtocol)),
+            TerminalProgram::Foot => {
+                ansi.with_image_capability(ImageCapability::Sixel(self::sixel::SixelProtocol))
+            }
             #[cfg(not(feature = "sixel"))]
             TerminalProgram::Foot => ansi,
             #[cfg(feature = "sixel")]
