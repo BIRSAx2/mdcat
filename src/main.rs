@@ -58,6 +58,9 @@ fn main() {
     } else if args.paginate() || args.ansi_only {
         // A pager won't support any terminal-specific features
         TerminalProgram::Ansi
+    } else if !std::io::IsTerminal::is_terminal(&std::io::stdout()) {
+        // Not a TTY: strip all formatting so ANSI escapes don't pollute pipes
+        TerminalProgram::Dumb
     } else {
         TerminalProgram::detect()
     };
@@ -70,10 +73,10 @@ fn main() {
         anstyle_query::windows::enable_ansi_colors();
 
         let terminal_size = TerminalSize::detect().unwrap_or_default();
-        let terminal_size = if let Some(max_columns) = args.columns {
-            terminal_size.with_max_columns(max_columns)
-        } else {
-            terminal_size
+        let terminal_size = match args.columns {
+            None => terminal_size,
+            Some(0) => terminal_size.with_max_columns(u16::MAX),
+            Some(max_columns) => terminal_size.with_max_columns(max_columns),
         };
 
         let exit_code = match Output::new(args.paginate()) {
