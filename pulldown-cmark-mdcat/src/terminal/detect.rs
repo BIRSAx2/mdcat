@@ -24,10 +24,6 @@ pub enum TerminalProgram {
     ///
     /// See <https://www.iterm2.com> for more information.
     ITerm2,
-    /// Terminology.
-    ///
-    /// See <http://terminolo.gy> for more information.
-    Terminology,
     /// Kitty.
     ///
     /// kitty is a fast, featureful, GPU-based terminal emulator with a lot of extensions to the
@@ -64,7 +60,6 @@ impl Display for TerminalProgram {
             TerminalProgram::Dumb => "dumb",
             TerminalProgram::Ansi => "ansi",
             TerminalProgram::ITerm2 => "iTerm2",
-            TerminalProgram::Terminology => "Terminology",
             TerminalProgram::Kitty => "kitty",
             TerminalProgram::WezTerm => "WezTerm",
             TerminalProgram::VSCode => "vscode",
@@ -147,7 +142,6 @@ impl TerminalProgram {
             TerminalProgram::ITerm2 => ansi
                 .with_mark_capability(MarkCapability::ITerm2(ITerm2Protocol))
                 .with_image_capability(ImageCapability::ITerm2(ITerm2Protocol)),
-            TerminalProgram::Terminology => ansi,
             TerminalProgram::Kitty => ansi
                 .with_image_capability(ImageCapability::Kitty(self::kitty::KittyGraphicsProtocol)),
             TerminalProgram::WezTerm => ansi
@@ -214,26 +208,6 @@ mod tests {
     }
 
     #[test]
-    pub fn does_not_detect_terminology() {
-        with_vars(
-            vec![
-                ("TERM", Some("xterm-256color")),
-                ("TERM_PROGRAM", None),
-                ("TERMINOLOGY", Some("1")),
-            ],
-            || assert_eq!(TerminalProgram::detect(), TerminalProgram::Ansi),
-        );
-        with_vars(
-            vec![
-                ("TERM", Some("xterm-256color")),
-                ("TERM_PROGRAM", None),
-                ("TERMINOLOGY", Some("0")),
-            ],
-            || assert_eq!(TerminalProgram::detect(), TerminalProgram::Ansi),
-        );
-    }
-
-    #[test]
     pub fn detect_term_program_vscode() {
         with_vars(
             vec![
@@ -245,9 +219,8 @@ mod tests {
     }
 
     #[test]
-    pub fn vscode_and_terminology_have_no_image_capability() {
+    pub fn vscode_has_no_image_capability() {
         assert!(TerminalProgram::VSCode.capabilities().image.is_none());
-        assert!(TerminalProgram::Terminology.capabilities().image.is_none());
     }
 
     #[test]
@@ -271,11 +244,7 @@ mod tests {
     #[test]
     pub fn detect_ansi() {
         with_vars(
-            vec![
-                ("TERM", Some("xterm-256color")),
-                ("TERM_PROGRAM", None),
-                ("TERMINOLOGY", None),
-            ],
+            vec![("TERM", Some("xterm-256color")), ("TERM_PROGRAM", None)],
             || assert_eq!(TerminalProgram::detect(), TerminalProgram::Ansi),
         )
     }

@@ -12,7 +12,6 @@ pub mod iterm2;
 pub mod kitty;
 #[cfg(feature = "sixel")]
 pub mod sixel;
-pub mod terminology;
 
 /// The capability of basic styling.
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -31,8 +30,6 @@ pub enum MarkCapability {
 /// The capability of the terminal to write images inline.
 #[derive(Debug, Copy, Clone)]
 pub enum ImageCapability {
-    /// The terminal understands the terminology image protocol.
-    Terminology(terminology::Terminology),
     /// The terminal understands the iterm2 image protocol.
     ITerm2(iterm2::ITerm2Protocol),
     /// The terminal understands the kitty graphics protocol.
@@ -45,7 +42,6 @@ pub enum ImageCapability {
 impl ImageCapability {
     pub(crate) fn image_protocol(&self) -> &dyn InlineImageProtocol {
         match self {
-            ImageCapability::Terminology(t) => t,
             ImageCapability::ITerm2(t) => t,
             ImageCapability::Kitty(t) => t,
             #[cfg(feature = "sixel")]

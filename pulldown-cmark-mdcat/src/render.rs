@@ -53,7 +53,6 @@ fn render_math_image(
         ImageCapability::Kitty(_) | ImageCapability::ITerm2(_) => {}
         #[cfg(feature = "sixel")]
         ImageCapability::Sixel(_) => {}
-        ImageCapability::Terminology(_) => return None,
     }
     math::render_math_png(
         math,
@@ -85,7 +84,7 @@ fn write_math_image<W: Write>(
             s.write_png_data(writer, &img.png)?;
             false
         }
-        Some(ImageCapability::Terminology(_)) | None => return Ok((0, 0, false)),
+        None => return Ok((0, 0, false)),
     };
     Ok((dims.0, dims.1, cursor_moved))
 }
