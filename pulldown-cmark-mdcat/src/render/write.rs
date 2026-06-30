@@ -238,17 +238,10 @@ pub fn write_rule<W: Write>(
 
 pub fn write_code_block_border<W: Write>(
     writer: &mut W,
-    theme: &Theme,
-    capabilities: &TerminalCapabilities,
-    terminal_size: &TerminalSize,
+    _theme: &Theme,
+    _capabilities: &TerminalCapabilities,
+    _terminal_size: &TerminalSize,
 ) -> std::io::Result<()> {
-    let separator = "\u{2500}".repeat(terminal_size.columns.min(20) as usize);
-    write_styled(
-        writer,
-        capabilities,
-        &Style::new().fg_color(Some(theme.code_block_border_color)),
-        separator,
-    )?;
     writeln!(writer)
 }
 
@@ -305,13 +298,7 @@ pub fn write_start_code_block<W: Write>(
     style: Style,
     block_kind: CodeBlockKind<'_>,
 ) -> Result<StackedState> {
-    write_indent(writer, indent)?;
-    write_code_block_border(
-        writer,
-        &settings.theme,
-        &settings.terminal_capabilities,
-        &settings.terminal_size,
-    )?;
+    writeln!(writer)?;
     // And start the indent for the contents of the block
     write_indent(writer, indent)?;
 

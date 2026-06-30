@@ -21,7 +21,7 @@ use textwrap::core::display_width;
 use tracing::{event, instrument, Level};
 use url::Url;
 
-use crate::render::highlighting::highlighter;
+use crate::render::highlighting::{highlighter, write_as_ansi_with_bg};
 use crate::resources::ResourceUrlHandler;
 use crate::theme::CombineStyle;
 use crate::{Environment, Settings};
@@ -483,9 +483,21 @@ pub fn write_event<'a, W: Write>(
         (Stacked(stack, LiteralBlock(attrs)), Text(text)) => {
             let LiteralBlockAttrs { indent, style, .. } = attrs;
             for line in LinesWithEndings::from(&text) {
-                write_styled(writer, &settings.terminal_capabilities, &style, line)?;
-                if line.ends_with('\n') {
-                    write_indent(writer, indent)?;
+                match settings.terminal_capabilities.style {
+                    Some(StyleCapability::Ansi) => {
+                        let bg = settings.theme.code_block_background;
+                        let content = line.trim_end_matches('\n').trim_end_matches('\r');
+                        let line_style = style.bg_color(Some(bg));
+                        write!(writer, "{}", line_style.render())?;
+                        write_indent(writer, indent)?;
+                        writeln!(writer, "{content}\x1b[K\x1b[0m")?;
+                    }
+                    None => {
+                        write_styled(writer, &settings.terminal_capabilities, &style, line)?;
+                        if line.ends_with('\n') {
+                            write_indent(writer, indent)?;
+                        }
+                    }
                 }
             }
             stack.current(attrs.into()).and_data(data).ok()
@@ -547,12 +559,23 @@ pub fn write_event<'a, W: Write>(
                     .parse_state
                     .parse_line(line, settings.syntax_set)
                     .expect("syntect parsing shouldn't fail in mdcat");
-                highlighting::write_as_ansi(
-                    writer,
-                    HighlightIterator::new(&mut attrs.highlight_state, &ops, line, highlighter()),
-                )?;
-                if text.ends_with('\n') {
-                    write_indent(writer, attrs.indent)?;
+                let regions =
+                    HighlightIterator::new(&mut attrs.highlight_state, &ops, line, highlighter());
+                match settings.terminal_capabilities.style {
+                    Some(StyleCapability::Ansi) => {
+                        write_indent(writer, attrs.indent)?;
+                        write_as_ansi_with_bg(
+                            writer,
+                            regions,
+                            settings.theme.code_block_background,
+                        )?;
+                    }
+                    None => {
+                        highlighting::write_as_ansi(writer, regions)?;
+                        if text.ends_with('\n') {
+                            write_indent(writer, attrs.indent)?;
+                        }
+                    }
                 }
             }
             stack.current(attrs.into()).and_data(data).ok()

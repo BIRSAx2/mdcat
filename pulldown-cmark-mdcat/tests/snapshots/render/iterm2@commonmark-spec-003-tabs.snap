@@ -1,10 +1,8 @@
 ---
 source: pulldown-cmark-mdcat/tests/render.rs
-assertion_line: 124
 expression: "render_to_string(markdown_file, &iterm2_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/003-tabs.md
 ---
-[32m────────────────────[0m
-[33ma	a
-[0m[33mὐ	a
-[0m[32m────────────────────[0m
+
+[33m[48;5;236ma	a[K[0m
+[33m[48;5;236mὐ	a[K[0m

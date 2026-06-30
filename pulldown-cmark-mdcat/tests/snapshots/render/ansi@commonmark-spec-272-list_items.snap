@@ -1,15 +1,13 @@
 ---
 source: pulldown-cmark-mdcat/tests/render.rs
-assertion_line: 123
 expression: "render_to_string(markdown_file, &ansi_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/272-list_items.md
 ---
-[32m────────────────────[0m
-[33mindented code
-[0m[32m────────────────────[0m
+
+[33m[48;5;236mindented code[K[0m
+
 
 paragraph
 
-[32m────────────────────[0m
-[33mmore code
-[0m[32m────────────────────[0m
+
+[33m[48;5;236mmore code[K[0m

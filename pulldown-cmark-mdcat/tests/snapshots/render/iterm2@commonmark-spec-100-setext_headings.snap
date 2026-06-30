@@ -1,11 +1,10 @@
 ---
 source: pulldown-cmark-mdcat/tests/render.rs
-assertion_line: 124
 expression: "render_to_string(markdown_file, &iterm2_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/100-setext_headings.md
 ---
-[32m────────────────────[0m
-[33mfoo
-[0m[32m────────────────────[0m
+
+[33m[48;5;236mfoo[K[0m
+
 
 [32m════════════════════════════════════════════════════════════════════════════════[0m

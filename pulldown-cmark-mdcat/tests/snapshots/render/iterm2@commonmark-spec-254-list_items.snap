@@ -1,13 +1,12 @@
 ---
 source: pulldown-cmark-mdcat/tests/render.rs
-assertion_line: 124
 expression: "render_to_string(markdown_file, &iterm2_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/254-list_items.md
 ---
  1. A paragraph with two lines.
 
-    [32m────────────────────[0m
-    [33mindented code
-[0m    [32m────────────────────[0m
+
+    [33m[48;5;236m    indented code[K[0m
+
 
         [3mA block quote.[0m
