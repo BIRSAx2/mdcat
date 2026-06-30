@@ -1,6 +1,5 @@
 ---
 source: pulldown-cmark-mdcat/tests/render.rs
-assertion_line: 124
 expression: "render_to_string(markdown_file, &iterm2_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/191-html_blocks.md
 ---
@@ -8,11 +7,11 @@ input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/191-html_blocks.
 [0m
 [32m  [0m[32m<tr>
 [0m
-[32m────────────────────[0m
-[33m<td>
-[0m[33m  Hi
-[0m[33m</td>
-[0m[32m────────────────────[0m
+
+[33m[48;5;236m<td>[K[0m
+[33m[48;5;236m  Hi[K[0m
+[33m[48;5;236m</td>[K[0m
+
 
 [32m  [0m[32m</tr>
 [0m

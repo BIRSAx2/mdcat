@@ -1,9 +1,7 @@
 ---
 source: pulldown-cmark-mdcat/tests/render.rs
-assertion_line: 123
 expression: "render_to_string(markdown_file, &ansi_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/001-tabs.md
 ---
-[32m────────────────────[0m
-[33mfoo	baz		bim
-[0m[32m────────────────────[0m
+
+[33m[48;5;236mfoo	baz		bim[K[0m

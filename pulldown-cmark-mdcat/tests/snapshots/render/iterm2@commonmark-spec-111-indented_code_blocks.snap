@@ -1,15 +1,13 @@
 ---
 source: pulldown-cmark-mdcat/tests/render.rs
-assertion_line: 124
 expression: "render_to_string(markdown_file, &iterm2_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/111-indented_code_blocks.md
 ---
-[32m────────────────────[0m
-[33mchunk1
-[0m[33m
-[0m[33mchunk2
-[0m[33m
-[0m[33m
-[0m[33m
-[0m[33mchunk3
-[0m[32m────────────────────[0m
+
+[33m[48;5;236mchunk1[K[0m
+[33m[48;5;236m[K[0m
+[33m[48;5;236mchunk2[K[0m
+[33m[48;5;236m[K[0m
+[33m[48;5;236m[K[0m
+[33m[48;5;236m[K[0m
+[33m[48;5;236mchunk3[K[0m

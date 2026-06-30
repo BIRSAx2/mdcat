@@ -14,10 +14,10 @@ use clap_complete::generate;
 use mdcat::{create_resource_handler, process_file};
 use pulldown_cmark_mdcat::terminal::{TerminalProgram, TerminalSize};
 use pulldown_cmark_mdcat::{Settings, Theme};
-use syntect::parsing::SyntaxSet;
 use tracing::{event, Level};
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::EnvFilter;
+use two_face::syntax::extra_newlines;
 
 use mdcat::args::Args;
 use mdcat::output::Output;
@@ -84,7 +84,7 @@ fn main() {
                 let settings = Settings {
                     terminal_capabilities: terminal.capabilities(),
                     terminal_size,
-                    syntax_set: &SyntaxSet::load_defaults_newlines(),
+                    syntax_set: &extra_newlines(),
                     theme: Theme::default(),
                 };
                 event!(

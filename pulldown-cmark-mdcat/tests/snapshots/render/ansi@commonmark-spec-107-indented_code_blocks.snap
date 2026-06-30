@@ -1,10 +1,8 @@
 ---
 source: pulldown-cmark-mdcat/tests/render.rs
-assertion_line: 123
 expression: "render_to_string(markdown_file, &ansi_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/107-indented_code_blocks.md
 ---
-[32m────────────────────[0m
-[33ma simple
-[0m[33m  indented code block
-[0m[32m────────────────────[0m
+
+[33m[48;5;236ma simple[K[0m
+[33m[48;5;236m  indented code block[K[0m

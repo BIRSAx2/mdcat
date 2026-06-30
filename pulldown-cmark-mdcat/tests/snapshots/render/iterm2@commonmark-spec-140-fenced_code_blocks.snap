@@ -1,13 +1,12 @@
 ---
 source: pulldown-cmark-mdcat/tests/render.rs
-assertion_line: 124
 expression: "render_to_string(markdown_file, &iterm2_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/140-fenced_code_blocks.md
 ---
 foo
 
-[32m────────────────────[0m
-[33mbar
-[0m[32m────────────────────[0m
+
+[33m[48;5;236mbar[K[0m
+
 
 baz

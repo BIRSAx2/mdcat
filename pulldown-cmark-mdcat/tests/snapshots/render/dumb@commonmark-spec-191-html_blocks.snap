@@ -1,6 +1,5 @@
 ---
 source: pulldown-cmark-mdcat/tests/render.rs
-assertion_line: 122
 expression: "render_to_string(markdown_file, &dumb_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/191-html_blocks.md
 ---
@@ -8,11 +7,11 @@ input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/191-html_blocks.
 
   <tr>
 
-────────────────────
+
 <td>
   Hi
 </td>
-────────────────────
+
 
   </tr>
 

@@ -1,6 +1,5 @@
 ---
 source: pulldown-cmark-mdcat/tests/render.rs
-assertion_line: 123
 expression: "render_to_string(markdown_file, &ansi_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/313-lists.md
 ---
@@ -8,6 +7,5 @@ input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/313-lists.md
 
  2. b
 
-[32m────────────────────[0m
-[33m3. c
-[0m[32m────────────────────[0m
+
+[33m[48;5;236m3. c[K[0m
