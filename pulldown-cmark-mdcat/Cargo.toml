@@ -14,9 +14,10 @@ edition.workspace = true
 rust-version.workspace = true
 
 [features]
-default = ["svg", "image-processing"]
+default = ["svg", "image-processing", "sixel"]
 svg = ["dep:resvg"]
 image-processing = ["dep:image"]
+sixel = ["image-processing", "dep:icy_sixel"]
 
 [dependencies]
 base64 = { version = "0.22.1", default-features = false, features = ["std"] }
@@ -40,6 +41,7 @@ ratex-parser = "0.1.11"
 ratex-layout = "0.1.11"
 ratex-render = { version = "0.1.11", features = ["embed-fonts"] }
 ratex-types = "0.1.11"
+icy_sixel = { version = "0.5.0", optional = true }
 
 [dev-dependencies]
 glob = "0.3.1"

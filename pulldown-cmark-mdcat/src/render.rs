@@ -51,6 +51,8 @@ fn render_math_image(
 ) -> Option<math::MathImage> {
     match settings.terminal_capabilities.image.as_ref()? {
         ImageCapability::Kitty(_) | ImageCapability::ITerm2(_) => {}
+        #[cfg(feature = "sixel")]
+        ImageCapability::Sixel(_) => {}
         ImageCapability::Terminology(_) => return None,
     }
     math::render_math_png(
@@ -76,6 +78,11 @@ fn write_math_image<W: Write>(
         }
         Some(ImageCapability::ITerm2(i)) => {
             i.write_png_data(writer, &img.png)?;
+            false
+        }
+        #[cfg(feature = "sixel")]
+        Some(ImageCapability::Sixel(s)) => {
+            s.write_png_data(writer, &img.png)?;
             false
         }
         Some(ImageCapability::Terminology(_)) | None => return Ok((0, 0, false)),
@@ -986,6 +993,15 @@ pub fn write_event<'a, W: Write>(
                     write!(writer, "{}", space)?;
                     length += 1;
                 }
+
+                // pre-allocate rows according to the image height to avoid that
+                // the image causes scrolling
+                for _ in 0..img.height_rows {
+                    writeln!(writer)?;
+                }
+                // then move the cursor back to its original position
+                write!(writer, "\x1b[{}A", img.height_rows)?;
+                write!(writer, "\x1b[{}G", u32::from(length) + 1)?;
                 write!(writer, "\x1b7")?;
                 let (img_cols, _img_rows, _) = write_math_image(writer, settings, img, false)?;
                 write!(writer, "\x1b8")?;
