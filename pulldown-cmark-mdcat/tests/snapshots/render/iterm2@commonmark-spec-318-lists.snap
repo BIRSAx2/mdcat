@@ -6,9 +6,9 @@ input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/318-lists.md
 • a
 • 
 
-  [33m[48;5;236m  b[K[0m
-[33m[48;5;236m  [K[0m
-[33m[48;5;236m  [K[0m
-
+    [33mb
+[0m    [33m
+[0m    [33m
+[0m  
 
 • c

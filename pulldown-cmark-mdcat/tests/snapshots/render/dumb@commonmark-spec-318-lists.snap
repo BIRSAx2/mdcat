@@ -6,9 +6,9 @@ input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/318-lists.md
 • a
 • 
 
-  b
-  
-  
+    b
+    
+    
   
 
 • c

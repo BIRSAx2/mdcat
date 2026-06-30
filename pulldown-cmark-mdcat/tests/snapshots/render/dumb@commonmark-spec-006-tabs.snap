@@ -4,4 +4,5 @@ expression: "render_to_string(markdown_file, &dumb_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/006-tabs.md
 ---
 
-      foo
+  
+foo

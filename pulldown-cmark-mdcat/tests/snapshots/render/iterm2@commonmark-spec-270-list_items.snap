@@ -6,4 +6,5 @@ input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/270-list_items.m
 • foo
 
 
-  [33m[48;5;236m  bar[K[0m
+    [33mbar
+[0m

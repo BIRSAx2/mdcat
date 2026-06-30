@@ -4,7 +4,7 @@ expression: "render_to_string(markdown_file, &iterm2_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/128-fenced_code_blocks.md
 ---
 
-    [3m[33m[48;5;236m    aaa[K[0m
-
+[3m[33maaa
+[0m
 
 bbb

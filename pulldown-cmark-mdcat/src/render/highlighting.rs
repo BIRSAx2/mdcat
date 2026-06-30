@@ -83,30 +83,3 @@ pub fn write_as_ansi<'a, W: Write, I: Iterator<Item = (Style, &'a str)>>(
     }
     Ok(())
 }
-
-/// Write syntax-highlighted regions for one line, filling the rest of the line
-/// with `bg` using EL (`\x1b[K`), then resetting and writing a newline.
-pub fn write_as_ansi_with_bg<'a, W: Write, I: Iterator<Item = (Style, &'a str)>>(
-    writer: &mut W,
-    regions: I,
-    bg: Color,
-) -> Result<()> {
-    let bg_style = anstyle::Style::new().bg_color(Some(bg));
-    write!(writer, "{}", bg_style.render())?;
-    for (style, text) in regions {
-        let token_style = solarized_to_ansi(style);
-        let content = text.trim_end_matches('\n').trim_end_matches('\r');
-        write!(
-            writer,
-            "{}{}{}",
-            token_style.render(),
-            content,
-            token_style.render_reset()
-        )?;
-        // Re-apply bg after each token reset
-        write!(writer, "{}", bg_style.render())?;
-    }
-    // Fill rest of line with bg, then reset and newline
-    writeln!(writer, "\x1b[K\x1b[0m")?;
-    Ok(())
-}

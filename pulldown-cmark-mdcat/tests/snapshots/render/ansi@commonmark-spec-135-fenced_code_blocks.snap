@@ -4,4 +4,5 @@ expression: "render_to_string(markdown_file, &ansi_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/135-fenced_code_blocks.md
 ---
 
-[33m[48;5;236maaa[K[0m
+[33maaa
+[0m

@@ -6,9 +6,9 @@ input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/263-list_items.m
  1. foo
 
 
-    [33m[48;5;236m    bar[K[0m
-
+        [33mbar
+[0m    
 
     baz
 
-        [3mbam[0m
+    [36m│[0m [3mbam[0m

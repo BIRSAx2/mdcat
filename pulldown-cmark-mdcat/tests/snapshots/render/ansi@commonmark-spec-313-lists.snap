@@ -8,4 +8,5 @@ input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/313-lists.md
  2. b
 
 
-[33m[48;5;236m3. c[K[0m
+[33m3. c
+[0m

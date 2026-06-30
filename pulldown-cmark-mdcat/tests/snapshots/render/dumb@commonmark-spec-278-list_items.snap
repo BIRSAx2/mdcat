@@ -6,9 +6,9 @@ input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/278-list_items.m
 • foo
 • 
 
-  bar
+    bar
   
 
 • 
 
-  baz
+    baz

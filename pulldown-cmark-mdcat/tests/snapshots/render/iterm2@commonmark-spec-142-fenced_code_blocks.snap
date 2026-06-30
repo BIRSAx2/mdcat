@@ -4,6 +4,6 @@ expression: "render_to_string(markdown_file, &iterm2_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/142-fenced_code_blocks.md
 ---
 
-[48;5;236m[32mdef[0m[48;5;236m [48;5;236m[33mfoo[0m[48;5;236m([48;5;236m[34mx[0m[48;5;236m)[48;5;236m[48;5;236m[K[0m
-[48;5;236m  [48;5;236m[32mreturn[0m[48;5;236m [48;5;236m[95m3[0m[48;5;236m[48;5;236m[K[0m
-[48;5;236m[32mend[0m[48;5;236m[48;5;236m[K[0m
+[32mdef[0m [33mfoo[0m([34mx[0m)
+  [32mreturn[0m [95m3[0m
+[32mend[0m

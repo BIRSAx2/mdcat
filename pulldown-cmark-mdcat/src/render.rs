@@ -21,10 +21,11 @@ use textwrap::core::display_width;
 use tracing::{event, instrument, Level};
 use url::Url;
 
-use crate::render::highlighting::{highlighter, write_as_ansi_with_bg};
+use crate::render::highlighting::highlighter;
 use crate::resources::ResourceUrlHandler;
+use crate::terminal::capabilities::TerminalCapabilities;
 use crate::theme::CombineStyle;
-use crate::{Environment, Settings};
+use crate::{Environment, Settings, Theme};
 
 mod data;
 mod highlighting;
@@ -41,6 +42,24 @@ use crate::render::state::MarginControl::NoMargin;
 use crate::terminal::capabilities::{ImageCapability, StyleCapability};
 use crate::terminal::osc::{clear_link, set_link_url};
 pub use data::StateData;
+
+fn quote_line_prefix(
+    capabilities: &TerminalCapabilities,
+    theme: &Theme,
+    depth: u16,
+) -> (String, u16) {
+    if depth == 0 {
+        return (String::new(), 0);
+    }
+    let prefix = match capabilities.style {
+        Some(StyleCapability::Ansi) => {
+            let s = theme.quote_border_style;
+            format!("{}\u{2502}{} ", s.render(), s.render_reset()).repeat(depth as usize)
+        }
+        None => "  ".repeat(depth as usize),
+    };
+    (prefix, depth * 2)
+}
 pub use state::State;
 pub use state::StateAndData;
 
@@ -230,10 +249,18 @@ pub fn write_event<'a, W: Write>(
 
         // Nested blocks with style, e.g. paragraphs in quotes, etc.
         (Stacked(stack, StyledBlock(attrs)), Start(Paragraph)) => {
+            let (prefix, _) = quote_line_prefix(
+                &settings.terminal_capabilities,
+                &settings.theme,
+                attrs.quote_depth,
+            );
             if attrs.margin_before != NoMargin {
+                write_indent(writer, attrs.indent)?;
+                write!(writer, "{}", prefix)?;
                 writeln!(writer)?;
             }
             write_indent(writer, attrs.indent)?;
+            write!(writer, "{}", prefix)?;
             let inline = InlineAttrs::from(&attrs);
             stack
                 .push(attrs.with_margin_before().into())
@@ -333,7 +360,12 @@ pub fn write_event<'a, W: Write>(
 
         // Lists
         (Stacked(stack, Inline(ListItem(kind, state), attrs)), Start(Item)) => {
-            let InlineAttrs { indent, style, .. } = attrs;
+            let InlineAttrs {
+                indent,
+                style,
+                quote_depth,
+                ..
+            } = attrs;
             if state == ItemBlock {
                 // Add margin
                 writeln!(writer)?;
@@ -352,7 +384,11 @@ pub fn write_event<'a, W: Write>(
             stack
                 .current(Inline(
                     ListItem(kind, StartItem),
-                    InlineAttrs { style, indent },
+                    InlineAttrs {
+                        style,
+                        indent,
+                        quote_depth,
+                    },
                 ))
                 .and_data(data.current_line(CurrentLine {
                     length: indent,
@@ -473,7 +509,14 @@ pub fn write_event<'a, W: Write>(
                 ListItemKind::Ordered(no) => (indent - 4, ListItemKind::Ordered(no + 1)),
             };
             stack
-                .current(Inline(ListItem(kind, state), InlineAttrs { style, indent }))
+                .current(Inline(
+                    ListItem(kind, state),
+                    InlineAttrs {
+                        style,
+                        indent,
+                        quote_depth: attrs.quote_depth,
+                    },
+                ))
                 .and_data(data)
                 .ok()
         }
@@ -482,22 +525,12 @@ pub fn write_event<'a, W: Write>(
         (Stacked(stack, LiteralBlock(attrs)), Text(text)) => {
             let LiteralBlockAttrs { indent, style, .. } = attrs;
             for line in LinesWithEndings::from(&text) {
-                match settings.terminal_capabilities.style {
-                    Some(StyleCapability::Ansi) => {
-                        let bg = settings.theme.code_block_background;
-                        let content = line.trim_end_matches('\n').trim_end_matches('\r');
-                        let line_style = style.bg_color(Some(bg));
-                        write!(writer, "{}", line_style.render())?;
-                        write_indent(writer, indent)?;
-                        writeln!(writer, "{content}\x1b[K\x1b[0m")?;
-                    }
-                    None => {
-                        write_styled(writer, &settings.terminal_capabilities, &style, line)?;
-                        if line.ends_with('\n') {
-                            write_indent(writer, indent)?;
-                        }
-                    }
+                write_indent(writer, indent)?;
+                write_styled(writer, &settings.terminal_capabilities, &style, line)?;
+                if !line.ends_with('\n') {
+                    writeln!(writer)?;
                 }
+                write_indent(writer, indent)?;
             }
             stack.current(attrs.into()).and_data(data).ok()
         }
@@ -560,22 +593,8 @@ pub fn write_event<'a, W: Write>(
                     .expect("syntect parsing shouldn't fail in mdcat");
                 let regions =
                     HighlightIterator::new(&mut attrs.highlight_state, &ops, line, highlighter());
-                match settings.terminal_capabilities.style {
-                    Some(StyleCapability::Ansi) => {
-                        write_indent(writer, attrs.indent)?;
-                        write_as_ansi_with_bg(
-                            writer,
-                            regions,
-                            settings.theme.code_block_background,
-                        )?;
-                    }
-                    None => {
-                        highlighting::write_as_ansi(writer, regions)?;
-                        if text.ends_with('\n') {
-                            write_indent(writer, attrs.indent)?;
-                        }
-                    }
-                }
+                write_indent(writer, attrs.indent)?;
+                highlighting::write_as_ansi(writer, regions)?;
             }
             stack.current(attrs.into()).and_data(data).ok()
         }
@@ -591,31 +610,65 @@ pub fn write_event<'a, W: Write>(
 
         // Inline markup
         (Stacked(stack, Inline(state, attrs)), Start(Emphasis)) => {
-            let InlineAttrs { style, indent } = attrs;
+            let InlineAttrs {
+                style,
+                indent,
+                quote_depth,
+                ..
+            } = attrs;
             let effects = style.get_effects();
             let style =
                 style.effects(effects.set(Effects::ITALIC, !effects.contains(Effects::ITALIC)));
             stack
                 .push(Inline(state, attrs))
-                .current(Inline(state, InlineAttrs { style, indent }))
+                .current(Inline(
+                    state,
+                    InlineAttrs {
+                        style,
+                        indent,
+                        quote_depth,
+                    },
+                ))
                 .and_data(data)
                 .ok()
         }
         (Stacked(stack, Inline(state, attrs)), Start(Strong)) => {
-            let InlineAttrs { indent, .. } = attrs;
+            let InlineAttrs {
+                indent,
+                quote_depth,
+                ..
+            } = attrs;
             let style = attrs.style.bold();
             stack
                 .push(Inline(state, attrs))
-                .current(Inline(state, InlineAttrs { style, indent }))
+                .current(Inline(
+                    state,
+                    InlineAttrs {
+                        style,
+                        indent,
+                        quote_depth,
+                    },
+                ))
                 .and_data(data)
                 .ok()
         }
         (Stacked(stack, Inline(state, attrs)), Start(Strikethrough)) => {
-            let InlineAttrs { indent, .. } = attrs;
+            let InlineAttrs {
+                indent,
+                quote_depth,
+                ..
+            } = attrs;
             let style = attrs.style.strikethrough();
             stack
                 .push(Inline(state, attrs))
-                .current(Inline(state, InlineAttrs { style, indent }))
+                .current(Inline(
+                    state,
+                    InlineAttrs {
+                        style,
+                        indent,
+                        quote_depth,
+                    },
+                ))
                 .and_data(data)
                 .ok()
         }
@@ -624,6 +677,11 @@ pub fn write_event<'a, W: Write>(
             End(TagEnd::Strong | TagEnd::Emphasis | TagEnd::Strikethrough),
         ) => stack.pop().and_data(data).ok(),
         (Stacked(stack, Inline(state, attrs)), Code(code)) => {
+            let (prefix, prefix_cols) = quote_line_prefix(
+                &settings.terminal_capabilities,
+                &settings.theme,
+                attrs.quote_depth,
+            );
             let current_line = write_styled_and_wrapped(
                 writer,
                 &settings.terminal_capabilities,
@@ -632,6 +690,8 @@ pub fn write_event<'a, W: Write>(
                 attrs.indent,
                 data.current_line,
                 code,
+                &prefix,
+                prefix_cols,
             )?;
             let data = StateData {
                 current_line,
@@ -641,6 +701,11 @@ pub fn write_event<'a, W: Write>(
         }
 
         (Stacked(stack, Inline(state, attrs)), InlineHtml(html)) => {
+            let (prefix, prefix_cols) = quote_line_prefix(
+                &settings.terminal_capabilities,
+                &settings.theme,
+                attrs.quote_depth,
+            );
             let current_line = write_styled_and_wrapped(
                 writer,
                 &settings.terminal_capabilities,
@@ -649,6 +714,8 @@ pub fn write_event<'a, W: Write>(
                 attrs.indent,
                 data.current_line,
                 html,
+                &prefix,
+                prefix_cols,
             )?;
             let data = StateData {
                 current_line,
@@ -657,7 +724,7 @@ pub fn write_event<'a, W: Write>(
             Ok(stack.current(Inline(state, attrs)).and_data(data))
         }
         (Stacked(stack, Inline(inline, attrs)), TaskListMarker(checked)) => {
-            let marker = if checked { "\u{2611}" } else { "\u{2610}" };
+            let marker = if checked { "[✓]" } else { "[ ]" };
             write_styled(
                 writer,
                 &settings.terminal_capabilities,
@@ -685,7 +752,13 @@ pub fn write_event<'a, W: Write>(
         }
         (Stacked(stack, Inline(state, attrs)), HardBreak) => {
             writeln!(writer)?;
+            let (prefix, _) = quote_line_prefix(
+                &settings.terminal_capabilities,
+                &settings.theme,
+                attrs.quote_depth,
+            );
             write_indent(writer, attrs.indent)?;
+            write!(writer, "{}", prefix)?;
 
             Ok(stack
                 .current(Inline(state, attrs))
@@ -694,6 +767,12 @@ pub fn write_event<'a, W: Write>(
         // Inline text
         (Stacked(stack, Inline(ListItem(kind, ItemBlock), attrs)), Text(text)) => {
             // Fresh text after a new block, so indent again.
+            let (prefix, prefix_cols) = quote_line_prefix(
+                &settings.terminal_capabilities,
+                &settings.theme,
+                attrs.quote_depth,
+            );
+            write!(writer, "{}", prefix)?;
             write_indent(writer, attrs.indent)?;
             let current_line = write_styled_and_wrapped(
                 writer,
@@ -703,6 +782,8 @@ pub fn write_event<'a, W: Write>(
                 attrs.indent,
                 data.current_line,
                 text,
+                &prefix,
+                prefix_cols,
             )?;
             Ok(stack
                 .current(Inline(ListItem(kind, ItemText), attrs))
@@ -717,6 +798,11 @@ pub fn write_event<'a, W: Write>(
             Ok(stack.current(Inline(InlineBlock, attrs)).and_data(data))
         }
         (Stacked(stack, Inline(state, attrs)), Text(text)) => {
+            let (prefix, prefix_cols) = quote_line_prefix(
+                &settings.terminal_capabilities,
+                &settings.theme,
+                attrs.quote_depth,
+            );
             let current_line = write_styled_and_wrapped(
                 writer,
                 &settings.terminal_capabilities,
@@ -725,6 +811,8 @@ pub fn write_event<'a, W: Write>(
                 attrs.indent,
                 data.current_line,
                 text,
+                &prefix,
+                prefix_cols,
             )?;
             Ok(stack.current(Inline(state, attrs)).and_data(StateData {
                 current_line,
@@ -794,7 +882,12 @@ pub fn write_event<'a, W: Write>(
                 }
             };
 
-            let InlineAttrs { style, indent } = attrs;
+            let InlineAttrs {
+                style,
+                indent,
+                quote_depth,
+                ..
+            } = attrs;
             stack
                 .push(Inline(state, attrs))
                 .current(Inline(
@@ -802,6 +895,7 @@ pub fn write_event<'a, W: Write>(
                     InlineAttrs {
                         indent,
                         style: settings.theme.link_style.on_top_of(&style),
+                        quote_depth,
                     },
                 ))
                 .and_data(data)
@@ -842,7 +936,12 @@ pub fn write_event<'a, W: Write>(
                 ..
             }),
         ) => {
-            let InlineAttrs { style, indent } = attrs;
+            let InlineAttrs {
+                style,
+                indent,
+                quote_depth,
+                ..
+            } = attrs;
             let resolved_link = environment.resolve_reference(&dest_url);
             let image_state = match (settings.terminal_capabilities.image, resolved_link) {
                 (Some(capability), Some(ref url)) => capability
@@ -868,6 +967,7 @@ pub fn write_event<'a, W: Write>(
                                     InlineAttrs {
                                         indent,
                                         style: settings.theme.image_link_style.on_top_of(&style),
+                                        quote_depth,
                                     },
                                 ))
                             },
@@ -892,7 +992,14 @@ pub fn write_event<'a, W: Write>(
                     } else {
                         settings.theme.image_link_style.on_top_of(&style)
                     };
-                    let state = Inline(InlineText, InlineAttrs { style, indent });
+                    let state = Inline(
+                        InlineText,
+                        InlineAttrs {
+                            style,
+                            indent,
+                            quote_depth,
+                        },
+                    );
                     (state, data.push_pending_link(link_type, dest_url, title))
                 }
             };
@@ -1038,6 +1145,11 @@ pub fn write_event<'a, W: Write>(
                     })));
             }
             let rendered = math::render_math_unicode(&math);
+            let (prefix, prefix_cols) = quote_line_prefix(
+                &settings.terminal_capabilities,
+                &settings.theme,
+                attrs.quote_depth,
+            );
             let current_line = write_styled_and_wrapped(
                 writer,
                 &settings.terminal_capabilities,
@@ -1046,6 +1158,8 @@ pub fn write_event<'a, W: Write>(
                 attrs.indent,
                 data.current_line,
                 &rendered,
+                &prefix,
+                prefix_cols,
             )?;
             Ok(stack.current(Inline(state, attrs)).and_data(StateData {
                 current_line,

@@ -6,4 +6,4 @@ input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/271-list_items.m
 10. foo
 
 
-    bar
+        bar

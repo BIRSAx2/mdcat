@@ -4,4 +4,5 @@ expression: "render_to_string(markdown_file, &iterm2_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/001-tabs.md
 ---
 
-[33m[48;5;236mfoo	baz		bim[K[0m
+[33mfoo	baz		bim
+[0m

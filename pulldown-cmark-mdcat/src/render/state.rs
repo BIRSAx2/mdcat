@@ -25,6 +25,8 @@ pub struct InlineAttrs {
     pub(super) style: Style,
     /// The indent to add after a line break in inline text.
     pub(super) indent: u16,
+    /// How many block quote levels deep we are (for rendering the `│` border).
+    pub(super) quote_depth: u16,
 }
 
 impl Default for InlineAttrs {
@@ -32,6 +34,7 @@ impl Default for InlineAttrs {
         InlineAttrs {
             style: Style::new(),
             indent: 0,
+            quote_depth: 0,
         }
     }
 }
@@ -44,6 +47,7 @@ where
         InlineAttrs {
             style: attrs.borrow().style,
             indent: attrs.borrow().indent,
+            quote_depth: attrs.borrow().quote_depth,
         }
     }
 }
@@ -96,13 +100,15 @@ pub enum InlineState {
 pub struct StyledBlockAttrs {
     /// Whether to write a margin before the beginning of a block inside this block.
     pub(super) margin_before: MarginControl,
-    /// The indent of this block.
+    /// The indent to add after the block quote prefix on each line.
     pub(super) indent: u16,
     /// The general style to apply to children of this block, if possible.
     ///
     /// Note that not all nested blocks inherit style; code blocks for instance will always use
     /// their own dedicated style.
     pub(super) style: Style,
+    /// How many block quote levels deep we are (for rendering the `│` border).
+    pub(super) quote_depth: u16,
 }
 
 impl StyledBlockAttrs {
@@ -122,8 +128,9 @@ impl StyledBlockAttrs {
 
     pub(super) fn block_quote(self) -> Self {
         StyledBlockAttrs {
-            indent: self.indent + 4,
+            indent: self.indent,
             style: self.style.italic(),
+            quote_depth: self.quote_depth + 1,
             ..self
         }
     }
@@ -135,6 +142,7 @@ impl Default for StyledBlockAttrs {
             margin_before: MarginControl::NoMargin,
             indent: 0,
             style: Style::new(),
+            quote_depth: 0,
         }
     }
 }

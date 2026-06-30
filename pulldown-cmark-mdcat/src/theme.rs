@@ -6,7 +6,7 @@
 
 //! Provide a colour theme for mdcat.
 
-use anstyle::{Ansi256Color, AnsiColor, Color, Style};
+use anstyle::{AnsiColor, Color, Style};
 
 /// A colour theme for mdcat.
 ///
@@ -25,8 +25,8 @@ pub struct Theme {
     pub(crate) image_link_style: Style,
     /// Color for rulers.
     pub(crate) rule_color: Color,
-    /// Background color for code blocks (fills to end of line).
-    pub(crate) code_block_background: Color,
+    /// Style for block quote borders (`│`).
+    pub(crate) quote_border_style: Style,
     /// Color for headings
     pub(crate) heading_style: Style,
     /// Style for footnote references and definitions.
@@ -45,7 +45,7 @@ impl Default for Theme {
             link_style: Style::new().fg_color(Some(AnsiColor::Blue.into())),
             image_link_style: Style::new().fg_color(Some(AnsiColor::Magenta.into())),
             rule_color: AnsiColor::Green.into(),
-            code_block_background: Color::Ansi256(Ansi256Color(236)),
+            quote_border_style: Style::new().fg_color(Some(AnsiColor::Cyan.into())),
             heading_style: Style::new().fg_color(Some(AnsiColor::Blue.into())).bold(),
             footnote_style: Style::new().fg_color(Some(AnsiColor::Cyan.into())),
             math_style: Style::new().fg_color(Some(AnsiColor::Yellow.into())),

@@ -5,7 +5,7 @@ input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/324-lists.md
 ---
  1. 
 
-    foo
+        foo
     
 
     bar

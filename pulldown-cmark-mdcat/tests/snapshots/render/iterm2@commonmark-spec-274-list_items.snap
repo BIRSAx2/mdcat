@@ -5,10 +5,11 @@ input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/274-list_items.m
 ---
  1. 
 
-    [33m[48;5;236m     indented code[K[0m
-
+        [33m indented code
+[0m    
 
     paragraph
 
 
-    [33m[48;5;236m    more code[K[0m
+        [33mmore code
+[0m

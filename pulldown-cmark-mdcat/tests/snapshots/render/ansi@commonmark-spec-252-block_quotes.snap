@@ -4,7 +4,7 @@ expression: "render_to_string(markdown_file, &ansi_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/252-block_quotes.md
 ---
 
-    [3m[33m[48;5;236m    code[K[0m
+[3m[33mcode
+[0m
 
-
-    [3mnot code[0m
+[36m│[0m [3mnot code[0m

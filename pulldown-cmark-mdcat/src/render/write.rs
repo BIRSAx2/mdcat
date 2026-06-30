@@ -48,6 +48,7 @@ pub fn write_styled<W: Write, S: AsRef<str>>(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn write_remaining_lines<W: Write>(
     writer: &mut W,
     capabilities: &TerminalCapabilities,
@@ -56,10 +57,12 @@ fn write_remaining_lines<W: Write>(
     mut buffer: String,
     next_lines: &[&[Word]],
     last_line: &[Word],
+    line_prefix: &str,
 ) -> Result<CurrentLine> {
     // Finish the previous line
     writeln!(writer)?;
     write_indent(writer, indent)?;
+    write!(writer, "{}", line_prefix)?;
     // Now write all lines up to the last
     for line in next_lines {
         match line.split_last() {
@@ -75,6 +78,7 @@ fn write_remaining_lines<W: Write>(
                 write_styled(writer, capabilities, style, &buffer)?;
                 writeln!(writer)?;
                 write_indent(writer, indent)?;
+                write!(writer, "{}", line_prefix)?;
                 buffer.clear();
             }
         };
@@ -101,6 +105,7 @@ fn write_remaining_lines<W: Write>(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn write_styled_and_wrapped<W: Write, S: AsRef<str>>(
     writer: &mut W,
     capabilities: &TerminalCapabilities,
@@ -109,7 +114,10 @@ pub fn write_styled_and_wrapped<W: Write, S: AsRef<str>>(
     indent: u16,
     current_line: CurrentLine,
     text: S,
+    line_prefix: &str,
+    prefix_cols: u16,
 ) -> Result<CurrentLine> {
+    let max_width = max_width.saturating_sub(prefix_cols);
     let words = WordSeparator::UnicodeBreakProperties
         .find_words(text.as_ref())
         .collect::<Vec<_>>();
@@ -132,14 +140,17 @@ pub fn write_styled_and_wrapped<W: Write, S: AsRef<str>>(
             {
                 writeln!(writer)?;
                 write_indent(writer, indent)?;
+                write!(writer, "{}", line_prefix)?;
                 return write_styled_and_wrapped(
                     writer,
                     capabilities,
                     style,
-                    max_width,
+                    max_width + prefix_cols,
                     indent,
                     CurrentLine::empty(),
                     text,
+                    line_prefix,
+                    prefix_cols,
                 );
             }
 
@@ -203,6 +214,7 @@ pub fn write_styled_and_wrapped<W: Write, S: AsRef<str>>(
                             buffer,
                             next_lines,
                             last_line,
+                            line_prefix,
                         ),
                     }
                 }
@@ -346,7 +358,11 @@ pub fn write_start_heading<W: Write>(
     // Headlines never wrap, so indent doesn't matter
     Ok(StackedState::Inline(
         InlineState::InlineBlock,
-        InlineAttrs { style, indent: 0 },
+        InlineAttrs {
+            style,
+            indent: 0,
+            quote_depth: 0,
+        },
     ))
 }
 
