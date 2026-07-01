@@ -6,7 +6,7 @@ input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/078-atx_headings
 Foo bar
 
 ]1337;SetMark\
-[94m[104m [0m[1m[97m[104mbaz[0m
+[94m[104m [0m[1m[97m[104mbaz[0m[94m[104m [0m
 
 
 Bar foo

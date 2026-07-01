@@ -27,6 +27,8 @@ pub struct InlineAttrs {
     pub(super) indent: u16,
     /// How many block quote levels deep we are (for rendering the `│` border).
     pub(super) quote_depth: u16,
+    /// Override color for the block quote border, used by alerts.
+    pub(super) border_style: Option<Style>,
 }
 
 impl Default for InlineAttrs {
@@ -35,6 +37,7 @@ impl Default for InlineAttrs {
             style: Style::new(),
             indent: 0,
             quote_depth: 0,
+            border_style: None,
         }
     }
 }
@@ -48,6 +51,7 @@ where
             style: attrs.borrow().style,
             indent: attrs.borrow().indent,
             quote_depth: attrs.borrow().quote_depth,
+            border_style: attrs.borrow().border_style,
         }
     }
 }
@@ -109,6 +113,8 @@ pub struct StyledBlockAttrs {
     pub(super) style: Style,
     /// How many block quote levels deep we are (for rendering the `│` border).
     pub(super) quote_depth: u16,
+    /// Override color for the block quote border, used by alerts.
+    pub(super) border_style: Option<Style>,
 }
 
 impl StyledBlockAttrs {
@@ -134,6 +140,16 @@ impl StyledBlockAttrs {
             ..self
         }
     }
+
+    pub(super) fn alert(self, border_style: Style) -> Self {
+        StyledBlockAttrs {
+            indent: self.indent,
+            style: self.style,
+            quote_depth: self.quote_depth + 1,
+            border_style: Some(border_style),
+            ..self
+        }
+    }
 }
 
 impl Default for StyledBlockAttrs {
@@ -143,6 +159,7 @@ impl Default for StyledBlockAttrs {
             indent: 0,
             style: Style::new(),
             quote_depth: 0,
+            border_style: None,
         }
     }
 }

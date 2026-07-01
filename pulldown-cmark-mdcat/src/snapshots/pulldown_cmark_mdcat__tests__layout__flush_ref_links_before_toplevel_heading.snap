@@ -5,7 +5,7 @@ expression: "render_string_dumb(\"> Hello [World](http://example.com/world)\n\n>
   Hello World[1]
 
 
- No refs before this headline
+ No refs before this headline 
 
 
 [1]: http://example.com/world

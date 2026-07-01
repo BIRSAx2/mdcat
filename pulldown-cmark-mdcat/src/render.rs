@@ -9,12 +9,12 @@
 use std::io::prelude::*;
 use std::io::Result;
 
-use anstyle::{Effects, Style};
+use anstyle::{AnsiColor, Effects, Style};
 use pulldown_cmark::Event::*;
 use pulldown_cmark::Tag;
 use pulldown_cmark::Tag::*;
 use pulldown_cmark::TagEnd;
-use pulldown_cmark::{Event, HeadingLevel, LinkType};
+use pulldown_cmark::{BlockQuoteKind, Event, HeadingLevel, LinkType};
 use syntect::highlighting::HighlightIterator;
 use syntect::util::LinesWithEndings;
 use textwrap::core::display_width;
@@ -43,17 +43,48 @@ use crate::terminal::capabilities::{ImageCapability, StyleCapability};
 use crate::terminal::osc::{clear_link, set_link_url};
 pub use data::StateData;
 
+fn alert_style_and_label(kind: BlockQuoteKind, theme: &Theme) -> (Style, &'static str) {
+    match kind {
+        BlockQuoteKind::Note => (theme.alert_note_style, "ℹ NOTE"),
+        BlockQuoteKind::Tip => (theme.alert_tip_style, "◆ TIP"),
+        BlockQuoteKind::Important => (theme.alert_important_style, "★ IMPORTANT"),
+        BlockQuoteKind::Warning => (theme.alert_warning_style, "⚠ WARNING"),
+        BlockQuoteKind::Caution => (theme.alert_caution_style, "✖ CAUTION"),
+    }
+}
+
+fn write_alert_label<W: Write>(
+    writer: &mut W,
+    capabilities: &TerminalCapabilities,
+    style: Style,
+    label: &str,
+) -> Result<()> {
+    if let Some(StyleCapability::Ansi) = capabilities.style {
+        write!(
+            writer,
+            "{}\u{2502}{} ",
+            style.render(),
+            style.render_reset()
+        )?;
+    } else {
+        write!(writer, "  ")?;
+    }
+    write_styled(writer, capabilities, &style, label)?;
+    writeln!(writer)
+}
+
 fn quote_line_prefix(
     capabilities: &TerminalCapabilities,
     theme: &Theme,
     depth: u16,
+    border_style: Option<Style>,
 ) -> (String, u16) {
     if depth == 0 {
         return (String::new(), 0);
     }
     let prefix = match capabilities.style {
         Some(StyleCapability::Ansi) => {
-            let s = theme.quote_border_style;
+            let s = border_style.unwrap_or(theme.quote_border_style);
             format!("{}\u{2502}{} ", s.render(), s.render_reset()).repeat(depth as usize)
         }
         None => "  ".repeat(depth as usize),
@@ -171,19 +202,25 @@ pub fn write_event<'a, W: Write>(
                 .and_data(data)
                 .ok()
         }
-        (TopLevel(attrs), Start(BlockQuote(_))) => {
+        (TopLevel(attrs), Start(BlockQuote(kind))) => {
             if attrs.margin_before != NoMargin {
                 writeln!(writer)?;
             }
+            let block_attrs = if let Some(kind) = kind {
+                let (style, label) = alert_style_and_label(kind, &settings.theme);
+                write_alert_label(writer, &settings.terminal_capabilities, style, label)?;
+                StyledBlockAttrs::default()
+                    .alert(style)
+                    .without_margin_before()
+            } else {
+                // We've written a block-level margin already, so the first
+                // block inside the styled block should add another margin.
+                StyledBlockAttrs::default()
+                    .block_quote()
+                    .without_margin_before()
+            };
             State::stack_onto(TopLevelAttrs::margin_before())
-                .current(
-                    // We've written a block-level margin already, so the first
-                    // block inside the styled block should add another margin.
-                    StyledBlockAttrs::default()
-                        .block_quote()
-                        .without_margin_before()
-                        .into(),
-                )
+                .current(block_attrs.into())
                 .and_data(data)
                 .ok()
         }
@@ -253,6 +290,7 @@ pub fn write_event<'a, W: Write>(
                 &settings.terminal_capabilities,
                 &settings.theme,
                 attrs.quote_depth,
+                attrs.border_style,
             );
             if attrs.margin_before != NoMargin {
                 write_indent(writer, attrs.indent)?;
@@ -284,13 +322,20 @@ pub fn write_event<'a, W: Write>(
                 .and_data(data)
                 .ok()
         }
-        (Stacked(stack, StyledBlock(attrs)), Start(BlockQuote(_))) => {
+        (Stacked(stack, StyledBlock(attrs)), Start(BlockQuote(kind))) => {
             if attrs.margin_before != NoMargin {
                 writeln!(writer)?;
             }
+            let block_attrs = if let Some(kind) = kind {
+                let (style, label) = alert_style_and_label(kind, &settings.theme);
+                write_alert_label(writer, &settings.terminal_capabilities, style, label)?;
+                attrs.clone().without_margin_before().alert(style)
+            } else {
+                attrs.clone().without_margin_before().block_quote()
+            };
             stack
-                .push(attrs.clone().with_margin_before().into())
-                .current(attrs.without_margin_before().block_quote().into())
+                .push(attrs.with_margin_before().into())
+                .current(block_attrs.into())
                 .and_data(data)
                 .ok()
         }
@@ -388,6 +433,7 @@ pub fn write_event<'a, W: Write>(
                         style,
                         indent,
                         quote_depth,
+                        border_style: attrs.border_style,
                     },
                 ))
                 .and_data(data.current_line(CurrentLine {
@@ -483,14 +529,22 @@ pub fn write_event<'a, W: Write>(
                 .and_data(data)
                 .ok()
         }
-        (Stacked(stack, Inline(ListItem(kind, _), attrs)), Start(BlockQuote(_))) => {
+        (Stacked(stack, Inline(ListItem(kind, _), attrs)), Start(BlockQuote(bq_kind))) => {
             writeln!(writer)?;
-            let block_quote = StyledBlockAttrs::from(&attrs)
-                .without_margin_before()
-                .block_quote();
+            let block_attrs = if let Some(bq_kind) = bq_kind {
+                let (style, label) = alert_style_and_label(bq_kind, &settings.theme);
+                write_alert_label(writer, &settings.terminal_capabilities, style, label)?;
+                StyledBlockAttrs::from(&attrs)
+                    .without_margin_before()
+                    .alert(style)
+            } else {
+                StyledBlockAttrs::from(&attrs)
+                    .without_margin_before()
+                    .block_quote()
+            };
             stack
                 .push(Inline(ListItem(kind, ItemBlock), attrs))
-                .current(block_quote.into())
+                .current(block_attrs.into())
                 .and_data(data)
                 .ok()
         }
@@ -515,6 +569,7 @@ pub fn write_event<'a, W: Write>(
                         style,
                         indent,
                         quote_depth: attrs.quote_depth,
+                        border_style: attrs.border_style,
                     },
                 ))
                 .and_data(data)
@@ -614,7 +669,7 @@ pub fn write_event<'a, W: Write>(
                 style,
                 indent,
                 quote_depth,
-                ..
+                border_style,
             } = attrs;
             let effects = style.get_effects();
             let style =
@@ -627,6 +682,7 @@ pub fn write_event<'a, W: Write>(
                         style,
                         indent,
                         quote_depth,
+                        border_style,
                     },
                 ))
                 .and_data(data)
@@ -636,6 +692,7 @@ pub fn write_event<'a, W: Write>(
             let InlineAttrs {
                 indent,
                 quote_depth,
+                border_style,
                 ..
             } = attrs;
             let style = attrs.style.bold();
@@ -647,6 +704,7 @@ pub fn write_event<'a, W: Write>(
                         style,
                         indent,
                         quote_depth,
+                        border_style,
                     },
                 ))
                 .and_data(data)
@@ -656,6 +714,7 @@ pub fn write_event<'a, W: Write>(
             let InlineAttrs {
                 indent,
                 quote_depth,
+                border_style,
                 ..
             } = attrs;
             let style = attrs.style.strikethrough();
@@ -667,6 +726,7 @@ pub fn write_event<'a, W: Write>(
                         style,
                         indent,
                         quote_depth,
+                        border_style,
                     },
                 ))
                 .and_data(data)
@@ -681,6 +741,7 @@ pub fn write_event<'a, W: Write>(
                 &settings.terminal_capabilities,
                 &settings.theme,
                 attrs.quote_depth,
+                attrs.border_style,
             );
             let current_line = write_styled_and_wrapped(
                 writer,
@@ -705,6 +766,7 @@ pub fn write_event<'a, W: Write>(
                 &settings.terminal_capabilities,
                 &settings.theme,
                 attrs.quote_depth,
+                attrs.border_style,
             );
             let current_line = write_styled_and_wrapped(
                 writer,
@@ -756,6 +818,7 @@ pub fn write_event<'a, W: Write>(
                 &settings.terminal_capabilities,
                 &settings.theme,
                 attrs.quote_depth,
+                attrs.border_style,
             );
             write_indent(writer, attrs.indent)?;
             write!(writer, "{}", prefix)?;
@@ -771,6 +834,7 @@ pub fn write_event<'a, W: Write>(
                 &settings.terminal_capabilities,
                 &settings.theme,
                 attrs.quote_depth,
+                attrs.border_style,
             );
             write!(writer, "{}", prefix)?;
             write_indent(writer, attrs.indent)?;
@@ -802,6 +866,7 @@ pub fn write_event<'a, W: Write>(
                 &settings.terminal_capabilities,
                 &settings.theme,
                 attrs.quote_depth,
+                attrs.border_style,
             );
             let current_line = write_styled_and_wrapped(
                 writer,
@@ -827,6 +892,10 @@ pub fn write_event<'a, W: Write>(
                 .and_data(data.current_line(CurrentLine::empty())))
         }
         (Stacked(stack, Inline(_, _)), End(TagEnd::Heading(HeadingLevel::H1))) => {
+            let pad_style = Style::new()
+                .bg_color(Some(AnsiColor::BrightBlue.into()))
+                .fg_color(Some(AnsiColor::BrightBlue.into()));
+            write_styled(writer, &settings.terminal_capabilities, &pad_style, " ")?;
             writeln!(writer)?;
             writeln!(writer)?;
             Ok(stack
@@ -893,7 +962,7 @@ pub fn write_event<'a, W: Write>(
                 style,
                 indent,
                 quote_depth,
-                ..
+                border_style,
             } = attrs;
             stack
                 .push(Inline(state, attrs))
@@ -903,6 +972,7 @@ pub fn write_event<'a, W: Write>(
                         indent,
                         style: settings.theme.link_style.on_top_of(&style),
                         quote_depth,
+                        border_style,
                     },
                 ))
                 .and_data(data)
@@ -947,7 +1017,7 @@ pub fn write_event<'a, W: Write>(
                 style,
                 indent,
                 quote_depth,
-                ..
+                border_style,
             } = attrs;
             let resolved_link = environment.resolve_reference(&dest_url);
             let image_state = match (settings.terminal_capabilities.image, resolved_link) {
@@ -975,6 +1045,7 @@ pub fn write_event<'a, W: Write>(
                                         indent,
                                         style: settings.theme.image_link_style.on_top_of(&style),
                                         quote_depth,
+                                        border_style,
                                     },
                                 ))
                             },
@@ -1005,6 +1076,7 @@ pub fn write_event<'a, W: Write>(
                             style,
                             indent,
                             quote_depth,
+                            border_style,
                         },
                     );
                     (state, data.push_pending_link(link_type, dest_url, title))
@@ -1156,6 +1228,7 @@ pub fn write_event<'a, W: Write>(
                 &settings.terminal_capabilities,
                 &settings.theme,
                 attrs.quote_depth,
+                attrs.border_style,
             );
             let current_line = write_styled_and_wrapped(
                 writer,

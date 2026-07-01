@@ -4,7 +4,7 @@ expression: "render_to_string(markdown_file, &ansi_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/115-indented_code_blocks.md
 ---
 
-[94m[104m [0m[1m[97m[104mHeading[0m
+[94m[104m [0m[1m[97m[104mHeading[0m[94m[104m [0m
 
 
 

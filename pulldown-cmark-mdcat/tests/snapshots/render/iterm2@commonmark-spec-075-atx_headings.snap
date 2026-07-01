@@ -4,4 +4,4 @@ expression: "render_to_string(markdown_file, &iterm2_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/075-atx_headings.md
 ---
 ]1337;SetMark\
-[94m[104m [0m[1m[97m[104mfoo#[0m
+[94m[104m [0m[1m[97m[104mfoo#[0m[94m[104m [0m

@@ -393,6 +393,7 @@ pub fn write_start_heading<W: Write>(
             style: level_style,
             indent: 0,
             quote_depth: 0,
+            border_style: None,
         },
     ))
 }

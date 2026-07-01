@@ -6,7 +6,7 @@ input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/078-atx_headings
 Foo bar
 
 
- baz
+ baz 
 
 
 Bar foo

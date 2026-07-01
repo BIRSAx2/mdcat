@@ -33,6 +33,16 @@ pub struct Theme {
     pub(crate) footnote_style: Style,
     /// Style for math expressions.
     pub(crate) math_style: Style,
+    /// Style for `[!NOTE]` alerts.
+    pub(crate) alert_note_style: Style,
+    /// Style for `[!TIP]` alerts.
+    pub(crate) alert_tip_style: Style,
+    /// Style for `[!IMPORTANT]` alerts.
+    pub(crate) alert_important_style: Style,
+    /// Style for `[!WARNING]` alerts.
+    pub(crate) alert_warning_style: Style,
+    /// Style for `[!CAUTION]` alerts.
+    pub(crate) alert_caution_style: Style,
 }
 
 impl Default for Theme {
@@ -49,6 +59,21 @@ impl Default for Theme {
             heading_style: Style::new().fg_color(Some(AnsiColor::Blue.into())).bold(),
             footnote_style: Style::new().fg_color(Some(AnsiColor::Cyan.into())),
             math_style: Style::new().fg_color(Some(AnsiColor::Yellow.into())),
+            alert_note_style: Style::new()
+                .fg_color(Some(AnsiColor::BrightBlue.into()))
+                .bold(),
+            alert_tip_style: Style::new()
+                .fg_color(Some(AnsiColor::BrightGreen.into()))
+                .bold(),
+            alert_important_style: Style::new()
+                .fg_color(Some(AnsiColor::BrightMagenta.into()))
+                .bold(),
+            alert_warning_style: Style::new()
+                .fg_color(Some(AnsiColor::BrightYellow.into()))
+                .bold(),
+            alert_caution_style: Style::new()
+                .fg_color(Some(AnsiColor::BrightRed.into()))
+                .bold(),
         }
     }
 }
