@@ -8,7 +8,7 @@ use std::cmp::{max, min};
 use std::io::{Result, Write};
 use std::iter::zip;
 
-use anstyle::Style;
+use anstyle::{AnsiColor, Style};
 use pulldown_cmark::{Alignment, CodeBlockKind, HeadingLevel};
 use syntect::highlighting::HighlightState;
 use syntect::parsing::{ParseState, ScopeStack};
@@ -348,18 +348,49 @@ pub fn write_start_heading<W: Write>(
     style: Style,
     level: HeadingLevel,
 ) -> Result<StackedState> {
-    write_styled(
-        writer,
-        capabilities,
-        &style,
-        "\u{2504}".repeat(level as usize),
-    )?;
+    let level_style = match level {
+        HeadingLevel::H1 => {
+            writeln!(writer)?;
+            let text_style = Style::new()
+                .bg_color(Some(AnsiColor::BrightBlue.into()))
+                .fg_color(Some(AnsiColor::BrightWhite.into()))
+                .bold();
+            let pad_style = Style::new()
+                .bg_color(Some(AnsiColor::BrightBlue.into()))
+                .fg_color(Some(AnsiColor::BrightBlue.into()));
+            write_styled(writer, capabilities, &pad_style, " ")?;
+            text_style
+        }
+        HeadingLevel::H2 => {
+            write_styled(writer, capabilities, &style, "━━ ")?;
+            style
+        }
+        HeadingLevel::H3 => {
+            write_styled(writer, capabilities, &style, "  ── ")?;
+            style
+        }
+        HeadingLevel::H4 => {
+            let s = style.dimmed();
+            write_styled(writer, capabilities, &s, "    ┄ ")?;
+            s
+        }
+        HeadingLevel::H5 => {
+            let s = style.dimmed().italic();
+            write_styled(writer, capabilities, &s, "      ╌ ")?;
+            s
+        }
+        HeadingLevel::H6 => {
+            let s = style.dimmed().italic();
+            write_styled(writer, capabilities, &s, "        · ")?;
+            s
+        }
+    };
 
     // Headlines never wrap, so indent doesn't matter
     Ok(StackedState::Inline(
         InlineState::InlineBlock,
         InlineAttrs {
-            style,
+            style: level_style,
             indent: 0,
             quote_depth: 0,
         },

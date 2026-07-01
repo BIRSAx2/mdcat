@@ -14,7 +14,7 @@ use pulldown_cmark::Event::*;
 use pulldown_cmark::Tag;
 use pulldown_cmark::Tag::*;
 use pulldown_cmark::TagEnd;
-use pulldown_cmark::{Event, LinkType};
+use pulldown_cmark::{Event, HeadingLevel, LinkType};
 use syntect::highlighting::HighlightIterator;
 use syntect::util::LinesWithEndings;
 use textwrap::core::display_width;
@@ -821,6 +821,13 @@ pub fn write_event<'a, W: Write>(
         }
         // Ending inline text
         (Stacked(stack, Inline(_, _)), End(TagEnd::Paragraph)) => {
+            writeln!(writer)?;
+            Ok(stack
+                .pop()
+                .and_data(data.current_line(CurrentLine::empty())))
+        }
+        (Stacked(stack, Inline(_, _)), End(TagEnd::Heading(HeadingLevel::H1))) => {
+            writeln!(writer)?;
             writeln!(writer)?;
             Ok(stack
                 .pop()

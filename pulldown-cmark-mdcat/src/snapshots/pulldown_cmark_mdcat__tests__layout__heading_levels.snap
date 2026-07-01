@@ -1,10 +1,11 @@
 ---
 source: pulldown-cmark-mdcat/src/lib.rs
-assertion_line: 237
 expression: "render_string_dumb(\"\n# First\n\n## Second\n\n### Third\").unwrap()"
 ---
-┄First
 
-┄┄Second
+ First
 
-┄┄┄Third
+
+━━ Second
+
+  ── Third

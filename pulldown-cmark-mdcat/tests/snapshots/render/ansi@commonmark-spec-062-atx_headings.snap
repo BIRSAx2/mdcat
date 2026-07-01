@@ -1,17 +1,18 @@
 ---
 source: pulldown-cmark-mdcat/tests/render.rs
-assertion_line: 123
 expression: "render_to_string(markdown_file, &ansi_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/062-atx_headings.md
 ---
-[1m[34m┄[0m[1m[34mfoo[0m
 
-[1m[34m┄┄[0m[1m[34mfoo[0m
+[94m[104m [0m[1m[97m[104mfoo[0m
 
-[1m[34m┄┄┄[0m[1m[34mfoo[0m
 
-[1m[34m┄┄┄┄[0m[1m[34mfoo[0m
+[1m[34m━━ [0m[1m[34mfoo[0m
 
-[1m[34m┄┄┄┄┄[0m[1m[34mfoo[0m
+[1m[34m  ── [0m[1m[34mfoo[0m
 
-[1m[34m┄┄┄┄┄┄[0m[1m[34mfoo[0m
+[1m[2m[34m    ┄ [0m[1m[2m[34mfoo[0m
+
+[1m[2m[3m[34m      ╌ [0m[1m[2m[3m[34mfoo[0m
+
+[1m[2m[3m[34m        · [0m[1m[2m[3m[34mfoo[0m

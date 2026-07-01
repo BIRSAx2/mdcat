@@ -1,10 +1,11 @@
 ---
 source: pulldown-cmark-mdcat/tests/render.rs
-assertion_line: 124
 expression: "render_to_string(markdown_file, &iterm2_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/300-list_items.md
 ---
-• [1m[34m┄[0m[1m[34mFoo[0m
+• 
+[94m[104m [0m[1m[97m[104mFoo[0m
 
-• [1m[34m┄┄[0m[1m[34mBar[0m
+
+• [1m[34m━━ [0m[1m[34mBar[0m
   baz

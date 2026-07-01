@@ -14,7 +14,7 @@
 
 use std::fs::File;
 use std::io::stdin;
-use std::io::{prelude::*, BufWriter};
+use std::io::{self, prelude::*, BufWriter};
 use std::path::PathBuf;
 
 use anyhow::{Context, Result};
@@ -39,6 +39,50 @@ pub mod resources;
 
 /// Default read size limit for resources.
 pub static DEFAULT_RESOURCE_READ_LIMIT: u64 = 104_857_600;
+
+/// A writer that prepends two spaces of left margin after every newline.
+struct MarginWriter<W: Write> {
+    inner: W,
+    at_line_start: bool,
+}
+
+impl<W: Write> MarginWriter<W> {
+    fn new(inner: W) -> Self {
+        Self {
+            inner,
+            at_line_start: true,
+        }
+    }
+}
+
+impl<W: Write> Write for MarginWriter<W> {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        let mut start = 0;
+        while start < buf.len() {
+            if self.at_line_start {
+                self.inner.write_all(b"  ")?;
+                self.at_line_start = false;
+            }
+            match buf[start..].iter().position(|&b| b == b'\n') {
+                Some(pos) => {
+                    let end = start + pos + 1;
+                    self.inner.write_all(&buf[start..end])?;
+                    self.at_line_start = true;
+                    start = end;
+                }
+                None => {
+                    self.inner.write_all(&buf[start..])?;
+                    start = buf.len();
+                }
+            }
+        }
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        self.inner.flush()
+    }
+}
 
 /// Strip YAML/TOML frontmatter from the beginning of a markdown document.
 ///
@@ -120,21 +164,29 @@ pub fn process_file(
     );
     let env = Environment::for_local_directory(&base_dir)?;
 
+    let ignore_broken_pipe = |error: io::Error| {
+        if error.kind() == io::ErrorKind::BrokenPipe {
+            event!(Level::TRACE, "Ignoring broken pipe");
+            Ok(())
+        } else {
+            event!(Level::ERROR, ?error, "Failed to process file: {:#}", error);
+            Err(error)
+        }
+    };
+
     let mut sink = BufWriter::new(output.writer());
-    pulldown_cmark_mdcat::push_tty(settings, &env, resource_handler, &mut sink, parser)
-        .and_then(|_| {
-            event!(Level::TRACE, "Finished rendering, flushing output");
-            sink.flush()
-        })
-        .or_else(|error| {
-            if error.kind() == std::io::ErrorKind::BrokenPipe {
-                event!(Level::TRACE, "Ignoring broken pipe");
-                Ok(())
-            } else {
-                event!(Level::ERROR, ?error, "Failed to process file: {:#}", error);
-                Err(error)
-            }
-        })?;
+    writeln!(sink).or_else(&ignore_broken_pipe)?;
+    {
+        let mut padded = MarginWriter::new(&mut sink);
+        pulldown_cmark_mdcat::push_tty(settings, &env, resource_handler, &mut padded, parser)
+            .and_then(|_| {
+                event!(Level::TRACE, "Finished rendering, flushing output");
+                padded.flush()
+            })
+            .or_else(&ignore_broken_pipe)?;
+    }
+    writeln!(sink).or_else(&ignore_broken_pipe)?;
+    sink.flush().or_else(&ignore_broken_pipe)?;
     Ok(())
 }
 

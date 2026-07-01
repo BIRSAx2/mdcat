@@ -92,7 +92,7 @@ pub struct CommonArgs {
     /// Disable all colours and other styles.
     #[arg(short = 'c', long, aliases=["nocolour", "no-color", "nocolor"])]
     pub no_colour: bool,
-    /// Maximum number of columns to use for output. Pass 0 to disable line wrapping.
+    /// Maximum number of columns to use for output. Defaults to 80 or the terminal width, whichever is smaller. Pass 0 to disable line wrapping.
     #[arg(long)]
     pub columns: Option<u16>,
     /// Do not load remote resources like images.

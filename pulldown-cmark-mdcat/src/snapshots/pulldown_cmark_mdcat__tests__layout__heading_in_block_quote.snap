@@ -4,4 +4,5 @@ expression: "render_string_dumb(\"> Hello World\n\n> # Hello World\").unwrap()"
 ---
   Hello World
 
-┄Hello World
+
+ Hello World

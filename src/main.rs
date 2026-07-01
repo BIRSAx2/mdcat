@@ -74,7 +74,7 @@ fn main() {
 
         let terminal_size = TerminalSize::detect().unwrap_or_default();
         let terminal_size = match args.columns {
-            None => terminal_size,
+            None => terminal_size.with_max_columns(terminal_size.columns.min(80)),
             Some(0) => terminal_size.with_max_columns(u16::MAX),
             Some(max_columns) => terminal_size.with_max_columns(max_columns),
         };

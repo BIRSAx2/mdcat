@@ -1,11 +1,12 @@
 ---
 source: pulldown-cmark-mdcat/tests/render.rs
-assertion_line: 124
 expression: "render_to_string(markdown_file, &iterm2_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/078-atx_headings.md
 ---
 Foo bar
 
-]1337;SetMark\[1m[34m┄[0m[1m[34mbaz[0m
+]1337;SetMark\
+[94m[104m [0m[1m[97m[104mbaz[0m
+
 
 Bar foo
