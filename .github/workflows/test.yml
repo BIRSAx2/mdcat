@@ -46,9 +46,8 @@ jobs:
           manifest-path: "./pulldown-cmark-mdcat/Cargo.toml"
 
       # Manpage
-      - uses: docker://asciidoctor/docker-asciidoctor
-        with:
-          args: asciidoctor -b manpage -a reproducible --warnings mdcat.1.adoc
+      - run: sudo apt-get install -y asciidoctor
+      - run: asciidoctor -b manpage -a reproducible --warnings mdcat.1.adoc
       - run: man -l --warnings=w --pager=cat mdcat.1
         env:
           MANWIDTH: 80
