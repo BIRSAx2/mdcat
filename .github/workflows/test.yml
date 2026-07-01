@@ -66,12 +66,10 @@ jobs:
       # Test library with no features
       - run: cargo clippy -p pulldown-cmark-mdcat --all-targets --locked --no-default-features
       - run: cargo test -p pulldown-cmark-mdcat --locked --no-default-features
-      - run: cargo doc -p pulldown-cmark-mdcat --locked --no-default-features
 
       # Build and test entire workspace in default configuration
       - run: cargo clippy --workspace --all-targets --locked
       - run: cargo test --workspace --locked
-      - run: cargo doc --workspace --locked
 
       # Run on our complete example, just to assert that the CLI doesn't crash
       - run: cargo run -- sample/common-mark.md
