@@ -55,34 +55,38 @@ jobs:
 
   # Test mdcat itself
   test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
-
-      # Since Windows builds are comparatively slow, we skip quite a few builds on Windows to speed up pipelines
+      - uses: Swatinem/rust-cache@v2
 
       # Test library with no features
-      - run: cargo build -p pulldown-cmark-mdcat --all-targets --locked --no-default-features
-        if: ${{ !contains(matrix.os, 'windows') }}
       - run: cargo clippy -p pulldown-cmark-mdcat --all-targets --locked --no-default-features
-        if: ${{ !contains(matrix.os, 'windows') }}
       - run: cargo test -p pulldown-cmark-mdcat --locked --no-default-features
-        if: ${{ !contains(matrix.os, 'windows') }}
       - run: cargo doc -p pulldown-cmark-mdcat --locked --no-default-features
-        if: ${{ !contains(matrix.os, 'windows') }}
 
       # Build and test entire workspace in default configuration
-      - run: cargo build --workspace --all-targets --locked
       - run: cargo clippy --workspace --all-targets --locked
       - run: cargo test --workspace --locked
       - run: cargo doc --workspace --locked
-        if: ${{ !contains(matrix.os, 'windows') }}
 
       # Run on our complete example, just to assert that the CLI doesn't crash
+      - run: cargo run -- sample/common-mark.md
+
+  # Test on Windows — only on pushes to main since Windows runners cost 2×
+  test-windows:
+    runs-on: windows-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+
+      - run: cargo clippy --workspace --all-targets --locked
+      - run: cargo test --workspace --locked
       - run: cargo run -- sample/common-mark.md
