@@ -8,27 +8,28 @@ $ mdcat sample.md
 
 ![mdcat showcase with different colour themes][sxs]
 
-mdcat in [WezTerm], with "One Light (base16)", "Gruvbox Light", and "Darcula
-(base16)" (from left to right), and [JetBrains Mono] as font.
+mdcat in [Ghostty], with `--theme catppuccin-mocha`, `--theme dracula`,
+and `--theme nord` (left to right), using [JetBrains Mono].
 
 [CommonMark]: http://commonmark.org
-[Solarized]: http://ethanschoonover.com/solarized
-[dracula]: https://draculatheme.com/iterm/
-[wezterm]: https://wezfurlong.org/wezterm/
 [JetBrains Mono]: https://www.jetbrains.com/lp/mono/
 [sxs]: ./screenshots/side-by-side.png
 
 ## Features
 
-`mdcat` works best with [iTerm2], [WezTerm], and [kitty], and a good terminal font with italic characters.
+`mdcat` works best with [iTerm2], [WezTerm], [kitty], and [Ghostty], and a good terminal font with italic characters.
 Then it
 
 - nicely renders all basic CommonMark syntax,
-- renders footnotes,
-- highlights code blocks with [syntect],
+- renders footnotes and inline markup in table cells,
+- highlights code blocks with syntax definitions from [bat] (TOML, TypeScript, Dockerfile, Zig, Nix, and more),
+  using the colour theme of your choice — including any theme [bat] supports via `$BAT_THEME`,
 - renders inline and display math, as PNGs through the iTerm2 or kitty image protocol, and as Unicode substitutions otherwise,
+- renders [GFM alerts][gfm-alerts] (`[!NOTE]`, `[!TIP]`, `[!WARNING]`, etc.) with coloured borders and icons,
 - shows [links][osc8], and also images inline in supported terminals (see above, where "Rust" is a clickable link!),
-- adds jump marks for headings in [iTerm2] (jump forwards and backwards with <key>⇧⌘↓</key> and <key>⇧⌘↑</key>).
+- adds jump marks for headings in [iTerm2] (jump forwards and backwards with <key>⇧⌘↓</key> and <key>⇧⌘↑</key>),
+- ships eight built-in colour themes (`catppuccin-mocha`, `catppuccin-latte`, `gruvbox-dark`, `gruvbox-light`,
+  `dracula`, `nord`, `solarized-dark`, `solarized-light`) plus auto dark/light detection.
 
 | Terminal           | Basic syntax | Syntax highlighting | Images | Math  | Jump marks |
 | :----------------- | :----------: | :-----------------: | :----: | :---: | :--------: |
@@ -54,9 +55,10 @@ Then it
 
 Not supported:
 
-- Inline markup and text wrapping in table cells.
+- Text wrapping inside table cells.
 
-[syntect]: https://github.com/trishume/syntect
+[bat]: https://github.com/sharkdp/bat
+[gfm-alerts]: https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#alerts
 [osc8]: https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda
 [iterm2]: https://www.iterm2.com
 [WezTerm]: https://wezfurlong.org/wezterm/
@@ -71,7 +73,21 @@ Not supported:
 ## Usage
 
 Try `mdcat --help` or read the [mdcat(1)](./mdcat.1.adoc) manpage.
-See [sample/math.md](./sample/math.md) for math rendering examples.
+
+To pick a colour theme:
+
+```console
+$ mdcat --theme catppuccin-mocha sample.md
+$ MDCAT_THEME=dracula mdcat sample.md
+```
+
+To use a [bat] syntax-highlighting theme for code blocks:
+
+```console
+$ BAT_THEME="Catppuccin Mocha" mdcat sample.md
+```
+
+See [sample/math.md](./sample/math.md) for math examples, [sample/alerts.md](./sample/alerts.md) for GFM alerts, and [sample/tables.md](./sample/tables.md) for table rendering.
 
 ## Installation
 

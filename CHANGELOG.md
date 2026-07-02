@@ -8,6 +8,43 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+### Added
+- Eight built-in colour themes selectable with `--theme` or `$MDCAT_THEME`:
+  `catppuccin-mocha`, `catppuccin-latte`, `gruvbox-dark`, `gruvbox-light`,
+  `dracula`, `nord`, `solarized-dark`, `solarized-light`.
+  Each named theme also sets the matching syntax-highlighting theme for code blocks automatically.
+- Auto dark/light detection (`--theme auto`, the default) queries the terminal
+  via OSC 11 and picks the appropriate built-in theme.
+- `$BAT_THEME`, `$BAT_THEME_DARK`, and `$BAT_THEME_LIGHT` are now read to select
+  a syntax-highlighting theme for code blocks when using `--theme dark/light/auto`.
+  Any theme shipped with [bat] is accepted.
+- GFM alerts (`[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`)
+  are rendered with a coloured `│` border and a bold icon + label.
+- Inline markup in table cells: bold, italic, strikethrough, inline code, links,
+  and images now render with their correct styles instead of being stripped.
+- Code blocks now use a coloured background that fills to the right edge of the
+  block, replacing the old top/bottom delimiter lines.
+- Syntax definitions from [bat] (via [two-face]) replace the built-in syntect
+  set, adding TOML, TypeScript, Dockerfile, Zig, Nix, and dozens more languages.
+- Sixel image protocol support for terminals such as foot and xterm.
+- Strip YAML/TOML frontmatter (`---` / `+++` delimited) before rendering.
+- `--columns 0` disables line-wrapping entirely.
+
+### Changed
+- Each heading level (H2–H6) now has a distinct colour instead of progressively
+  dimming a single accent colour.
+- H3–H6 heading markers are no longer indented; all headings start flush to the
+  left margin.
+- Default column width is now 80 (previously the full terminal width).
+- ANSI formatting is suppressed when stdout is not a TTY, so piped output is
+  clean plain text.
+
+### Removed
+- Removed dead Terminology terminal support.
+
+[bat]: https://github.com/sharkdp/bat
+[two-face]: https://github.com/CosmicHorrorDev/two-face
+
 ## [2.9.1] – 2026-06-20
 
 ### Changed

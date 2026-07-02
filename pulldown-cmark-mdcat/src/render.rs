@@ -1307,23 +1307,47 @@ pub fn write_event<'a, W: Write>(
                 let mut length = data.current_line.length;
                 if let Some(space) = data.current_line.trailing_space.as_ref() {
                     write!(writer, "{}", space)?;
-                    length += 1;
+                    length += display_width(space.as_ref()) as u16;
                 }
 
-                // pre-allocate rows according to the image height to avoid that
-                // the image causes scrolling
-                for _ in 0..img.height_rows {
-                    writeln!(writer)?;
+                // Add paragraph indent when starting at column 0, so inline math
+                // images align with display math indentation.
+                if length == 0 && attrs.indent > 0 {
+                    write_indent(writer, attrs.indent)?;
+                    length = attrs.indent;
                 }
-                // then move the cursor back to its original position
-                write!(writer, "\x1b[{}A", img.height_rows)?;
-                write!(writer, "\x1b[{}G", u32::from(length) + 1)?;
-                write!(writer, "\x1b7")?;
-                let (img_cols, _img_rows, _) = write_math_image(writer, settings, img, false)?;
-                write!(writer, "\x1b8")?;
-                if img_cols > 0 {
-                    write!(writer, "\x1b[{}C", img_cols)?;
-                }
+
+                let img_cols = match settings.terminal_capabilities.image.as_ref() {
+                    Some(ImageCapability::Kitty(_)) => {
+                        // Kitty with move_cursor=false places the image at the cursor
+                        // without affecting cursor position or causing line displacement,
+                        // so no pre-allocation is needed. Pre-allocating newlines causes
+                        // terminal scrolling which shifts the image onto the wrong line.
+                        write!(writer, "\x1b7")?;
+                        let (cols, _, _) = write_math_image(writer, settings, img, false)?;
+                        write!(writer, "\x1b8")?;
+                        if cols > 0 {
+                            write!(writer, "\x1b[{}C", cols)?;
+                        }
+                        cols
+                    }
+                    _ => {
+                        // For iTerm2 and Sixel, pre-allocate vertical space below the
+                        // current line so the image doesn't overwrite subsequent content.
+                        for _ in 0..img.height_rows {
+                            writeln!(writer)?;
+                        }
+                        write!(writer, "\x1b[{}A", img.height_rows)?;
+                        write!(writer, "\x1b[{}G", u32::from(length) + 1)?;
+                        write!(writer, "\x1b7")?;
+                        let (cols, _, _) = write_math_image(writer, settings, img, false)?;
+                        write!(writer, "\x1b8")?;
+                        if cols > 0 {
+                            write!(writer, "\x1b[{}C", cols)?;
+                        }
+                        cols
+                    }
+                };
                 return Ok(stack
                     .current(Inline(state, attrs))
                     .and_data(data.current_line(CurrentLine {
