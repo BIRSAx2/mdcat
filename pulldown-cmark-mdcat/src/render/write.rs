@@ -399,18 +399,12 @@ fn calculate_column_widths(table: &CurrentTable) -> Option<Vec<usize>> {
     let mut widths = vec![0; first_row.cells.len()];
     let rows = table.head.iter().chain(table.rows.as_slice());
     for row in rows {
-        let current = row.cells.as_slice().iter().map(|cell| {
-            cell.fragments
-                .as_slice()
-                .iter()
-                .fold(0, |acc, x| acc + x.len())
-        });
+        let current = row.cells.iter().map(|cell| cell.text_width());
         widths = zip(widths, current).map(|(a, b)| max(a, b)).collect();
     }
     Some(widths)
 }
 
-// TODO: Support themes for table rule.
 fn write_table_rule<W: Write>(
     writer: &mut W,
     capabilities: &TerminalCapabilities,
@@ -421,14 +415,41 @@ fn write_table_rule<W: Write>(
     writeln!(writer)
 }
 
-fn format_table_cell(cell: TableCell, width: usize, alignment: Alignment) -> String {
-    use Alignment::*;
-    let content = cell.fragments.join("");
+fn write_table_cell<W: Write>(
+    writer: &mut W,
+    capabilities: &TerminalCapabilities,
+    cell: TableCell,
+    width: usize,
+    alignment: Alignment,
+) -> Result<()> {
+    let text_width = cell.text_width();
+    let padding = width.saturating_sub(text_width);
     match alignment {
-        Left | None => format!(" {:<width$} ", content),
-        Center => format!(" {:^width$} ", content),
-        Right => format!(" {:>width$} ", content),
+        Alignment::Right => {
+            write!(writer, " {:>padding$}", "")?;
+            for (style, text) in cell.fragments {
+                write_styled(writer, capabilities, &style, text)?;
+            }
+            write!(writer, " ")?;
+        }
+        Alignment::Center => {
+            let left = padding / 2;
+            let right = padding - left;
+            write!(writer, " {:>left$}", "")?;
+            for (style, text) in cell.fragments {
+                write_styled(writer, capabilities, &style, text)?;
+            }
+            write!(writer, "{:>right$} ", "")?;
+        }
+        _ => {
+            write!(writer, " ")?;
+            for (style, text) in cell.fragments {
+                write_styled(writer, capabilities, &style, text)?;
+            }
+            write!(writer, "{:>padding$} ", "")?;
+        }
     }
+    Ok(())
 }
 
 pub fn write_table<W: Write>(
@@ -438,10 +459,8 @@ pub fn write_table<W: Write>(
     table: CurrentTable,
 ) -> Result<()> {
     if let Some(widths) = calculate_column_widths(&table) {
-        // Calculate length of the table rule.
         let total_width: usize = widths.iter().sum();
         let rule_length = min(
-            // We use two spaces for padding for each cell in format_table_cell.
             (total_width + 2 * widths.len())
                 .try_into()
                 .unwrap_or(u16::MAX),
@@ -449,34 +468,21 @@ pub fn write_table<W: Write>(
         );
         write_table_rule(writer, capabilities, rule_length)?;
 
-        // Write the table head in bold if any.
         if let Some(head) = table.head {
             for ((cell, &width), &alignment) in zip(zip(head.cells, &widths), &table.alignments) {
-                write_styled(
-                    writer,
-                    capabilities,
-                    &Style::new().bold(),
-                    format_table_cell(cell, width, alignment),
-                )?;
+                write_table_cell(writer, capabilities, cell, width, alignment)?;
             }
             writeln!(writer)?;
             write_table_rule(writer, capabilities, rule_length)?;
         }
 
-        // Write table body.
         for row in table.rows {
             for ((cell, &width), &alignment) in zip(zip(row.cells, &widths), &table.alignments) {
-                write_styled(
-                    writer,
-                    capabilities,
-                    &Style::new(),
-                    format_table_cell(cell, width, alignment),
-                )?;
+                write_table_cell(writer, capabilities, cell, width, alignment)?;
             }
             writeln!(writer)?;
         }
         write_table_rule(writer, capabilities, rule_length)?;
     }
-    // Do nothing when there are no rows in the table, which should be impossible.
     Ok(())
 }

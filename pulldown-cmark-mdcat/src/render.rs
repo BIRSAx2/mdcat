@@ -1174,8 +1174,18 @@ pub fn write_event<'a, W: Write>(
             };
             Stacked(stack, TableBlock).and_data(data).ok()
         }
-        (Stacked(stack, TableBlock), Text(text)) | (Stacked(stack, TableBlock), Code(text)) => {
-            let current_table = data.current_table.push_fragment(text);
+        (Stacked(stack, TableBlock), Text(text)) => {
+            let current_table = data.current_table.push_text(text);
+            let data = StateData {
+                current_table,
+                ..data
+            };
+            Stacked(stack, TableBlock).and_data(data).ok()
+        }
+        (Stacked(stack, TableBlock), Code(text)) => {
+            let current_table = data
+                .current_table
+                .push_styled_text(text, settings.theme.code_style);
             let data = StateData {
                 current_table,
                 ..data
@@ -1196,20 +1206,99 @@ pub fn write_event<'a, W: Write>(
             };
             stack.pop().and_data(data).ok()
         }
-        // Ignore all inline elements in a table.
-        // TODO: Support those events.
-        (Stacked(stack, TableBlock), Start(Emphasis))
-        | (Stacked(stack, TableBlock), Start(Strong))
-        | (Stacked(stack, TableBlock), Start(Strikethrough))
-        | (Stacked(stack, TableBlock), Start(Link { .. }))
-        | (Stacked(stack, TableBlock), Start(Image { .. }))
-        | (Stacked(stack, TableBlock), End(TagEnd::Emphasis))
-        | (Stacked(stack, TableBlock), End(TagEnd::Strong))
-        | (Stacked(stack, TableBlock), End(TagEnd::Strikethrough))
-        | (Stacked(stack, TableBlock), End(TagEnd::Link))
-        | (Stacked(stack, TableBlock), End(TagEnd::Image))
-        | (Stacked(stack, TableBlock), InlineHtml(_)) => {
-            Stacked(stack, TableBlock).and_data(data).ok()
+        (Stacked(stack, TableBlock), Start(Strong)) => {
+            let current_table = data.current_table.enter_strong();
+            Stacked(stack, TableBlock)
+                .and_data(StateData {
+                    current_table,
+                    ..data
+                })
+                .ok()
+        }
+        (Stacked(stack, TableBlock), End(TagEnd::Strong)) => {
+            let current_table = data.current_table.exit_strong();
+            Stacked(stack, TableBlock)
+                .and_data(StateData {
+                    current_table,
+                    ..data
+                })
+                .ok()
+        }
+        (Stacked(stack, TableBlock), Start(Emphasis)) => {
+            let current_table = data.current_table.enter_emphasis();
+            Stacked(stack, TableBlock)
+                .and_data(StateData {
+                    current_table,
+                    ..data
+                })
+                .ok()
+        }
+        (Stacked(stack, TableBlock), End(TagEnd::Emphasis)) => {
+            let current_table = data.current_table.exit_emphasis();
+            Stacked(stack, TableBlock)
+                .and_data(StateData {
+                    current_table,
+                    ..data
+                })
+                .ok()
+        }
+        (Stacked(stack, TableBlock), Start(Strikethrough)) => {
+            let current_table = data.current_table.enter_strikethrough();
+            Stacked(stack, TableBlock)
+                .and_data(StateData {
+                    current_table,
+                    ..data
+                })
+                .ok()
+        }
+        (Stacked(stack, TableBlock), End(TagEnd::Strikethrough)) => {
+            let current_table = data.current_table.exit_strikethrough();
+            Stacked(stack, TableBlock)
+                .and_data(StateData {
+                    current_table,
+                    ..data
+                })
+                .ok()
+        }
+        (Stacked(stack, TableBlock), Start(Link { .. })) => {
+            let current_table = data.current_table.enter_span(settings.theme.link_style);
+            Stacked(stack, TableBlock)
+                .and_data(StateData {
+                    current_table,
+                    ..data
+                })
+                .ok()
+        }
+        (Stacked(stack, TableBlock), Start(Image { .. })) => {
+            let current_table = data
+                .current_table
+                .enter_span(settings.theme.image_link_style);
+            Stacked(stack, TableBlock)
+                .and_data(StateData {
+                    current_table,
+                    ..data
+                })
+                .ok()
+        }
+        (Stacked(stack, TableBlock), End(TagEnd::Link | TagEnd::Image)) => {
+            let current_table = data.current_table.exit_span();
+            Stacked(stack, TableBlock)
+                .and_data(StateData {
+                    current_table,
+                    ..data
+                })
+                .ok()
+        }
+        (Stacked(stack, TableBlock), InlineHtml(text)) => {
+            let current_table = data
+                .current_table
+                .push_styled_text(text, settings.theme.inline_html_style);
+            Stacked(stack, TableBlock)
+                .and_data(StateData {
+                    current_table,
+                    ..data
+                })
+                .ok()
         }
 
         // Inline math

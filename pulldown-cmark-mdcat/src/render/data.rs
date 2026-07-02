@@ -55,9 +55,8 @@ impl CurrentLine {
 /// A cell in the table.
 #[derive(Debug)]
 pub struct TableCell<'a> {
-    // TODO: Support styles of fragments.
-    /// Renderable fragments in a table cell.
-    pub(super) fragments: Vec<CowStr<'a>>,
+    /// Styled text fragments in a table cell.
+    pub(super) fragments: Vec<(Style, CowStr<'a>)>,
 }
 
 impl TableCell<'_> {
@@ -66,6 +65,14 @@ impl TableCell<'_> {
         Self {
             fragments: Vec::new(),
         }
+    }
+
+    /// Display width of the cell's text content (no ANSI sequences).
+    pub(super) fn text_width(&self) -> usize {
+        self.fragments
+            .iter()
+            .map(|(_, t)| textwrap::core::display_width(t.as_ref()))
+            .sum()
     }
 }
 
@@ -99,6 +106,16 @@ pub struct CurrentTable<'a> {
     pub(super) current_row: TableRow<'a>,
     /// Alignments of columns.
     pub(super) alignments: Vec<Alignment>,
+    /// Whether we are currently collecting the head row.
+    pub(super) is_head: bool,
+    /// Nesting depth of `Strong` spans.
+    pub(super) strong_depth: u32,
+    /// Nesting depth of `Emphasis` spans.
+    pub(super) emphasis_depth: u32,
+    /// Nesting depth of `Strikethrough` spans.
+    pub(super) strikethrough_depth: u32,
+    /// Override style for link/image/code spans; replaces the normal text style.
+    pub(super) span_style: Option<Style>,
 }
 
 impl<'a> CurrentTable<'a> {
@@ -109,12 +126,82 @@ impl<'a> CurrentTable<'a> {
             rows: Vec::new(),
             current_row: TableRow::empty(),
             alignments: Vec::new(),
+            is_head: true,
+            strong_depth: 0,
+            emphasis_depth: 0,
+            strikethrough_depth: 0,
+            span_style: None,
         }
     }
 
-    /// Push a fragment to the current cell of the current row.
-    pub(super) fn push_fragment(mut self, fragment: CowStr<'a>) -> Self {
-        self.current_row.current_cell.fragments.push(fragment);
+    /// Compute the effective style for a text fragment given a base style.
+    fn effective_style(&self, base: Style) -> Style {
+        let mut style = self.span_style.unwrap_or(base);
+        if self.strong_depth > 0 || self.is_head {
+            style = style.bold();
+        }
+        if self.emphasis_depth > 0 {
+            style = style.italic();
+        }
+        if self.strikethrough_depth > 0 {
+            style = style.strikethrough();
+        }
+        style
+    }
+
+    /// Push a plain text fragment using the current inline markup state.
+    pub(super) fn push_text(mut self, text: CowStr<'a>) -> Self {
+        let style = self.effective_style(Style::new());
+        self.current_row.current_cell.fragments.push((style, text));
+        self
+    }
+
+    /// Push a text fragment with a specific base style (e.g. code or inline HTML).
+    pub(super) fn push_styled_text(mut self, text: CowStr<'a>, base: Style) -> Self {
+        let style = self.effective_style(base);
+        self.current_row.current_cell.fragments.push((style, text));
+        self
+    }
+
+    pub(super) fn enter_strong(mut self) -> Self {
+        self.strong_depth += 1;
+        self
+    }
+
+    pub(super) fn exit_strong(mut self) -> Self {
+        self.strong_depth = self.strong_depth.saturating_sub(1);
+        self
+    }
+
+    pub(super) fn enter_emphasis(mut self) -> Self {
+        self.emphasis_depth += 1;
+        self
+    }
+
+    pub(super) fn exit_emphasis(mut self) -> Self {
+        self.emphasis_depth = self.emphasis_depth.saturating_sub(1);
+        self
+    }
+
+    pub(super) fn enter_strikethrough(mut self) -> Self {
+        self.strikethrough_depth += 1;
+        self
+    }
+
+    pub(super) fn exit_strikethrough(mut self) -> Self {
+        self.strikethrough_depth = self.strikethrough_depth.saturating_sub(1);
+        self
+    }
+
+    /// Enter a link or image span with a given style.
+    pub(super) fn enter_span(mut self, style: Style) -> Self {
+        self.span_style = Some(style);
+        self
+    }
+
+    /// Exit a link or image span.
+    pub(super) fn exit_span(mut self) -> Self {
+        self.span_style = None;
         self
     }
 
@@ -129,6 +216,7 @@ impl<'a> CurrentTable<'a> {
     pub(super) fn end_head(mut self) -> Self {
         self.head = Some(self.current_row);
         self.current_row = TableRow::empty();
+        self.is_head = false;
         self
     }
 

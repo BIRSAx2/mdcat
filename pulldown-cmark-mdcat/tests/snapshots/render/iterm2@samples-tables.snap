@@ -1,13 +1,12 @@
 ---
 source: pulldown-cmark-mdcat/tests/render.rs
-assertion_line: 124
 expression: "render_to_string(markdown_file, &iterm2_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/samples/tables.md
 ---
 Normal table:
 
 ─────────────────────────────────────────────────────
-[1m left aligned [0m[1m centered [0m[1m right aligned [0m[1m no alignment [0m
+ [1mleft aligned[0m  [1mcentered[0m  [1mright aligned[0m  [1mno alignment[0m 
 ─────────────────────────────────────────────────────
  cell            cell             cell  cell         
  cell            cell             cell  cell         
@@ -17,14 +16,14 @@ Normal table:
 Table without body:
 
 ──────
-[1m head [0m
+ [1mhead[0m 
 ──────
 ──────
 
 Table with empty cells:
 
 ──────
-[1m a [0m[1m b [0m
+ [1ma[0m  [1mb[0m 
 ──────
       
 ──────
@@ -32,7 +31,7 @@ Table with empty cells:
 Inline markups in table:
 
 ───────
-[1m head  [0m
+ [1mhead[0m  
 ───────
- a b c 
+ [3ma[0m [1mb[0m [33mc[0m 
 ───────
