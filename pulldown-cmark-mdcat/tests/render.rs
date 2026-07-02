@@ -78,18 +78,21 @@ fn test_render() {
         terminal_size: TerminalSize::default(),
         theme: Theme::default(),
         syntax_set: syntax_set(),
+        syntax_theme: None,
     };
     let ansi_settings = Settings {
         terminal_capabilities: TerminalProgram::Ansi.capabilities(),
         terminal_size: TerminalSize::default(),
         theme: Theme::default(),
         syntax_set: syntax_set(),
+        syntax_theme: None,
     };
     let iterm2_settings = Settings {
         terminal_capabilities: TerminalProgram::ITerm2.capabilities(),
         terminal_size: TerminalSize::default(),
         theme: Theme::default(),
         syntax_set: syntax_set(),
+        syntax_theme: None,
     };
 
     glob!("markdown/**/*.md", |markdown_file| {
@@ -128,6 +131,7 @@ fn inline_math_image_fallback_preserves_single_pending_space() {
         terminal_size: TerminalSize::default(),
         theme: Theme::default(),
         syntax_set: syntax_set(),
+        syntax_theme: None,
     };
     let cwd = std::env::current_dir().expect("Require working directory");
     let output = render_markdown_to_string(r"Text $\unknown$ end", &cwd, &settings);
@@ -142,6 +146,7 @@ fn inline_math_kitty_placement_does_not_move_cursor() {
         terminal_size: TerminalSize::default(),
         theme: Theme::default(),
         syntax_set: syntax_set(),
+        syntax_theme: None,
     };
     let cwd = std::env::current_dir().expect("Require working directory");
     let output = render_markdown_to_string(r"Text $\alpha$, $\beta$.", &cwd, &settings);
@@ -158,6 +163,7 @@ fn display_math_kitty_placement_does_not_add_extra_newline() {
         terminal_size: TerminalSize::default(),
         theme: Theme::default(),
         syntax_set: syntax_set(),
+        syntax_theme: None,
     };
     let cwd = std::env::current_dir().expect("Require working directory");
     let output = render_markdown_to_string("$$x$$\n$$y$$", &cwd, &settings);

@@ -8,4 +8,4 @@ expression: "render_string_dumb(\"\n# First\n\n## Second\n\n### Third\").unwrap(
 
 ━━ Second
 
-  ── Third
+── Third

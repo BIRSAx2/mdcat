@@ -7,4 +7,4 @@ input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/072-atx_headings
 [94m[104m [0m[1m[97m[104mfoo[0m[94m[104m [0m
 
 
-[1m[2m[3m[34m      ╌ [0m[1m[2m[3m[34mfoo[0m
+[1m[33m╌ [0m[1m[33mfoo[0m

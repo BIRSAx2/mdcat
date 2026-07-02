@@ -9,7 +9,7 @@
 use std::io::prelude::*;
 use std::io::Result;
 
-use anstyle::{AnsiColor, Effects, Style};
+use anstyle::{Effects, Style};
 use pulldown_cmark::Event::*;
 use pulldown_cmark::Tag;
 use pulldown_cmark::Tag::*;
@@ -21,7 +21,7 @@ use textwrap::core::display_width;
 use tracing::{event, instrument, Level};
 use url::Url;
 
-use crate::render::highlighting::highlighter;
+use crate::render::highlighting::{highlighter, highlighter_for};
 use crate::resources::ResourceUrlHandler;
 use crate::terminal::capabilities::TerminalCapabilities;
 use crate::theme::CombineStyle;
@@ -196,7 +196,8 @@ pub fn write_event<'a, W: Write>(
                 .current(write_start_heading(
                     writer,
                     &settings.terminal_capabilities,
-                    settings.theme.heading_style,
+                    &settings.theme,
+                    Style::new(),
                     level,
                 )?)
                 .and_data(data)
@@ -369,7 +370,8 @@ pub fn write_event<'a, W: Write>(
                 .current(write_start_heading(
                     writer,
                     &settings.terminal_capabilities,
-                    settings.theme.heading_style.on_top_of(&style),
+                    &settings.theme,
+                    style,
                     level,
                 )?)
                 .and_data(data)
@@ -512,7 +514,8 @@ pub fn write_event<'a, W: Write>(
                 .current(write_start_heading(
                     writer,
                     &settings.terminal_capabilities,
-                    settings.theme.heading_style.on_top_of(&style),
+                    &settings.theme,
+                    style,
                     level,
                 )?)
                 .and_data(data)
@@ -646,10 +649,24 @@ pub fn write_event<'a, W: Write>(
                     .parse_state
                     .parse_line(line, settings.syntax_set)
                     .expect("syntect parsing shouldn't fail in mdcat");
-                let regions =
-                    HighlightIterator::new(&mut attrs.highlight_state, &ops, line, highlighter());
                 write_indent(writer, attrs.indent)?;
-                highlighting::write_as_ansi(writer, regions)?;
+                match &settings.syntax_theme {
+                    Some(theme) => {
+                        let h = highlighter_for(theme);
+                        let regions =
+                            HighlightIterator::new(&mut attrs.highlight_state, &ops, line, &h);
+                        highlighting::write_as_rgb(writer, regions)?;
+                    }
+                    None => {
+                        let regions = HighlightIterator::new(
+                            &mut attrs.highlight_state,
+                            &ops,
+                            line,
+                            highlighter(),
+                        );
+                        highlighting::write_as_ansi(writer, regions)?;
+                    }
+                }
             }
             stack.current(attrs.into()).and_data(data).ok()
         }
@@ -892,10 +909,12 @@ pub fn write_event<'a, W: Write>(
                 .and_data(data.current_line(CurrentLine::empty())))
         }
         (Stacked(stack, Inline(_, _)), End(TagEnd::Heading(HeadingLevel::H1))) => {
-            let pad_style = Style::new()
-                .bg_color(Some(AnsiColor::BrightBlue.into()))
-                .fg_color(Some(AnsiColor::BrightBlue.into()));
-            write_styled(writer, &settings.terminal_capabilities, &pad_style, " ")?;
+            write_styled(
+                writer,
+                &settings.terminal_capabilities,
+                &settings.theme.h1_prefix_style,
+                " ",
+            )?;
             writeln!(writer)?;
             writeln!(writer)?;
             Ok(stack

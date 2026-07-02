@@ -6,7 +6,7 @@
 
 //! Tools for syntax highlighting.
 
-use anstyle::{AnsiColor, Color, Effects};
+use anstyle::{AnsiColor, Color, Effects, RgbColor};
 use std::{
     io::{Result, Write},
     sync::OnceLock,
@@ -82,4 +82,29 @@ pub fn write_as_ansi<'a, W: Write, I: Iterator<Item = (Style, &'a str)>>(
         write!(writer, "{}{}{}", style.render(), text, style.render_reset())?;
     }
     Ok(())
+}
+
+/// Write highlighted regions using 24-bit RGB colors from the syntect theme.
+pub fn write_as_rgb<'a, W: Write, I: Iterator<Item = (Style, &'a str)>>(
+    writer: &mut W,
+    regions: I,
+) -> Result<()> {
+    for (style, text) in regions {
+        let fg = style.foreground;
+        let font = style.font_style;
+        let effects = Effects::new()
+            .set(Effects::BOLD, font.contains(FontStyle::BOLD))
+            .set(Effects::ITALIC, font.contains(FontStyle::ITALIC))
+            .set(Effects::UNDERLINE, font.contains(FontStyle::UNDERLINE));
+        let ansi = anstyle::Style::new()
+            .fg_color(Some(RgbColor(fg.r, fg.g, fg.b).into()))
+            .effects(effects);
+        write!(writer, "{}{}{}", ansi.render(), text, ansi.render_reset())?;
+    }
+    Ok(())
+}
+
+/// Create a highlighter for a given syntect theme.
+pub fn highlighter_for(theme: &Theme) -> Highlighter<'_> {
+    Highlighter::new(theme)
 }

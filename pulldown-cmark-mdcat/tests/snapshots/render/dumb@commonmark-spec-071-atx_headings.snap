@@ -5,4 +5,4 @@ input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/071-atx_headings
 ---
 ━━ foo
 
-  ── bar
+── bar

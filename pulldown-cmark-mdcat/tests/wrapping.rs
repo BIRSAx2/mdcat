@@ -40,6 +40,7 @@ fn lines_are_below_column_width_of_terminal() {
             terminal_size: TerminalSize::default(),
             theme: Theme::default(),
             syntax_set: &SyntaxSet::load_defaults_newlines(),
+            syntax_theme: None,
         };
         let rendered = render_to_string(markdown, &settings);
         for line in rendered.lines() {

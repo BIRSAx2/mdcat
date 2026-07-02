@@ -12,6 +12,11 @@ ignore = [
     "RUSTSEC-2024-0436",
     # ttf-parser is unmaintained but no upgrade path exists; comes through resvg and ratex-render
     "RUSTSEC-2026-0192",
+    # quick-xml 0.39.x has quadratic attribute-dedup (RUSTSEC-2026-0194) and unbounded namespace
+    # resolver allocation (RUSTSEC-2026-0195); fix requires >= 0.41.0, but plist 1.9.0 (the latest,
+    # pulled in by syntect) still pins 0.39.x — no upgrade path available yet.
+    "RUSTSEC-2026-0194",
+    "RUSTSEC-2026-0195",
 ]
 
 [licenses]

@@ -15,7 +15,7 @@ rust-version.workspace = true
 
 [dependencies]
 anyhow = { version = "1.0.89", default-features = false, features = ["std"] }
-clap = { version = "4.5.17", default-features = false, features = ["std", "derive", "help", "usage", "error-context"] }
+clap = { version = "4.5.17", default-features = false, features = ["std", "derive", "help", "usage", "error-context", "env"] }
 clap_complete = "4.5.28"
 curl = "0.4.47"
 mime = { workspace = true}
@@ -27,6 +27,7 @@ two-face = "0.5.1"
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.18", default-features = false, features = ["env-filter", "std", "fmt", "ansi"] }
 url = { workspace = true }
+terminal-colorsaurus = "1.0.3"
 
 [dev-dependencies]
 similar-asserts = { workspace = true }

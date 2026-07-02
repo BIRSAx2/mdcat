@@ -8,7 +8,7 @@ use std::cmp::{max, min};
 use std::io::{Result, Write};
 use std::iter::zip;
 
-use anstyle::{AnsiColor, Style};
+use anstyle::Style;
 use pulldown_cmark::{Alignment, CodeBlockKind, HeadingLevel};
 use syntect::highlighting::HighlightState;
 use syntect::parsing::{ParseState, ScopeStack};
@@ -345,43 +345,39 @@ pub fn write_start_code_block<W: Write>(
 pub fn write_start_heading<W: Write>(
     writer: &mut W,
     capabilities: &TerminalCapabilities,
-    style: Style,
+    theme: &Theme,
+    context_style: Style,
     level: HeadingLevel,
 ) -> Result<StackedState> {
     let level_style = match level {
         HeadingLevel::H1 => {
             writeln!(writer)?;
-            let text_style = Style::new()
-                .bg_color(Some(AnsiColor::BrightBlue.into()))
-                .fg_color(Some(AnsiColor::BrightWhite.into()))
-                .bold();
-            let pad_style = Style::new()
-                .bg_color(Some(AnsiColor::BrightBlue.into()))
-                .fg_color(Some(AnsiColor::BrightBlue.into()));
-            write_styled(writer, capabilities, &pad_style, " ")?;
-            text_style
+            write_styled(writer, capabilities, &theme.h1_prefix_style, " ")?;
+            theme.h1_text_style
         }
         HeadingLevel::H2 => {
-            write_styled(writer, capabilities, &style, "━━ ")?;
-            style
+            let s = theme.h2_style.on_top_of(&context_style);
+            write_styled(writer, capabilities, &s, "━━ ")?;
+            s
         }
         HeadingLevel::H3 => {
-            write_styled(writer, capabilities, &style, "  ── ")?;
-            style
+            let s = theme.h3_style.on_top_of(&context_style);
+            write_styled(writer, capabilities, &s, "── ")?;
+            s
         }
         HeadingLevel::H4 => {
-            let s = style.dimmed();
-            write_styled(writer, capabilities, &s, "    ┄ ")?;
+            let s = theme.h4_style.on_top_of(&context_style);
+            write_styled(writer, capabilities, &s, "┄ ")?;
             s
         }
         HeadingLevel::H5 => {
-            let s = style.dimmed().italic();
-            write_styled(writer, capabilities, &s, "      ╌ ")?;
+            let s = theme.h5_style.on_top_of(&context_style);
+            write_styled(writer, capabilities, &s, "╌ ")?;
             s
         }
         HeadingLevel::H6 => {
-            let s = style.dimmed().italic();
-            write_styled(writer, capabilities, &s, "        · ")?;
+            let s = theme.h6_style.on_top_of(&context_style);
+            write_styled(writer, capabilities, &s, "· ")?;
             s
         }
     };

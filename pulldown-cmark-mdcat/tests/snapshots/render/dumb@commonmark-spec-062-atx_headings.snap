@@ -9,10 +9,10 @@ input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/062-atx_headings
 
 ━━ foo
 
-  ── foo
+── foo
 
-    ┄ foo
+┄ foo
 
-      ╌ foo
+╌ foo
 
-        · foo
+· foo

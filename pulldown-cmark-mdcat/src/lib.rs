@@ -42,6 +42,7 @@ use std::path::Path;
 
 use gethostname::gethostname;
 use pulldown_cmark::Event;
+use syntect::highlighting::Theme as SyntectTheme;
 use syntect::parsing::SyntaxSet;
 use tracing::instrument;
 use url::Url;
@@ -69,6 +70,11 @@ pub struct Settings<'a> {
     pub syntax_set: &'a SyntaxSet,
     /// Colour theme for mdcat
     pub theme: Theme,
+    /// Syntect theme for syntax-highlighted code blocks.
+    ///
+    /// When set, code blocks are rendered with 24-bit RGB colors from this theme.
+    /// When absent, falls back to the built-in Solarized Dark → ANSI color mapping.
+    pub syntax_theme: Option<SyntectTheme>,
 }
 
 /// The environment to render markdown in.
@@ -180,6 +186,7 @@ mod tests {
                 terminal_capabilities: TerminalProgram::Dumb.capabilities(),
                 terminal_size: TerminalSize::default(),
                 theme: Theme::default(),
+                syntax_theme: None,
             },
         )
     }

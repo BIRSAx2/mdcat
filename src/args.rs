@@ -4,8 +4,42 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use clap::ValueHint;
+use clap::{ValueEnum, ValueHint};
 use clap_complete::Shell;
+
+/// Which colour theme to use for rendering.
+#[derive(Debug, Clone, Copy, Default, ValueEnum)]
+pub enum ThemeChoice {
+    /// Detect dark/light mode from the terminal and pick accordingly.
+    #[default]
+    Auto,
+    /// Use the built-in dark theme.
+    Dark,
+    /// Use the built-in light theme.
+    Light,
+    /// Catppuccin Mocha (dark).
+    #[value(name = "catppuccin-mocha")]
+    CatppuccinMocha,
+    /// Catppuccin Latte (light).
+    #[value(name = "catppuccin-latte")]
+    CatppuccinLatte,
+    /// Gruvbox dark.
+    #[value(name = "gruvbox-dark")]
+    GruvboxDark,
+    /// Gruvbox light.
+    #[value(name = "gruvbox-light")]
+    GruvboxLight,
+    /// Dracula.
+    Dracula,
+    /// Nord.
+    Nord,
+    /// Solarized dark.
+    #[value(name = "solarized-dark")]
+    SolarizedDark,
+    /// Solarized light.
+    #[value(name = "solarized-light")]
+    SolarizedLight,
+}
 
 fn after_help() -> &'static str {
     "See 'man 1 mdcat' for more information.
@@ -110,6 +144,14 @@ pub struct CommonArgs {
     /// Generate completions for a shell to standard output and exit.
     #[arg(long)]
     pub completions: Option<Shell>,
+    /// Colour theme to use. Defaults to auto-detecting dark or light from the terminal.
+    #[arg(
+        long,
+        env = "MDCAT_THEME",
+        default_value = "auto",
+        value_name = "THEME"
+    )]
+    pub theme: ThemeChoice,
 }
 
 /// What resources mdcat may access.

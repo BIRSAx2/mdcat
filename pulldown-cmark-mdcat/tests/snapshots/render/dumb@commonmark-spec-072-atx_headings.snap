@@ -7,4 +7,4 @@ input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/072-atx_headings
  foo 
 
 
-      ╌ foo
+╌ foo
