@@ -8,6 +8,19 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+### Added
+- Ratatui widget (`MdcatWidget`) for rendering Markdown inside TUI applications,
+  with optional image overlays via the Kitty, iTerm2, Sixel, or halfblocks
+  protocols, and inline math rendering for terminals that support image output.
+
+### Fixed
+- Ratatui: reference links after a Markdown image now show the correct URL.
+  Previously the image's OSC 8 link consumed the next link's queue entry,
+  shifting all subsequent reference targets by one.
+- Ratatui: image overlays inside block quotes and other indented contexts now
+  render at the correct column. The indent was computed in bytes rather than
+  display-width columns, causing a drift for multi-byte prefix characters.
+
 ## [2.10.1] – 2026-07-05
 
 ### Fixed

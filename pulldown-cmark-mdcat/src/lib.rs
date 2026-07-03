@@ -33,6 +33,8 @@
 //!
 //!   Please **do not report bugs** about inline image rendering with this feature disabled, unless
 //!   the issue can also be reproduced if the feature is enabled.
+//!
+//! - `ratatui` enables rendering markdown into Ratatui `Text` and stateful widgets.
 
 #![deny(warnings, missing_docs, clippy::all)]
 #![forbid(unsafe_code)]
@@ -41,7 +43,7 @@ use std::io::{Error, ErrorKind, Result, Write};
 use std::path::Path;
 
 use gethostname::gethostname;
-use pulldown_cmark::Event;
+use pulldown_cmark::{Event, Options};
 use syntect::highlighting::Theme as SyntectTheme;
 use syntect::parsing::SyntaxSet;
 use tracing::instrument;
@@ -52,6 +54,8 @@ pub use crate::terminal::capabilities::TerminalCapabilities;
 pub use crate::terminal::{TerminalProgram, TerminalSize};
 pub use crate::theme::Theme;
 
+#[cfg(feature = "ratatui")]
+pub mod ratatui;
 mod references;
 pub mod resources;
 pub mod terminal;
@@ -78,7 +82,7 @@ pub struct Settings<'a> {
 }
 
 /// The environment to render markdown in.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Environment {
     /// The base URL to resolve relative URLs with.
     pub base_url: Url,
@@ -121,6 +125,45 @@ impl Environment {
             })
             .and_then(Self::for_localhost)
     }
+}
+
+/// Return the pulldown-cmark options mdcat uses for Markdown parsing.
+pub fn markdown_options() -> Options {
+    Options::ENABLE_TASKLISTS
+        | Options::ENABLE_STRIKETHROUGH
+        | Options::ENABLE_TABLES
+        | Options::ENABLE_FOOTNOTES
+        | Options::ENABLE_MATH
+        | Options::ENABLE_GFM
+}
+
+/// Strip YAML frontmatter from the beginning of a Markdown document.
+///
+/// Frontmatter is a `---` block at the very start of the input, closed by another `---` or `...`
+/// line. If no valid frontmatter block is found, return the input unchanged.
+pub fn strip_frontmatter(input: &str) -> &str {
+    let after_open = match input
+        .strip_prefix("---\n")
+        .or_else(|| input.strip_prefix("---\r\n"))
+    {
+        Some(s) => s,
+        None => return input,
+    };
+
+    let mut start = 0;
+    while start < after_open.len() {
+        let end = after_open[start..]
+            .find('\n')
+            .map_or(after_open.len(), |i| start + i);
+        let line = after_open[start..end].trim_end_matches('\r');
+        let next = (end + 1).min(after_open.len());
+        if line == "---" || line == "..." {
+            return &after_open[next..];
+        }
+        start = end + 1;
+    }
+
+    input
 }
 
 /// Write markdown to a TTY.

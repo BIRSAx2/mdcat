@@ -29,7 +29,7 @@ use crate::{Environment, Settings, Theme};
 
 mod data;
 mod highlighting;
-mod math;
+pub(crate) mod math;
 mod state;
 mod write;
 
@@ -349,7 +349,7 @@ pub fn write_event<'a, W: Write>(
                 writer,
                 &settings.terminal_capabilities,
                 &settings.theme,
-                settings.terminal_size.columns - attrs.indent,
+                settings.terminal_size.columns.saturating_sub(attrs.indent),
             )?;
             writeln!(writer)?;
             stack
@@ -521,7 +521,7 @@ pub fn write_event<'a, W: Write>(
                 writer,
                 &settings.terminal_capabilities,
                 &settings.theme,
-                settings.terminal_size.columns - attrs.indent,
+                settings.terminal_size.columns.saturating_sub(attrs.indent),
             )?;
             writeln!(writer)?;
             stack

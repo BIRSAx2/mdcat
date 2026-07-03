@@ -129,7 +129,7 @@ fn rewrite_latex(input: &str) -> String {
 
 /// Convert LaTeX math to Unicode text (fallback for inline math and
 /// terminals without image support).
-pub(super) fn render_math_unicode(input: &str) -> String {
+pub(crate) fn render_math_unicode(input: &str) -> String {
     let s = rewrite_latex(input);
     unicodeit::replace(&s)
 }
@@ -243,7 +243,7 @@ fn pad_png_vertically(data: &[u8], top: u32, bottom: u32) -> Option<Vec<u8>> {
     Some(output)
 }
 
-pub(super) struct MathImage {
+pub(crate) struct MathImage {
     pub png: Vec<u8>,
     pub width_columns: u16,
     pub height_rows: u16,
@@ -254,7 +254,7 @@ pub(super) struct MathImage {
 }
 
 /// Render math to a PNG image using RaTeX.
-pub(super) fn render_math_png(
+pub(crate) fn render_math_png(
     input: &str,
     display_mode: bool,
     terminal_size: &TerminalSize,
