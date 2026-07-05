@@ -117,6 +117,34 @@ pub struct StyledBlockAttrs {
     pub(super) border_style: Option<Style>,
 }
 
+#[derive(Debug, Default, PartialEq, Clone)]
+pub struct TableBlockAttrs {
+    /// Indentation to apply to the table.
+    pub(super) indent: u16,
+    /// How many block quote levels deep we are (for rendering the `│` border).
+    pub(super) quote_depth: u16,
+    /// Override color for the block quote border, used by alerts.
+    pub(super) border_style: Option<Style>,
+}
+
+impl TableBlockAttrs {
+    pub(super) fn from_styled_block(attrs: &StyledBlockAttrs) -> Self {
+        Self {
+            indent: attrs.indent,
+            quote_depth: attrs.quote_depth,
+            border_style: attrs.border_style,
+        }
+    }
+
+    pub(super) fn from_inline(attrs: &InlineAttrs) -> Self {
+        Self {
+            indent: attrs.indent,
+            quote_depth: attrs.quote_depth,
+            border_style: attrs.border_style,
+        }
+    }
+}
+
 impl StyledBlockAttrs {
     pub(super) fn without_margin_before(self) -> Self {
         StyledBlockAttrs {
@@ -225,7 +253,7 @@ pub enum StackedState {
     /// suppress intermediate events, namely the image title.
     RenderedImage,
     /// A table block.
-    TableBlock,
+    TableBlock(TableBlockAttrs),
     /// A footnote definition block (collecting body text, not rendering).
     FootnoteDefinition,
     /// Some inline markup.

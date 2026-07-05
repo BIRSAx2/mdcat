@@ -405,11 +405,19 @@ fn calculate_column_widths(table: &CurrentTable) -> Option<Vec<usize>> {
     Some(widths)
 }
 
+fn write_table_prefix<W: Write>(writer: &mut W, indent: u16, line_prefix: &str) -> Result<()> {
+    write_indent(writer, indent)?;
+    write!(writer, "{line_prefix}")
+}
+
 fn write_table_rule<W: Write>(
     writer: &mut W,
     capabilities: &TerminalCapabilities,
+    indent: u16,
+    line_prefix: &str,
     length: u16,
 ) -> Result<()> {
+    write_table_prefix(writer, indent, line_prefix)?;
     let rule = "\u{2500}".repeat(length.into());
     write_styled(writer, capabilities, &Style::new(), rule)?;
     writeln!(writer)
@@ -456,6 +464,9 @@ pub fn write_table<W: Write>(
     writer: &mut W,
     capabilities: &TerminalCapabilities,
     terminal_size: &TerminalSize,
+    indent: u16,
+    line_prefix: &str,
+    prefix_cols: u16,
     table: CurrentTable,
 ) -> Result<()> {
     if let Some(widths) = calculate_column_widths(&table) {
@@ -464,25 +475,30 @@ pub fn write_table<W: Write>(
             (total_width + 2 * widths.len())
                 .try_into()
                 .unwrap_or(u16::MAX),
-            terminal_size.columns,
+            terminal_size
+                .columns
+                .saturating_sub(indent)
+                .saturating_sub(prefix_cols),
         );
-        write_table_rule(writer, capabilities, rule_length)?;
+        write_table_rule(writer, capabilities, indent, line_prefix, rule_length)?;
 
         if let Some(head) = table.head {
+            write_table_prefix(writer, indent, line_prefix)?;
             for ((cell, &width), &alignment) in zip(zip(head.cells, &widths), &table.alignments) {
                 write_table_cell(writer, capabilities, cell, width, alignment)?;
             }
             writeln!(writer)?;
-            write_table_rule(writer, capabilities, rule_length)?;
+            write_table_rule(writer, capabilities, indent, line_prefix, rule_length)?;
         }
 
         for row in table.rows {
+            write_table_prefix(writer, indent, line_prefix)?;
             for ((cell, &width), &alignment) in zip(zip(row.cells, &widths), &table.alignments) {
                 write_table_cell(writer, capabilities, cell, width, alignment)?;
             }
             writeln!(writer)?;
         }
-        write_table_rule(writer, capabilities, rule_length)?;
+        write_table_rule(writer, capabilities, indent, line_prefix, rule_length)?;
     }
     Ok(())
 }
