@@ -280,7 +280,7 @@ pub fn write_event<'a, W: Write>(
                 ..data
             };
             State::stack_onto(TopLevelAttrs::margin_before())
-                .current(TableBlock)
+                .current(TableBlock(TableBlockAttrs::default()))
                 .and_data(data)
                 .ok()
         }
@@ -389,6 +389,33 @@ pub fn write_event<'a, W: Write>(
                 .push(attrs.with_margin_before().into())
                 .current(Inline(ListItem(kind, StartItem), inline))
                 .and_data(data)
+                .ok()
+        }
+        (Stacked(stack, StyledBlock(attrs)), Start(Table(alignments))) => {
+            if attrs.margin_before != NoMargin {
+                let (prefix, _) = quote_line_prefix(
+                    &settings.terminal_capabilities,
+                    &settings.theme,
+                    attrs.quote_depth,
+                    attrs.border_style,
+                );
+                write_indent(writer, attrs.indent)?;
+                write!(writer, "{}", prefix)?;
+                writeln!(writer)?;
+            }
+            let current_table = CurrentTable {
+                alignments,
+                ..data.current_table
+            };
+            let data = StateData {
+                current_table,
+                ..data
+            };
+            let table_attrs = TableBlockAttrs::from_styled_block(&attrs);
+            stack
+                .push(attrs.with_margin_before().into())
+                .current(TableBlock(table_attrs))
+                .and_data(data.current_line(CurrentLine::empty()))
                 .ok()
         }
         (Stacked(stack, StyledBlock(attrs)), Start(CodeBlock(kind))) => {
@@ -530,6 +557,22 @@ pub fn write_event<'a, W: Write>(
                 .push(Inline(ListItem(kind, ItemBlock), attrs.clone()))
                 .current(Inline(ListItem(nested_kind, StartItem), attrs))
                 .and_data(data)
+                .ok()
+        }
+        (Stacked(stack, Inline(ListItem(kind, _), attrs)), Start(Table(alignments))) => {
+            writeln!(writer)?;
+            let current_table = CurrentTable {
+                alignments,
+                ..data.current_table
+            };
+            let data = StateData {
+                current_table,
+                ..data
+            };
+            stack
+                .push(Inline(ListItem(kind, ItemBlock), attrs.clone()))
+                .current(TableBlock(TableBlockAttrs::from_inline(&attrs)))
+                .and_data(data.current_line(CurrentLine::empty()))
                 .ok()
         }
         (Stacked(stack, Inline(ListItem(kind, _), attrs)), Start(BlockQuote(bq_kind))) => {
@@ -1145,44 +1188,44 @@ pub fn write_event<'a, W: Write>(
         }
 
         // Tables
-        (Stacked(stack, TableBlock), Start(TableHead))
-        | (Stacked(stack, TableBlock), Start(TableRow))
-        | (Stacked(stack, TableBlock), Start(TableCell)) => {
-            Stacked(stack, TableBlock).and_data(data).ok()
+        (Stacked(stack, TableBlock(attrs)), Start(TableHead))
+        | (Stacked(stack, TableBlock(attrs)), Start(TableRow))
+        | (Stacked(stack, TableBlock(attrs)), Start(TableCell)) => {
+            Stacked(stack, TableBlock(attrs)).and_data(data).ok()
         }
-        (Stacked(stack, TableBlock), End(TagEnd::TableHead)) => {
+        (Stacked(stack, TableBlock(attrs)), End(TagEnd::TableHead)) => {
             let current_table = data.current_table.end_head();
             let data = StateData {
                 current_table,
                 ..data
             };
-            Stacked(stack, TableBlock).and_data(data).ok()
+            Stacked(stack, TableBlock(attrs)).and_data(data).ok()
         }
-        (Stacked(stack, TableBlock), End(TagEnd::TableRow)) => {
+        (Stacked(stack, TableBlock(attrs)), End(TagEnd::TableRow)) => {
             let current_table = data.current_table.end_row();
             let data = StateData {
                 current_table,
                 ..data
             };
-            Stacked(stack, TableBlock).and_data(data).ok()
+            Stacked(stack, TableBlock(attrs)).and_data(data).ok()
         }
-        (Stacked(stack, TableBlock), End(TagEnd::TableCell)) => {
+        (Stacked(stack, TableBlock(attrs)), End(TagEnd::TableCell)) => {
             let current_table = data.current_table.end_cell();
             let data = StateData {
                 current_table,
                 ..data
             };
-            Stacked(stack, TableBlock).and_data(data).ok()
+            Stacked(stack, TableBlock(attrs)).and_data(data).ok()
         }
-        (Stacked(stack, TableBlock), Text(text)) => {
+        (Stacked(stack, TableBlock(attrs)), Text(text)) => {
             let current_table = data.current_table.push_text(text);
             let data = StateData {
                 current_table,
                 ..data
             };
-            Stacked(stack, TableBlock).and_data(data).ok()
+            Stacked(stack, TableBlock(attrs)).and_data(data).ok()
         }
-        (Stacked(stack, TableBlock), Code(text)) => {
+        (Stacked(stack, TableBlock(attrs)), Code(text)) => {
             let current_table = data
                 .current_table
                 .push_styled_text(text, settings.theme.code_style);
@@ -1190,13 +1233,22 @@ pub fn write_event<'a, W: Write>(
                 current_table,
                 ..data
             };
-            Stacked(stack, TableBlock).and_data(data).ok()
+            Stacked(stack, TableBlock(attrs)).and_data(data).ok()
         }
-        (Stacked(stack, TableBlock), End(TagEnd::Table)) => {
+        (Stacked(stack, TableBlock(attrs)), End(TagEnd::Table)) => {
+            let (prefix, prefix_cols) = quote_line_prefix(
+                &settings.terminal_capabilities,
+                &settings.theme,
+                attrs.quote_depth,
+                attrs.border_style,
+            );
             write_table(
                 writer,
                 &settings.terminal_capabilities,
                 &settings.terminal_size,
+                attrs.indent,
+                &prefix,
+                prefix_cols,
                 data.current_table,
             )?;
             let current_table = data::CurrentTable::empty();
@@ -1206,94 +1258,94 @@ pub fn write_event<'a, W: Write>(
             };
             stack.pop().and_data(data).ok()
         }
-        (Stacked(stack, TableBlock), Start(Strong)) => {
+        (Stacked(stack, TableBlock(attrs)), Start(Strong)) => {
             let current_table = data.current_table.enter_strong();
-            Stacked(stack, TableBlock)
+            Stacked(stack, TableBlock(attrs))
                 .and_data(StateData {
                     current_table,
                     ..data
                 })
                 .ok()
         }
-        (Stacked(stack, TableBlock), End(TagEnd::Strong)) => {
+        (Stacked(stack, TableBlock(attrs)), End(TagEnd::Strong)) => {
             let current_table = data.current_table.exit_strong();
-            Stacked(stack, TableBlock)
+            Stacked(stack, TableBlock(attrs))
                 .and_data(StateData {
                     current_table,
                     ..data
                 })
                 .ok()
         }
-        (Stacked(stack, TableBlock), Start(Emphasis)) => {
+        (Stacked(stack, TableBlock(attrs)), Start(Emphasis)) => {
             let current_table = data.current_table.enter_emphasis();
-            Stacked(stack, TableBlock)
+            Stacked(stack, TableBlock(attrs))
                 .and_data(StateData {
                     current_table,
                     ..data
                 })
                 .ok()
         }
-        (Stacked(stack, TableBlock), End(TagEnd::Emphasis)) => {
+        (Stacked(stack, TableBlock(attrs)), End(TagEnd::Emphasis)) => {
             let current_table = data.current_table.exit_emphasis();
-            Stacked(stack, TableBlock)
+            Stacked(stack, TableBlock(attrs))
                 .and_data(StateData {
                     current_table,
                     ..data
                 })
                 .ok()
         }
-        (Stacked(stack, TableBlock), Start(Strikethrough)) => {
+        (Stacked(stack, TableBlock(attrs)), Start(Strikethrough)) => {
             let current_table = data.current_table.enter_strikethrough();
-            Stacked(stack, TableBlock)
+            Stacked(stack, TableBlock(attrs))
                 .and_data(StateData {
                     current_table,
                     ..data
                 })
                 .ok()
         }
-        (Stacked(stack, TableBlock), End(TagEnd::Strikethrough)) => {
+        (Stacked(stack, TableBlock(attrs)), End(TagEnd::Strikethrough)) => {
             let current_table = data.current_table.exit_strikethrough();
-            Stacked(stack, TableBlock)
+            Stacked(stack, TableBlock(attrs))
                 .and_data(StateData {
                     current_table,
                     ..data
                 })
                 .ok()
         }
-        (Stacked(stack, TableBlock), Start(Link { .. })) => {
+        (Stacked(stack, TableBlock(attrs)), Start(Link { .. })) => {
             let current_table = data.current_table.enter_span(settings.theme.link_style);
-            Stacked(stack, TableBlock)
+            Stacked(stack, TableBlock(attrs))
                 .and_data(StateData {
                     current_table,
                     ..data
                 })
                 .ok()
         }
-        (Stacked(stack, TableBlock), Start(Image { .. })) => {
+        (Stacked(stack, TableBlock(attrs)), Start(Image { .. })) => {
             let current_table = data
                 .current_table
                 .enter_span(settings.theme.image_link_style);
-            Stacked(stack, TableBlock)
+            Stacked(stack, TableBlock(attrs))
                 .and_data(StateData {
                     current_table,
                     ..data
                 })
                 .ok()
         }
-        (Stacked(stack, TableBlock), End(TagEnd::Link | TagEnd::Image)) => {
+        (Stacked(stack, TableBlock(attrs)), End(TagEnd::Link | TagEnd::Image)) => {
             let current_table = data.current_table.exit_span();
-            Stacked(stack, TableBlock)
+            Stacked(stack, TableBlock(attrs))
                 .and_data(StateData {
                     current_table,
                     ..data
                 })
                 .ok()
         }
-        (Stacked(stack, TableBlock), InlineHtml(text)) => {
+        (Stacked(stack, TableBlock(attrs)), InlineHtml(text)) => {
             let current_table = data
                 .current_table
                 .push_styled_text(text, settings.theme.inline_html_style);
-            Stacked(stack, TableBlock)
+            Stacked(stack, TableBlock(attrs))
                 .and_data(StateData {
                     current_table,
                     ..data
