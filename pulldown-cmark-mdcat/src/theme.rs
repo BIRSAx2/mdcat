@@ -9,7 +9,7 @@
 use anstyle::{AnsiColor, Color, RgbColor, Style};
 
 /// A colour theme for mdcat.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Theme {
     /// Style for HTML blocks.
     pub(crate) html_block_style: Style,

@@ -6,6 +6,20 @@
 
 — `mdcat` supports _italic_, **bold**, ~~strikethrough~~, `inline code`, and **_combined_** styles.
 
+> [!TIP]
+> Set `$BAT_THEME` to use any bat syntax-highlighting theme for code blocks.
+
+## Code
+
+```rust
+fn fibonacci(n: u64) -> u64 {
+    match n {
+        0 | 1 => n,
+        _ => fibonacci(n - 1) + fibonacci(n - 2),
+    }
+}
+```
+
 ## Tables
 
 | Language |    Paradigm    |    Typing |

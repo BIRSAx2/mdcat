@@ -159,7 +159,7 @@ pub fn write_styled_and_wrapped<W: Write, S: AsRef<str>>(
                 // the trailing space we need to add if we add more words to this line
                 (max_width - current_width.min(max_width)) as f64,
                 // For remaining lines we only need to account for the indent
-                (max_width - indent) as f64,
+                max_width.saturating_sub(indent) as f64,
             ];
             let lines = textwrap::wrap_algorithms::wrap_first_fit(&words, &widths);
             match lines.split_first() {

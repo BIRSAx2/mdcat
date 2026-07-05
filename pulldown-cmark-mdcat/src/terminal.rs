@@ -15,6 +15,6 @@ pub mod capabilities;
 mod detect;
 
 pub use self::detect::TerminalProgram;
-#[cfg(test)]
+#[cfg(any(test, feature = "ratatui"))]
 pub(crate) use self::size::PixelSize;
 pub use self::size::TerminalSize;

@@ -18,11 +18,11 @@ use std::io::{self, prelude::*, BufWriter};
 use std::path::PathBuf;
 
 use anyhow::{Context, Result};
-use pulldown_cmark::{Options, Parser};
+use pulldown_cmark::Parser;
 use pulldown_cmark_mdcat::resources::{
     DispatchingResourceHandler, FileResourceHandler, ResourceUrlHandler,
 };
-use pulldown_cmark_mdcat::{Environment, Settings};
+use pulldown_cmark_mdcat::{markdown_options, strip_frontmatter, Environment, Settings};
 use resources::CurlResourceHandler;
 use tracing::{event, instrument, Level};
 
@@ -84,36 +84,6 @@ impl<W: Write> Write for MarginWriter<W> {
     }
 }
 
-/// Strip YAML/TOML frontmatter from the beginning of a markdown document.
-///
-/// Frontmatter is a `---` block at the very start of the file, closed by
-/// another `---` or `...` line.  If no valid frontmatter block is found the
-/// input is returned unchanged.
-fn strip_frontmatter(input: &str) -> &str {
-    let after_open = match input
-        .strip_prefix("---\n")
-        .or_else(|| input.strip_prefix("---\r\n"))
-    {
-        Some(s) => s,
-        None => return input,
-    };
-
-    let mut start = 0;
-    while start < after_open.len() {
-        let end = after_open[start..]
-            .find('\n')
-            .map_or(after_open.len(), |i| start + i);
-        let line = after_open[start..end].trim_end_matches('\r');
-        let next = (end + 1).min(after_open.len());
-        if line == "---" || line == "..." {
-            return &after_open[next..];
-        }
-        start = end + 1;
-    }
-
-    input
-}
-
 /// Read input for `filename`.
 ///
 /// If `filename` is `-` read from standard input, otherwise try to open and
@@ -154,15 +124,7 @@ pub fn process_file(
         "Read input, using {} as base directory",
         base_dir.display()
     );
-    let parser = Parser::new_ext(
-        input,
-        Options::ENABLE_TASKLISTS
-            | Options::ENABLE_STRIKETHROUGH
-            | Options::ENABLE_TABLES
-            | Options::ENABLE_FOOTNOTES
-            | Options::ENABLE_MATH
-            | Options::ENABLE_GFM,
-    );
+    let parser = Parser::new_ext(input, markdown_options());
     let env = Environment::for_local_directory(&base_dir)?;
 
     let ignore_broken_pipe = |error: io::Error| {
