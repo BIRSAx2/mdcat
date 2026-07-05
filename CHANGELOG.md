@@ -8,6 +8,8 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+## [2.10.1] – 2026-07-05
+
 ### Fixed
 - Render tables nested in list items.
 
@@ -921,7 +923,8 @@ Use `cargo release` to create a new release.
 - Support ordered and unordered lists, with nest.
 - Show links, with references grouped by section.
 
-[Unreleased]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.10.0...HEAD
+[Unreleased]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.10.1...HEAD
+[2.10.1]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.10.0...mdcat-2.10.1
 [2.10.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.9.1...mdcat-2.10.0
 [2.9.1]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.9.0...mdcat-2.9.1
 [2.9.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.8.0...mdcat-2.9.0
