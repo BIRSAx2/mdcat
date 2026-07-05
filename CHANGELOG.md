@@ -8,6 +8,9 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+### Fixed
+- Render tables nested in list items.
+
 ## [2.10.0] – 2026-07-02
 
 ### Added
