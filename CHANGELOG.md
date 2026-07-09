@@ -8,6 +8,8 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+## [2.11.0] – 2026-07-09
+
 ### Added
 - `--watch`/`-w` to re-render a file on every save, for a live preview while
   editing. Requires a single file argument and a terminal on standard output;
@@ -939,7 +941,8 @@ Use `cargo release` to create a new release.
 - Support ordered and unordered lists, with nest.
 - Show links, with references grouped by section.
 
-[Unreleased]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.10.1...HEAD
+[Unreleased]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.11.0...HEAD
+[2.11.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.10.1...mdcat-2.11.0
 [2.10.1]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.10.0...mdcat-2.10.1
 [2.10.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.9.1...mdcat-2.10.0
 [2.9.1]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.9.0...mdcat-2.9.1
