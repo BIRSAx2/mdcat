@@ -29,7 +29,8 @@ Then it
 - shows [links][osc8], and also images inline in supported terminals (see above, where "Rust" is a clickable link!),
 - adds jump marks for headings in [iTerm2] (jump forwards and backwards with <key>⇧⌘↓</key> and <key>⇧⌘↑</key>),
 - ships eight built-in colour themes (`catppuccin-mocha`, `catppuccin-latte`, `gruvbox-dark`, `gruvbox-light`,
-  `dracula`, `nord`, `solarized-dark`, `solarized-light`) plus auto dark/light detection.
+  `dracula`, `nord`, `solarized-dark`, `solarized-light`) plus auto dark/light detection,
+- can watch a file and re-render it on every save with `--watch`, for a live preview while editing.
 
 | Terminal           | Basic syntax | Syntax highlighting | Images | Math  | Jump marks |
 | :----------------- | :----------: | :-----------------: | :----: | :---: | :--------: |
@@ -85,6 +86,12 @@ To use a [bat] syntax-highlighting theme for code blocks:
 
 ```console
 $ BAT_THEME="Catppuccin Mocha" mdcat sample.md
+```
+
+To get a live preview while editing:
+
+```console
+$ mdcat --watch sample.md
 ```
 
 See [sample/math.md](./sample/math.md) for math examples, [sample/alerts.md](./sample/alerts.md) for GFM alerts, and [sample/tables.md](./sample/tables.md) for table rendering.

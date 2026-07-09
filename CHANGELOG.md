@@ -10,7 +10,8 @@ Use `cargo release` to create a new release.
 
 ### Added
 - `--watch`/`-w` to re-render a file on every save, for a live preview while
-  editing. Requires a single file argument; not compatible with `--paginate`.
+  editing. Requires a single file argument and a terminal on standard output;
+  not compatible with `--paginate` or reading from standard input.
 - Ratatui widget (`MdcatWidget`) for rendering Markdown inside TUI applications,
   with optional image overlays via the Kitty, iTerm2, Sixel, or halfblocks
   protocols, and inline math rendering for terminals that support image output.
