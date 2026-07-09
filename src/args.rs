@@ -152,6 +152,9 @@ pub struct CommonArgs {
         value_name = "THEME"
     )]
     pub theme: ThemeChoice,
+    /// Watch the input file and re-render on change. Requires a single file argument.
+    #[arg(short, long)]
+    pub watch: bool,
 }
 
 /// What resources mdcat may access.

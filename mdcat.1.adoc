@@ -118,6 +118,11 @@ This is the default when run as `mdcat`.
 --detect-terminal::
     Detect the terminal program, print its name, and exit.
 
+-w::
+--watch::
+    Watch the input file and re-render on every change.
+    Requires exactly one FILE argument, and does not work with standard input or `--paginate`.
+
 --completions=_SHELL_::
     Generate completions for _SHELL_ to standard output and exit.
 

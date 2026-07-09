@@ -9,11 +9,17 @@
 
 //! Show CommonMark documents on TTYs.
 
+use std::io::Write;
+use std::path::Path;
+use std::sync::mpsc::channel;
 use std::time::Duration;
 
+use anyhow::Context;
 use clap::{CommandFactory, Parser};
 use clap_complete::generate;
 use mdcat::{create_resource_handler, process_file};
+use notify::{RecursiveMode, Watcher};
+use pulldown_cmark_mdcat::resources::ResourceUrlHandler;
 use pulldown_cmark_mdcat::terminal::{TerminalProgram, TerminalSize};
 use pulldown_cmark_mdcat::{Settings, Theme};
 use syntect::highlighting::Theme as SyntectTheme;
@@ -25,6 +31,70 @@ use two_face::theme::{EmbeddedThemeName, LazyThemeSet};
 
 use mdcat::args::{Args, ThemeChoice};
 use mdcat::output::Output;
+
+/// Clear the terminal screen and scrollback, then move the cursor home.
+fn clear_screen() {
+    print!("\x1B[3J\x1B[H\x1B[2J");
+    let _ = std::io::stdout().flush();
+}
+
+/// Watch `filename` for changes, re-rendering to `output` on every save.
+///
+/// Watches the parent directory rather than the file itself, because
+/// editors commonly save by writing a temporary file and renaming it over
+/// the original, which a direct file watch can miss.
+fn watch_file(
+    filename: &str,
+    settings: &Settings,
+    resource_handler: &dyn ResourceUrlHandler,
+    output: &mut Output,
+) -> anyhow::Result<()> {
+    let path = Path::new(filename)
+        .canonicalize()
+        .with_context(|| format!("Failed to resolve path of {filename}"))?;
+    let parent = path
+        .parent()
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|| Path::new(".").to_path_buf());
+
+    let (tx, rx) = channel();
+    let mut watcher = notify::recommended_watcher(move |result| {
+        let _ = tx.send(result);
+    })
+    .with_context(|| "Failed to set up file watcher".to_string())?;
+    watcher
+        .watch(&parent, RecursiveMode::NonRecursive)
+        .with_context(|| format!("Failed to watch {}", parent.display()))?;
+
+    let render = |output: &mut Output| {
+        clear_screen();
+        if let Err(error) = process_file(filename, settings, resource_handler, output) {
+            eprintln!("Error: {filename}: {error:#}");
+        }
+    };
+
+    render(output);
+    eprintln!("Watching {filename} for changes, press Ctrl+C to stop…");
+
+    loop {
+        match rx.recv() {
+            Ok(Ok(event))
+                if !matches!(event.kind, notify::EventKind::Access(_))
+                    && event.paths.contains(&path) =>
+            {
+                // Debounce: editors often fire several events per save.
+                while rx.recv_timeout(Duration::from_millis(150)).is_ok() {}
+                render(output);
+            }
+            Ok(Ok(_)) => {}
+            Ok(Err(error)) => {
+                event!(Level::WARN, %error, "Watch error");
+            }
+            Err(_) => break,
+        }
+    }
+    Ok(())
+}
 
 struct ResolvedTheme {
     mdcat: Theme,
@@ -183,7 +253,20 @@ fn main() {
             Some(max_columns) => terminal_size.with_max_columns(max_columns),
         };
 
+        if args.watch && args.paginate() {
+            eprintln!("Error: --watch cannot be combined with --paginate");
+            std::process::exit(1);
+        }
+        if args.watch && (args.filenames.len() != 1 || args.filenames[0] == "-") {
+            eprintln!("Error: --watch requires exactly one file argument (not stdin)");
+            std::process::exit(1);
+        }
         let is_tty = std::io::IsTerminal::is_terminal(&std::io::stdout());
+        if args.watch && !is_tty {
+            eprintln!("Error: --watch requires standard output to be a terminal");
+            std::process::exit(1);
+        }
+
         let resolved = resolve_theme(args.theme, is_tty);
         let syntax_theme = resolve_syntax_theme(resolved.is_light, resolved.default_syntax);
         let theme = resolved.mdcat;
@@ -205,21 +288,36 @@ fn main() {
                 );
                 // TODO: Handle this error properly
                 let resource_handler = create_resource_handler(args.resource_access()).unwrap();
-                args.filenames
-                    .iter()
-                    .try_fold(0, |code, filename| {
-                        process_file(filename, &settings, &resource_handler, &mut output)
-                            .map(|_| code)
-                            .or_else(|error| {
-                                eprintln!("Error: {filename}: {error}");
-                                if args.fail_fast {
-                                    Err(error)
-                                } else {
-                                    Ok(1)
-                                }
-                            })
-                    })
-                    .unwrap_or(1)
+                if args.watch {
+                    match watch_file(
+                        &args.filenames[0],
+                        &settings,
+                        &resource_handler,
+                        &mut output,
+                    ) {
+                        Ok(()) => 0,
+                        Err(error) => {
+                            eprintln!("Error: {error:#}");
+                            1
+                        }
+                    }
+                } else {
+                    args.filenames
+                        .iter()
+                        .try_fold(0, |code, filename| {
+                            process_file(filename, &settings, &resource_handler, &mut output)
+                                .map(|_| code)
+                                .or_else(|error| {
+                                    eprintln!("Error: {filename}: {error}");
+                                    if args.fail_fast {
+                                        Err(error)
+                                    } else {
+                                        Ok(1)
+                                    }
+                                })
+                        })
+                        .unwrap_or(1)
+                }
             }
             Err(error) => {
                 eprintln!("Error: {error:#}");
