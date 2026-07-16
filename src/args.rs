@@ -162,6 +162,9 @@ pub struct CommonArgs {
     /// dashes, and `...` becomes an ellipsis.
     #[arg(long)]
     pub smart_punctuation: bool,
+    /// Print a sample rendered with every built-in theme, to help pick one, and exit.
+    #[arg(long)]
+    pub list_themes: bool,
 }
 
 /// What resources mdcat may access.

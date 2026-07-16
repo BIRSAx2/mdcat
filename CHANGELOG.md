@@ -14,6 +14,8 @@ Use `cargo release` to create a new release.
   ellipsis. Off by default, to avoid silently changing existing output.
 - Definition lists (`Term` / `: Description`) are now rendered, with the term
   in bold and its description(s) indented underneath.
+- `--list-themes` prints a short sample rendered with every built-in theme,
+  to help pick one.
 
 ## [2.11.1] – 2026-07-16
 

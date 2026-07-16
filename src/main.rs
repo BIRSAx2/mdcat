@@ -15,13 +15,14 @@ use std::sync::mpsc::channel;
 use std::time::Duration;
 
 use anyhow::Context;
-use clap::{CommandFactory, Parser};
+use clap::{CommandFactory, Parser, ValueEnum};
 use clap_complete::generate;
 use mdcat::{create_resource_handler, process_file};
 use notify::{RecursiveMode, Watcher};
-use pulldown_cmark_mdcat::resources::ResourceUrlHandler;
+use pulldown_cmark::Parser as MarkdownParser;
+use pulldown_cmark_mdcat::resources::{NoopResourceHandler, ResourceUrlHandler};
 use pulldown_cmark_mdcat::terminal::{TerminalProgram, TerminalSize};
-use pulldown_cmark_mdcat::{Settings, Theme};
+use pulldown_cmark_mdcat::{markdown_options, push_tty, Environment, Settings, Theme};
 use syntect::highlighting::Theme as SyntectTheme;
 use tracing::{event, Level};
 use tracing_subscriber::filter::LevelFilter;
@@ -205,6 +206,66 @@ fn resolve_syntax_theme(
     themes.get(&name).cloned()
 }
 
+/// A short sample exercising headings, inline styles, an alert, and a code block, to give a
+/// representative preview of a theme's colours.
+const THEME_SAMPLE: &str = "\
+## Sample heading
+
+Some **bold**, _italic_, `inline code`, and a [link](https://example.com).
+
+> [!NOTE]
+> A quick note in a callout.
+
+```rust
+fn greet(name: &str) -> String {
+    format!(\"Hello, {name}!\")
+}
+```";
+
+/// Print a short sample rendered with every built-in theme, to help pick one.
+fn list_themes() -> anyhow::Result<()> {
+    let cwd = std::env::current_dir()?;
+    let env = Environment::for_local_directory(&cwd)?;
+    let syntax_set = extra_newlines();
+    let mut writer = std::io::BufWriter::new(std::io::stdout());
+
+    let ignore_broken_pipe = |error: std::io::Error| {
+        if error.kind() == std::io::ErrorKind::BrokenPipe {
+            Ok(())
+        } else {
+            Err(error)
+        }
+    };
+
+    for choice in ThemeChoice::value_variants() {
+        // `auto` isn't a distinct visual theme; it just picks dark or light for us.
+        if matches!(choice, ThemeChoice::Auto) {
+            continue;
+        }
+        let name = choice
+            .to_possible_value()
+            .expect("all ThemeChoice variants have a value name")
+            .get_name()
+            .to_string();
+        let resolved = resolve_theme(*choice, false);
+        let syntax_theme = resolve_syntax_theme(resolved.is_light, resolved.default_syntax);
+        let settings = Settings {
+            terminal_capabilities: TerminalProgram::Ansi.capabilities(),
+            terminal_size: TerminalSize::default(),
+            syntax_set: &syntax_set,
+            theme: resolved.mdcat,
+            syntax_theme,
+        };
+        writeln!(writer, "=== {name} ===\n").or_else(&ignore_broken_pipe)?;
+        let parser = MarkdownParser::new_ext(THEME_SAMPLE, markdown_options(false));
+        push_tty(&settings, &env, &NoopResourceHandler, &mut writer, parser)
+            .or_else(&ignore_broken_pipe)?;
+        writeln!(writer).or_else(&ignore_broken_pipe)?;
+    }
+    writer.flush().or_else(&ignore_broken_pipe)?;
+    Ok(())
+}
+
 fn main() {
     // Initialize curl for remote resources
     curl::init();
@@ -233,6 +294,14 @@ fn main() {
         let mut command = Args::command();
         let subcommand = command.find_subcommand_mut(binary).unwrap();
         generate(shell, subcommand, binary, &mut std::io::stdout());
+        std::process::exit(0);
+    }
+
+    if args.list_themes {
+        if let Err(error) = list_themes() {
+            eprintln!("Error: {error:#}");
+            std::process::exit(1);
+        }
         std::process::exit(0);
     }
 
