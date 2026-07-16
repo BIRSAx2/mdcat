@@ -33,7 +33,7 @@ fn parse_env_var(name: &str) -> Result<Option<Vec<String>>> {
     use std::env::VarError;
     match std::env::var(name) {
         Ok(value) => shell_words::split(&value)
-            .with_context(|| format!("Failed to parse value {} of {}", &value, &name))
+            .with_context(|| format!("Failed to parse value {value} of {name}"))
             .map(Some),
         Err(VarError::NotPresent) => Ok(None),
         Err(VarError::NotUnicode(value)) => bail!("Value of {} not unicode: {:?}", name, value),

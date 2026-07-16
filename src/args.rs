@@ -155,6 +155,9 @@ pub struct CommonArgs {
     /// Watch the input file and re-render on change. Requires a single file argument.
     #[arg(short, long)]
     pub watch: bool,
+    /// Add a two-space left margin to all output. Reduces the effective render width accordingly.
+    #[arg(long)]
+    pub margin: bool,
 }
 
 /// What resources mdcat may access.

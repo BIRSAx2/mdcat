@@ -41,6 +41,9 @@ pub mod resources;
 pub static DEFAULT_RESOURCE_READ_LIMIT: u64 = 104_857_600;
 
 /// A writer that prepends two spaces of left margin after every newline.
+///
+/// Only used when `--margin` is passed; callers must shrink the render width
+/// by 2 columns to account for it.
 struct MarginWriter<W: Write> {
     inner: W,
     at_line_start: bool,
@@ -109,13 +112,17 @@ pub fn read_input<T: AsRef<str>>(filename: T) -> Result<(PathBuf, String)> {
 
 /// Process a single file.
 ///
-/// Read from `filename` and render the contents to `output`.
+/// Read from `filename` and render the contents to `output`. If `margin` is
+/// `true`, prepend a two-space left margin to every rendered line; callers
+/// must shrink `settings.terminal_size` by 2 columns beforehand so wrapping
+/// still respects the requested output width.
 #[instrument(skip(output, settings, resource_handler), level = "debug")]
 pub fn process_file(
     filename: &str,
     settings: &Settings,
     resource_handler: &dyn ResourceUrlHandler,
     output: &mut Output,
+    margin: bool,
 ) -> Result<()> {
     let (base_dir, input) = read_input(filename)?;
     let input = strip_frontmatter(&input);
@@ -139,13 +146,16 @@ pub fn process_file(
 
     let mut sink = BufWriter::new(output.writer());
     writeln!(sink).or_else(&ignore_broken_pipe)?;
-    {
+    if margin {
         let mut padded = MarginWriter::new(&mut sink);
         pulldown_cmark_mdcat::push_tty(settings, &env, resource_handler, &mut padded, parser)
             .and_then(|_| {
                 event!(Level::TRACE, "Finished rendering, flushing output");
                 padded.flush()
             })
+            .or_else(&ignore_broken_pipe)?;
+    } else {
+        pulldown_cmark_mdcat::push_tty(settings, &env, resource_handler, &mut sink, parser)
             .or_else(&ignore_broken_pipe)?;
     }
     writeln!(sink).or_else(&ignore_broken_pipe)?;

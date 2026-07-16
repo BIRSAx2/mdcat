@@ -48,6 +48,7 @@ fn watch_file(
     settings: &Settings,
     resource_handler: &dyn ResourceUrlHandler,
     output: &mut Output,
+    margin: bool,
 ) -> anyhow::Result<()> {
     let path = Path::new(filename)
         .canonicalize()
@@ -68,7 +69,7 @@ fn watch_file(
 
     let render = |output: &mut Output| {
         clear_screen();
-        if let Err(error) = process_file(filename, settings, resource_handler, output) {
+        if let Err(error) = process_file(filename, settings, resource_handler, output, margin) {
             eprintln!("Error: {filename}: {error:#}");
         }
     };
@@ -252,6 +253,13 @@ fn main() {
             Some(0) => terminal_size.with_max_columns(u16::MAX),
             Some(max_columns) => terminal_size.with_max_columns(max_columns),
         };
+        // Reserve the margin's two columns so wrapped output plus margin never
+        // exceeds the requested width.
+        let terminal_size = if args.margin {
+            terminal_size.with_max_columns(terminal_size.columns.saturating_sub(2))
+        } else {
+            terminal_size
+        };
 
         if args.watch && args.paginate() {
             eprintln!("Error: --watch cannot be combined with --paginate");
@@ -294,6 +302,7 @@ fn main() {
                         &settings,
                         &resource_handler,
                         &mut output,
+                        args.margin,
                     ) {
                         Ok(()) => 0,
                         Err(error) => {
@@ -305,16 +314,22 @@ fn main() {
                     args.filenames
                         .iter()
                         .try_fold(0, |code, filename| {
-                            process_file(filename, &settings, &resource_handler, &mut output)
-                                .map(|_| code)
-                                .or_else(|error| {
-                                    eprintln!("Error: {filename}: {error}");
-                                    if args.fail_fast {
-                                        Err(error)
-                                    } else {
-                                        Ok(1)
-                                    }
-                                })
+                            process_file(
+                                filename,
+                                &settings,
+                                &resource_handler,
+                                &mut output,
+                                args.margin,
+                            )
+                            .map(|_| code)
+                            .or_else(|error| {
+                                eprintln!("Error: {filename}: {error}");
+                                if args.fail_fast {
+                                    Err(error)
+                                } else {
+                                    Ok(1)
+                                }
+                            })
                         })
                         .unwrap_or(1)
                 }

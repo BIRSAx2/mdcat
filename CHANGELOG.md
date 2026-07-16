@@ -8,6 +8,17 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+### Changed
+- The two-space left margin added in 2.11.0 is now opt-in via `--margin`,
+  and disabled by default. Previously it was always on with no way to turn
+  it off, even with `--no-colour` or `--columns 0`.
+
+### Fixed
+- `--margin` now reduces the effective render width by 2 columns, so wrapped
+  output plus the margin never exceeds `--columns N`. Previously the margin
+  was added after wrapping, so the default 80-column setting could produce
+  82-column lines.
+
 ## [2.11.0] – 2026-07-09
 
 ### Added

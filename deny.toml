@@ -21,6 +21,10 @@ ignore = [
     # rayon (image -> exr/ravif) for sixel/image support. No direct dependency, and the fix
     # (crossbeam-epoch >= 0.9.20) is not yet picked up by rayon-core 1.13.0.
     "RUSTSEC-2026-0204",
+    # rustybuzz is unmaintained; pulled in transitively via resvg -> usvg for SVG image
+    # support. No direct dependency and no upgrade path (harfrust migration not yet
+    # available in resvg).
+    "RUSTSEC-2026-0206",
 ]
 
 [licenses]
