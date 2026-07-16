@@ -9,50 +9,64 @@
 use anstyle::{AnsiColor, Color, RgbColor, Style};
 
 /// A colour theme for mdcat.
+///
+/// All fields are public so themes can be fully customised, e.g. from a user config file.
+/// `h1_prefix_style` is a derived convenience (background-only padding matching `h1_text_style`'s
+/// background); use [`Theme::with_h1`] to keep the two in sync when changing the H1 background.
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Theme {
     /// Style for HTML blocks.
-    pub(crate) html_block_style: Style,
+    pub html_block_style: Style,
     /// Style for inline HTML.
-    pub(crate) inline_html_style: Style,
+    pub inline_html_style: Style,
     /// Style for code, unless the code is syntax-highlighted.
-    pub(crate) code_style: Style,
+    pub code_style: Style,
     /// Style for links.
-    pub(crate) link_style: Style,
+    pub link_style: Style,
     /// Color for image links (unless the image is rendered inline)
-    pub(crate) image_link_style: Style,
+    pub image_link_style: Style,
     /// Color for rulers.
-    pub(crate) rule_color: Color,
+    pub rule_color: Color,
     /// Style for block quote borders (`│`).
-    pub(crate) quote_border_style: Style,
+    pub quote_border_style: Style,
     /// Style for H2 headings.
-    pub(crate) h2_style: Style,
+    pub h2_style: Style,
     /// Style for H3 headings.
-    pub(crate) h3_style: Style,
+    pub h3_style: Style,
     /// Style for H4 headings.
-    pub(crate) h4_style: Style,
+    pub h4_style: Style,
     /// Style for H5 headings.
-    pub(crate) h5_style: Style,
+    pub h5_style: Style,
     /// Style for H6 headings.
-    pub(crate) h6_style: Style,
+    pub h6_style: Style,
     /// Style for footnote references and definitions.
-    pub(crate) footnote_style: Style,
+    pub footnote_style: Style,
     /// Style for math expressions.
-    pub(crate) math_style: Style,
+    pub math_style: Style,
     /// Style for `[!NOTE]` alerts.
-    pub(crate) alert_note_style: Style,
+    pub alert_note_style: Style,
     /// Style for `[!TIP]` alerts.
-    pub(crate) alert_tip_style: Style,
+    pub alert_tip_style: Style,
     /// Style for `[!IMPORTANT]` alerts.
-    pub(crate) alert_important_style: Style,
+    pub alert_important_style: Style,
     /// Style for `[!WARNING]` alerts.
-    pub(crate) alert_warning_style: Style,
+    pub alert_warning_style: Style,
     /// Style for `[!CAUTION]` alerts.
-    pub(crate) alert_caution_style: Style,
+    pub alert_caution_style: Style,
     /// Background-colored padding space written before H1 text.
-    pub(crate) h1_prefix_style: Style,
+    pub h1_prefix_style: Style,
     /// Style for H1 heading text (fg + bg color).
-    pub(crate) h1_text_style: Style,
+    pub h1_text_style: Style,
+}
+
+impl Theme {
+    /// Set the H1 style, keeping `h1_prefix_style`'s background in sync with `text_style`'s.
+    pub fn with_h1(mut self, text_style: Style) -> Self {
+        let bg = text_style.get_bg_color();
+        self.h1_prefix_style = Style::new().bg_color(bg).fg_color(bg);
+        self.h1_text_style = text_style;
+        self
+    }
 }
 
 fn rgb(r: u8, g: u8, b: u8) -> Color {
