@@ -8,6 +8,8 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+## [2.11.1] – 2026-07-16
+
 ### Changed
 - The two-space left margin added in 2.11.0 is now opt-in via `--margin`,
   and disabled by default. Previously it was always on with no way to turn
@@ -952,7 +954,8 @@ Use `cargo release` to create a new release.
 - Support ordered and unordered lists, with nest.
 - Show links, with references grouped by section.
 
-[Unreleased]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.11.0...HEAD
+[Unreleased]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.11.1...HEAD
+[2.11.1]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.11.0...mdcat-2.11.1
 [2.11.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.10.1...mdcat-2.11.0
 [2.10.1]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.10.0...mdcat-2.10.1
 [2.10.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.9.1...mdcat-2.10.0
