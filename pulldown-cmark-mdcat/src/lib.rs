@@ -128,13 +128,20 @@ impl Environment {
 }
 
 /// Return the pulldown-cmark options mdcat uses for Markdown parsing.
-pub fn markdown_options() -> Options {
-    Options::ENABLE_TASKLISTS
+///
+/// If `smart_punctuation` is `true`, straight quotes, `--`/`---`, and `...` are rendered as their
+/// typographic equivalents (curly quotes, en/em dashes, ellipsis).
+pub fn markdown_options(smart_punctuation: bool) -> Options {
+    let mut options = Options::ENABLE_TASKLISTS
         | Options::ENABLE_STRIKETHROUGH
         | Options::ENABLE_TABLES
         | Options::ENABLE_FOOTNOTES
         | Options::ENABLE_MATH
-        | Options::ENABLE_GFM
+        | Options::ENABLE_GFM;
+    if smart_punctuation {
+        options |= Options::ENABLE_SMART_PUNCTUATION;
+    }
+    options
 }
 
 /// Strip YAML frontmatter from the beginning of a Markdown document.
@@ -232,6 +239,12 @@ mod tests {
                 syntax_theme: None,
             },
         )
+    }
+
+    #[test]
+    fn markdown_options_smart_punctuation_toggle() {
+        assert!(!markdown_options(false).contains(Options::ENABLE_SMART_PUNCTUATION));
+        assert!(markdown_options(true).contains(Options::ENABLE_SMART_PUNCTUATION));
     }
 
     mod layout {

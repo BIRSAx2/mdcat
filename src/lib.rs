@@ -115,7 +115,9 @@ pub fn read_input<T: AsRef<str>>(filename: T) -> Result<(PathBuf, String)> {
 /// Read from `filename` and render the contents to `output`. If `margin` is
 /// `true`, prepend a two-space left margin to every rendered line; callers
 /// must shrink `settings.terminal_size` by 2 columns beforehand so wrapping
-/// still respects the requested output width.
+/// still respects the requested output width. If `smart_punctuation` is
+/// `true`, render typographic punctuation (curly quotes, en/em dashes,
+/// ellipsis) instead of the literal input characters.
 #[instrument(skip(output, settings, resource_handler), level = "debug")]
 pub fn process_file(
     filename: &str,
@@ -123,6 +125,7 @@ pub fn process_file(
     resource_handler: &dyn ResourceUrlHandler,
     output: &mut Output,
     margin: bool,
+    smart_punctuation: bool,
 ) -> Result<()> {
     let (base_dir, input) = read_input(filename)?;
     let input = strip_frontmatter(&input);
@@ -131,7 +134,7 @@ pub fn process_file(
         "Read input, using {} as base directory",
         base_dir.display()
     );
-    let parser = Parser::new_ext(input, markdown_options());
+    let parser = Parser::new_ext(input, markdown_options(smart_punctuation));
     let env = Environment::for_local_directory(&base_dir)?;
 
     let ignore_broken_pipe = |error: io::Error| {

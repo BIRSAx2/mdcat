@@ -8,6 +8,11 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+### Added
+- `--smart-punctuation` renders typographic punctuation: straight quotes
+  become curly quotes, `--`/`---` become en/em dashes, and `...` becomes an
+  ellipsis. Off by default, to avoid silently changing existing output.
+
 ## [2.11.1] – 2026-07-16
 
 ### Changed

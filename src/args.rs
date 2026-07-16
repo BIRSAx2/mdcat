@@ -158,6 +158,10 @@ pub struct CommonArgs {
     /// Add a two-space left margin to all output. Reduces the effective render width accordingly.
     #[arg(long)]
     pub margin: bool,
+    /// Render typographic punctuation: straight quotes become curly, `--`/`---` become en/em
+    /// dashes, and `...` becomes an ellipsis.
+    #[arg(long)]
+    pub smart_punctuation: bool,
 }
 
 /// What resources mdcat may access.

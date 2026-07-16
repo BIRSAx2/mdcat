@@ -500,7 +500,7 @@ struct MarkdownAssets {
 }
 
 fn collect_markdown_assets(markdown: &str) -> MarkdownAssets {
-    let parser = Parser::new_ext(strip_frontmatter(markdown), markdown_options());
+    let parser = Parser::new_ext(strip_frontmatter(markdown), markdown_options(false));
     let mut images = Vec::new();
     let mut math = Vec::new();
     let mut current_image: Option<MarkdownImage> = None;
@@ -795,7 +795,7 @@ pub fn push_text_str(
     resource_handler: &dyn ResourceUrlHandler,
     markdown: &str,
 ) -> Result<Text<'static>> {
-    let parser = Parser::new_ext(strip_frontmatter(markdown), markdown_options());
+    let parser = Parser::new_ext(strip_frontmatter(markdown), markdown_options(false));
     push_text(settings, environment, resource_handler, parser)
 }
 

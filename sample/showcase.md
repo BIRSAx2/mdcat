@@ -9,6 +9,12 @@
 > [!TIP]
 > Set `$BAT_THEME` to use any bat syntax-highlighting theme for code blocks.
 
+## Punctuation
+
+Run with `--smart-punctuation` to see this rendered with curly quotes,
+en/em dashes, and an ellipsis: "straight quotes" become curly -- an em dash
+---like this--- and a trailing thought...
+
 ## Code
 
 ```rust

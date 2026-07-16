@@ -49,6 +49,7 @@ fn watch_file(
     resource_handler: &dyn ResourceUrlHandler,
     output: &mut Output,
     margin: bool,
+    smart_punctuation: bool,
 ) -> anyhow::Result<()> {
     let path = Path::new(filename)
         .canonicalize()
@@ -69,7 +70,14 @@ fn watch_file(
 
     let render = |output: &mut Output| {
         clear_screen();
-        if let Err(error) = process_file(filename, settings, resource_handler, output, margin) {
+        if let Err(error) = process_file(
+            filename,
+            settings,
+            resource_handler,
+            output,
+            margin,
+            smart_punctuation,
+        ) {
             eprintln!("Error: {filename}: {error:#}");
         }
     };
@@ -303,6 +311,7 @@ fn main() {
                         &resource_handler,
                         &mut output,
                         args.margin,
+                        args.smart_punctuation,
                     ) {
                         Ok(()) => 0,
                         Err(error) => {
@@ -320,6 +329,7 @@ fn main() {
                                 &resource_handler,
                                 &mut output,
                                 args.margin,
+                                args.smart_punctuation,
                             )
                             .map(|_| code)
                             .or_else(|error| {
