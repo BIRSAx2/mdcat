@@ -137,7 +137,8 @@ pub fn markdown_options(smart_punctuation: bool) -> Options {
         | Options::ENABLE_TABLES
         | Options::ENABLE_FOOTNOTES
         | Options::ENABLE_MATH
-        | Options::ENABLE_GFM;
+        | Options::ENABLE_GFM
+        | Options::ENABLE_DEFINITION_LIST;
     if smart_punctuation {
         options |= Options::ENABLE_SMART_PUNCTUATION;
     }
@@ -245,6 +246,59 @@ mod tests {
     fn markdown_options_smart_punctuation_toggle() {
         assert!(!markdown_options(false).contains(Options::ENABLE_SMART_PUNCTUATION));
         assert!(markdown_options(true).contains(Options::ENABLE_SMART_PUNCTUATION));
+    }
+
+    fn render_definition_list(markup: &str) -> Result<String> {
+        let source = Parser::new_ext(markup, markdown_options(false));
+        let mut sink = Vec::new();
+        let env =
+            Environment::for_local_directory(&std::env::current_dir().expect("Working directory"))?;
+        push_tty(
+            &Settings {
+                syntax_set: &SyntaxSet::default(),
+                terminal_capabilities: TerminalProgram::Dumb.capabilities(),
+                terminal_size: TerminalSize::default(),
+                theme: Theme::default(),
+                syntax_theme: None,
+            },
+            &env,
+            &NoopResourceHandler,
+            &mut sink,
+            source,
+        )?;
+        Ok(String::from_utf8_lossy(&sink).into())
+    }
+
+    #[test]
+    fn definition_list_tight() {
+        assert_eq!(
+            render_definition_list("Apple\n: A fruit.\n: A tech company.\n\nBanana\n: A fruit.\n")
+                .unwrap(),
+            "Apple\n    A fruit.\n    A tech company.\nBanana\n    A fruit.\n"
+        );
+    }
+
+    #[test]
+    fn definition_list_with_inline_markup_does_not_panic() {
+        // Regression test: bold/code/link/emphasis inside a term or description must not hit
+        // the "impossible state" panic in `write_event`.
+        let output = render_definition_list(
+            "Term with `code` and **bold**\n: Def with [a link](https://example.com) and _italics_.\n",
+        )
+        .unwrap();
+        assert!(output.contains("Term with code and bold"));
+        assert!(output.contains("Def with a link"));
+        assert!(output.contains("https://example.com"));
+    }
+
+    #[test]
+    fn definition_list_nested_blocks_do_not_panic() {
+        // Regression test: a loose definition (blank line before it) may contain nested
+        // paragraphs, lists, and code blocks; none of these must hit the panic either.
+        render_definition_list(
+            "Term\n\n: First paragraph.\n\n  Second paragraph.\n\n  - a nested item\n\n  ```\n  code\n  ```\n",
+        )
+        .unwrap();
     }
 
     mod layout {

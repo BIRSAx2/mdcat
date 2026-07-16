@@ -150,6 +150,7 @@ pub fn write_event<'a, W: Write>(
     data: StateData<'a>,
     event: Event<'a>,
 ) -> Result<StateAndData<StateData<'a>>> {
+    use self::DefinitionPart::*;
     use self::InlineState::*;
     use self::ListItemState::*;
     use self::StackedState::*;
@@ -264,6 +265,15 @@ pub fn write_event<'a, W: Write>(
 
             State::stack_onto(TopLevelAttrs::margin_before())
                 .current(Inline(ListItem(kind, StartItem), InlineAttrs::default()))
+                .and_data(data)
+                .ok()
+        }
+        (TopLevel(attrs), Start(Tag::DefinitionList)) => {
+            if attrs.margin_before != NoMargin {
+                writeln!(writer)?;
+            }
+            State::stack_onto(TopLevelAttrs::margin_before())
+                .current(Inline(Definition(Term, StartItem), InlineAttrs::default()))
                 .and_data(data)
                 .ok()
         }
@@ -388,6 +398,17 @@ pub fn write_event<'a, W: Write>(
             stack
                 .push(attrs.with_margin_before().into())
                 .current(Inline(ListItem(kind, StartItem), inline))
+                .and_data(data)
+                .ok()
+        }
+        (Stacked(stack, StyledBlock(attrs)), Start(Tag::DefinitionList)) => {
+            if attrs.margin_before != NoMargin {
+                writeln!(writer)?;
+            }
+            let inline = InlineAttrs::from(&attrs);
+            stack
+                .push(attrs.with_margin_before().into())
+                .current(Inline(Definition(Term, StartItem), inline))
                 .and_data(data)
                 .ok()
         }
@@ -620,6 +641,261 @@ pub fn write_event<'a, W: Write>(
                 ))
                 .and_data(data)
                 .ok()
+        }
+
+        // Definition lists.
+        //
+        // Structurally mirrors list items above: a term/description's content may be direct
+        // inline text (tight) or nested blocks wrapped in e.g. `Paragraph` (loose).
+        (Stacked(stack, Inline(Definition(_, state), attrs)), Start(Tag::DefinitionListTitle)) => {
+            if state == ItemBlock {
+                // Add margin before a new term following a previous term's nested block.
+                writeln!(writer)?;
+            }
+            write_indent(writer, attrs.indent)?;
+            stack
+                .current(Inline(Definition(Term, StartItem), attrs.clone()))
+                .and_data(data.current_line(CurrentLine {
+                    length: attrs.indent,
+                    trailing_space: None,
+                }))
+                .ok()
+        }
+        // Term text is bolded ad-hoc here, rather than folded into `attrs.style`, so the base
+        // style carries over unchanged to the description that follows.
+        (Stacked(stack, Inline(Definition(Term, state), attrs)), Text(text)) => {
+            let (prefix, prefix_cols) = quote_line_prefix(
+                &settings.terminal_capabilities,
+                &settings.theme,
+                attrs.quote_depth,
+                attrs.border_style,
+            );
+            let current_line = write_styled_and_wrapped(
+                writer,
+                &settings.terminal_capabilities,
+                &attrs.style.bold(),
+                settings.terminal_size.columns,
+                attrs.indent,
+                data.current_line,
+                text,
+                &prefix,
+                prefix_cols,
+            )?;
+            Ok(stack
+                .current(Inline(Definition(Term, state), attrs))
+                .and_data(StateData {
+                    current_line,
+                    ..data
+                }))
+        }
+        (
+            Stacked(stack, Inline(Definition(Term, state), attrs)),
+            End(TagEnd::DefinitionListTitle),
+        ) => {
+            if state != ItemBlock {
+                writeln!(writer)?;
+            }
+            // Carry `state` through unchanged (mirroring `End(Item)`): the term's content is
+            // always direct inline text, so `state` is `StartItem` here, meaning the very next
+            // description should *not* get a blank line before it.
+            stack
+                .current(Inline(Definition(Term, state), attrs))
+                .and_data(data.current_line(CurrentLine::empty()))
+                .ok()
+        }
+        (
+            Stacked(stack, Inline(Definition(_, state), attrs)),
+            Start(Tag::DefinitionListDefinition),
+        ) => {
+            if state == ItemBlock {
+                writeln!(writer)?;
+            }
+            let indent = attrs.indent + 4;
+            write_indent(writer, indent)?;
+            stack
+                .current(Inline(
+                    Definition(Description, StartItem),
+                    InlineAttrs { indent, ..attrs },
+                ))
+                .and_data(data.current_line(CurrentLine {
+                    length: indent,
+                    trailing_space: None,
+                }))
+                .ok()
+        }
+        (
+            Stacked(stack, Inline(Definition(Description, state), attrs)),
+            End(TagEnd::DefinitionListDefinition),
+        ) => {
+            let data = if state != ItemBlock {
+                writeln!(writer)?;
+                data.current_line(CurrentLine::empty())
+            } else {
+                data
+            };
+            let indent = attrs.indent.saturating_sub(4);
+            stack
+                .current(Inline(
+                    Definition(Description, state),
+                    InlineAttrs { indent, ..attrs },
+                ))
+                .and_data(data)
+                .ok()
+        }
+        (Stacked(stack, Inline(Definition(part, state), attrs)), Start(Paragraph)) => {
+            if state != StartItem {
+                writeln!(writer)?;
+                write_indent(writer, attrs.indent)?;
+            }
+            stack
+                .push(Inline(Definition(part, ItemBlock), attrs.clone()))
+                .current(Inline(InlineText, attrs))
+                .and_data(data)
+                .ok()
+        }
+        (Stacked(stack, Inline(Definition(part, state), attrs)), Start(Tag::HtmlBlock)) => {
+            let InlineAttrs { indent, style, .. } = attrs;
+            let initial_indent = if state == StartItem {
+                0
+            } else {
+                writeln!(writer)?;
+                indent
+            };
+            stack
+                .push(Inline(Definition(part, ItemBlock), attrs))
+                .current(
+                    HtmlBlockAttrs {
+                        style: settings.theme.html_block_style.on_top_of(&style),
+                        indent,
+                        initial_indent,
+                    }
+                    .into(),
+                )
+                .and_data(data)
+                .ok()
+        }
+        (Stacked(stack, Inline(Definition(part, _), attrs)), Start(CodeBlock(ck))) => {
+            writeln!(writer)?;
+            let InlineAttrs { indent, style, .. } = attrs;
+            stack
+                .push(Inline(Definition(part, ItemBlock), attrs))
+                .current(write_start_code_block(writer, settings, indent, style, ck)?)
+                .and_data(data)
+                .ok()
+        }
+        (Stacked(stack, Inline(Definition(part, _), attrs)), Rule) => {
+            writeln!(writer)?;
+            write_indent(writer, attrs.indent)?;
+            write_rule(
+                writer,
+                &settings.terminal_capabilities,
+                &settings.theme,
+                settings.terminal_size.columns.saturating_sub(attrs.indent),
+            )?;
+            writeln!(writer)?;
+            stack
+                .current(Inline(Definition(part, ItemBlock), attrs))
+                .and_data(data)
+                .ok()
+        }
+        (Stacked(stack, Inline(Definition(part, state), attrs)), Start(Heading { level, .. })) => {
+            if state != StartItem {
+                writeln!(writer)?;
+                write_indent(writer, attrs.indent)?;
+            }
+            let style = attrs.style;
+            stack
+                .push(Inline(Definition(part, ItemBlock), attrs))
+                .current(write_start_heading(
+                    writer,
+                    &settings.terminal_capabilities,
+                    &settings.theme,
+                    style,
+                    level,
+                )?)
+                .and_data(data)
+                .ok()
+        }
+        (Stacked(stack, Inline(Definition(part, _), attrs)), Start(List(start))) => {
+            writeln!(writer)?;
+            let nested_kind = start.map_or(ListItemKind::Unordered, |start| {
+                ListItemKind::Ordered(start)
+            });
+            stack
+                .push(Inline(Definition(part, ItemBlock), attrs.clone()))
+                .current(Inline(ListItem(nested_kind, StartItem), attrs))
+                .and_data(data)
+                .ok()
+        }
+        (Stacked(stack, Inline(Definition(part, _), attrs)), Start(Tag::DefinitionList)) => {
+            writeln!(writer)?;
+            stack
+                .push(Inline(Definition(part, ItemBlock), attrs.clone()))
+                .current(Inline(Definition(Term, StartItem), attrs))
+                .and_data(data)
+                .ok()
+        }
+        (Stacked(stack, Inline(Definition(part, _), attrs)), Start(Table(alignments))) => {
+            writeln!(writer)?;
+            let current_table = CurrentTable {
+                alignments,
+                ..data.current_table
+            };
+            let data = StateData {
+                current_table,
+                ..data
+            };
+            stack
+                .push(Inline(Definition(part, ItemBlock), attrs.clone()))
+                .current(TableBlock(TableBlockAttrs::from_inline(&attrs)))
+                .and_data(data.current_line(CurrentLine::empty()))
+                .ok()
+        }
+        (Stacked(stack, Inline(Definition(part, _), attrs)), Start(BlockQuote(bq_kind))) => {
+            writeln!(writer)?;
+            let block_attrs = if let Some(bq_kind) = bq_kind {
+                let (style, label) = alert_style_and_label(bq_kind, &settings.theme);
+                write_alert_label(writer, &settings.terminal_capabilities, style, label)?;
+                StyledBlockAttrs::from(&attrs)
+                    .without_margin_before()
+                    .alert(style)
+            } else {
+                StyledBlockAttrs::from(&attrs)
+                    .without_margin_before()
+                    .block_quote()
+            };
+            stack
+                .push(Inline(Definition(part, ItemBlock), attrs))
+                .current(block_attrs.into())
+                .and_data(data)
+                .ok()
+        }
+        (Stacked(stack, Inline(Definition(part, ItemBlock), attrs)), Text(text)) => {
+            let (prefix, prefix_cols) = quote_line_prefix(
+                &settings.terminal_capabilities,
+                &settings.theme,
+                attrs.quote_depth,
+                attrs.border_style,
+            );
+            write!(writer, "{}", prefix)?;
+            write_indent(writer, attrs.indent)?;
+            let current_line = write_styled_and_wrapped(
+                writer,
+                &settings.terminal_capabilities,
+                &attrs.style,
+                settings.terminal_size.columns,
+                attrs.indent,
+                data.current_line,
+                text,
+                &prefix,
+                prefix_cols,
+            )?;
+            Ok(stack
+                .current(Inline(Definition(part, ItemText), attrs))
+                .and_data(StateData {
+                    current_line,
+                    ..data
+                }))
         }
 
         // Literal blocks without highlighting
@@ -1509,9 +1785,15 @@ pub fn write_event<'a, W: Write>(
         }
 
         // Unconditional returns to previous states
-        (Stacked(stack, _), End(TagEnd::BlockQuote(_) | TagEnd::List(_) | TagEnd::HtmlBlock)) => {
-            stack.pop().and_data(data).ok()
-        }
+        (
+            Stacked(stack, _),
+            End(
+                TagEnd::BlockQuote(_)
+                | TagEnd::List(_)
+                | TagEnd::HtmlBlock
+                | TagEnd::DefinitionList,
+            ),
+        ) => stack.pop().and_data(data).ok(),
 
         // Footnotes
         (state, Start(Tag::FootnoteDefinition(label))) => {

@@ -97,6 +97,21 @@ pub enum InlineState {
     /// List item text carries the type of the current item as well as a "state" which we use for
     /// newline control when ending and starting list items.
     ListItem(ListItemKind, ListItemState),
+    /// A definition list term (`<dt>`) or description (`<dd>`).
+    ///
+    /// Structurally the same hybrid inline/block situation as `ListItem`: term and description
+    /// content can be direct inline text (tight) or nested blocks wrapped in `Paragraph` etc.
+    /// (loose), so we reuse `ListItemState` for the same newline-control bookkeeping.
+    Definition(DefinitionPart, ListItemState),
+}
+
+/// Which part of a definition list entry we're currently rendering.
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum DefinitionPart {
+    /// The term being defined (`<dt>`).
+    Term,
+    /// A description of the term (`<dd>`). A term may have more than one.
+    Description,
 }
 
 /// State attributes for styled blocks.

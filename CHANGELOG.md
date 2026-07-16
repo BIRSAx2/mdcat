@@ -12,6 +12,8 @@ Use `cargo release` to create a new release.
 - `--smart-punctuation` renders typographic punctuation: straight quotes
   become curly quotes, `--`/`---` become en/em dashes, and `...` becomes an
   ellipsis. Off by default, to avoid silently changing existing output.
+- Definition lists (`Term` / `: Description`) are now rendered, with the term
+  in bold and its description(s) indented underneath.
 
 ## [2.11.1] – 2026-07-16
 

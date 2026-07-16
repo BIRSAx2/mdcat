@@ -26,6 +26,12 @@ fn fibonacci(n: u64) -> u64 {
 }
 ```
 
+## Definitions
+
+mdcat
+: A CLI tool that renders Markdown to the terminal.
+: Also a mood after a long refactor.
+
 ## Tables
 
 | Language |    Paradigm    |    Typing |
