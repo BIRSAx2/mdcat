@@ -20,7 +20,7 @@ and `--theme nord` (left to right), using [JetBrains Mono].
 `mdcat` works best with [iTerm2], [WezTerm], [kitty], and [Ghostty], and a good terminal font with italic characters.
 Then it
 
-- nicely renders all basic CommonMark syntax,
+- nicely renders all basic CommonMark syntax, plus definition lists,
 - renders footnotes and inline markup in table cells,
 - highlights code blocks with syntax definitions from [bat] (TOML, TypeScript, Dockerfile, Zig, Nix, and more),
   using the colour theme of your choice — including any theme [bat] supports via `$BAT_THEME`,
@@ -30,6 +30,8 @@ Then it
 - adds jump marks for headings in [iTerm2] (jump forwards and backwards with <key>⇧⌘↓</key> and <key>⇧⌘↑</key>),
 - ships eight built-in colour themes (`catppuccin-mocha`, `catppuccin-latte`, `gruvbox-dark`, `gruvbox-light`,
   `dracula`, `nord`, `solarized-dark`, `solarized-light`) plus auto dark/light detection,
+  and lets you fully customise colours and styles via `~/.config/mdcat/config.toml`,
+- can render typographic punctuation (curly quotes, en/em dashes, an ellipsis) with `--smart-punctuation`,
 - can watch a file and re-render it on every save with `--watch`, for a live preview while editing.
 
 | Terminal           | Basic syntax | Syntax highlighting | Images | Math  | Jump marks |
@@ -80,7 +82,12 @@ To pick a colour theme:
 ```console
 $ mdcat --theme catppuccin-mocha sample.md
 $ MDCAT_THEME=dracula mdcat sample.md
+$ mdcat --list-themes  # preview every built-in theme
 ```
+
+To customise colours and styles, or set defaults for flags like `--margin`, `--smart-punctuation`,
+or `--columns`, create `~/.config/mdcat/config.toml`; see the [mdcat(1)](./mdcat.1.adoc) manpage's
+"Configuration file" section for the format.
 
 To use a [bat] syntax-highlighting theme for code blocks:
 
