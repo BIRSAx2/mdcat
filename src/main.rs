@@ -188,6 +188,30 @@ fn resolve_theme(choice: ThemeChoice, is_tty: bool) -> ResolvedTheme {
     }
 }
 
+/// Resolve the effective theme: `cli_theme` (from `--theme`/`$MDCAT_THEME`) if given, otherwise
+/// the `base` theme from the user's config file if it sets one, otherwise the default
+/// (auto-detect dark/light). Applies the config file's style overrides on top, if present.
+fn resolve_effective_theme(
+    cli_theme: Option<ThemeChoice>,
+    theme_config: Option<&mdcat::config::ThemeConfig>,
+    is_tty: bool,
+) -> anyhow::Result<ResolvedTheme> {
+    let choice = match cli_theme {
+        Some(choice) => choice,
+        None => match theme_config.and_then(|c| c.base.as_deref()) {
+            Some(name) => ThemeChoice::from_str(name, true)
+                .map_err(|_| anyhow::anyhow!("Invalid base theme {name:?} in config file"))?,
+            None => ThemeChoice::default(),
+        },
+    };
+
+    let mut resolved = resolve_theme(choice, is_tty);
+    if let Some(theme_config) = theme_config {
+        resolved.mdcat = mdcat::config::apply_theme(theme_config, resolved.mdcat)?;
+    }
+    Ok(resolved)
+}
+
 fn resolve_syntax_theme(
     is_light: bool,
     default_embedded: Option<EmbeddedThemeName>,
@@ -305,6 +329,24 @@ fn main() {
         std::process::exit(0);
     }
 
+    let config = match mdcat::config::config_path()
+        .map(|path| mdcat::config::load(&path))
+        .transpose()
+    {
+        Ok(config) => config.flatten(),
+        Err(error) => {
+            eprintln!("Error: {error:#}");
+            std::process::exit(1);
+        }
+    };
+    let defaults = config.as_ref().map(|c| &c.defaults);
+    let margin = args.margin || defaults.and_then(|d| d.margin).unwrap_or(false);
+    let smart_punctuation =
+        args.smart_punctuation || defaults.and_then(|d| d.smart_punctuation).unwrap_or(false);
+    let columns = args.columns.or_else(|| defaults.and_then(|d| d.columns));
+    let local_only = args.local_only || defaults.and_then(|d| d.local_only).unwrap_or(false);
+    let fail_fast = args.fail_fast || defaults.and_then(|d| d.fail_fast).unwrap_or(false);
+
     let terminal = if args.no_colour {
         TerminalProgram::Dumb
     } else if args.paginate() || args.ansi_only {
@@ -325,14 +367,14 @@ fn main() {
         anstyle_query::windows::enable_ansi_colors();
 
         let terminal_size = TerminalSize::detect().unwrap_or_default();
-        let terminal_size = match args.columns {
+        let terminal_size = match columns {
             None => terminal_size.with_max_columns(terminal_size.columns.min(80)),
             Some(0) => terminal_size.with_max_columns(u16::MAX),
             Some(max_columns) => terminal_size.with_max_columns(max_columns),
         };
         // Reserve the margin's two columns so wrapped output plus margin never
         // exceeds the requested width.
-        let terminal_size = if args.margin {
+        let terminal_size = if margin {
             terminal_size.with_max_columns(terminal_size.columns.saturating_sub(2))
         } else {
             terminal_size
@@ -352,7 +394,14 @@ fn main() {
             std::process::exit(1);
         }
 
-        let resolved = resolve_theme(args.theme, is_tty);
+        let theme_config = config.as_ref().and_then(|c| c.theme.as_ref());
+        let resolved = match resolve_effective_theme(args.theme, theme_config, is_tty) {
+            Ok(resolved) => resolved,
+            Err(error) => {
+                eprintln!("Error: {error:#}");
+                std::process::exit(1);
+            }
+        };
         let syntax_theme = resolve_syntax_theme(resolved.is_light, resolved.default_syntax);
         let theme = resolved.mdcat;
         let exit_code = match Output::new(args.paginate()) {
@@ -371,16 +420,21 @@ fn main() {
                     ?settings.terminal_capabilities,
                     "settings"
                 );
+                let resource_access = if local_only {
+                    mdcat::args::ResourceAccess::LocalOnly
+                } else {
+                    mdcat::args::ResourceAccess::Remote
+                };
                 // TODO: Handle this error properly
-                let resource_handler = create_resource_handler(args.resource_access()).unwrap();
+                let resource_handler = create_resource_handler(resource_access).unwrap();
                 if args.watch {
                     match watch_file(
                         &args.filenames[0],
                         &settings,
                         &resource_handler,
                         &mut output,
-                        args.margin,
-                        args.smart_punctuation,
+                        margin,
+                        smart_punctuation,
                     ) {
                         Ok(()) => 0,
                         Err(error) => {
@@ -397,13 +451,13 @@ fn main() {
                                 &settings,
                                 &resource_handler,
                                 &mut output,
-                                args.margin,
-                                args.smart_punctuation,
+                                margin,
+                                smart_punctuation,
                             )
                             .map(|_| code)
                             .or_else(|error| {
                                 eprintln!("Error: {filename}: {error}");
-                                if args.fail_fast {
+                                if fail_fast {
                                     Err(error)
                                 } else {
                                     Ok(1)

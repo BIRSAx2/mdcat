@@ -126,13 +126,17 @@ pub struct CommonArgs {
     /// Disable all colours and other styles.
     #[arg(short = 'c', long, aliases=["nocolour", "no-color", "nocolor"])]
     pub no_colour: bool,
-    /// Maximum number of columns to use for output. Defaults to 80 or the terminal width, whichever is smaller. Pass 0 to disable line wrapping.
+    /// Maximum number of columns to use for output. Defaults to 80, the terminal width (whichever
+    /// is smaller), or `defaults.columns` in `~/.config/mdcat/config.toml`. Pass 0 to disable
+    /// line wrapping.
     #[arg(long)]
     pub columns: Option<u16>,
-    /// Do not load remote resources like images.
+    /// Do not load remote resources like images. Also settable via `defaults.local_only` in
+    /// `~/.config/mdcat/config.toml`.
     #[arg(short, long = "local")]
     pub local_only: bool,
-    /// Exit immediately if any error occurs processing an input file.
+    /// Exit immediately if any error occurs processing an input file. Also settable via
+    /// `defaults.fail_fast` in `~/.config/mdcat/config.toml`.
     #[arg(long = "fail")]
     pub fail_fast: bool,
     /// Print detected terminal name and exit.
@@ -144,22 +148,20 @@ pub struct CommonArgs {
     /// Generate completions for a shell to standard output and exit.
     #[arg(long)]
     pub completions: Option<Shell>,
-    /// Colour theme to use. Defaults to auto-detecting dark or light from the terminal.
-    #[arg(
-        long,
-        env = "MDCAT_THEME",
-        default_value = "auto",
-        value_name = "THEME"
-    )]
-    pub theme: ThemeChoice,
+    /// Colour theme to use. Defaults to auto-detecting dark or light from the terminal, or to
+    /// the `[theme]` section's `base` in `~/.config/mdcat/config.toml` if that file exists.
+    #[arg(long, env = "MDCAT_THEME", value_name = "THEME")]
+    pub theme: Option<ThemeChoice>,
     /// Watch the input file and re-render on change. Requires a single file argument.
     #[arg(short, long)]
     pub watch: bool,
     /// Add a two-space left margin to all output. Reduces the effective render width accordingly.
+    /// Also settable via `defaults.margin` in `~/.config/mdcat/config.toml`.
     #[arg(long)]
     pub margin: bool,
     /// Render typographic punctuation: straight quotes become curly, `--`/`---` become en/em
-    /// dashes, and `...` becomes an ellipsis.
+    /// dashes, and `...` becomes an ellipsis. Also settable via `defaults.smart_punctuation` in
+    /// `~/.config/mdcat/config.toml`.
     #[arg(long)]
     pub smart_punctuation: bool,
     /// Print a sample rendered with every built-in theme, to help pick one, and exit.

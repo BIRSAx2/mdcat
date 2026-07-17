@@ -32,6 +32,8 @@ use output::Output;
 /// Argument parsing for mdcat.
 #[allow(missing_docs)]
 pub mod args;
+/// User configuration file.
+pub mod config;
 /// Output handling for mdcat.
 pub mod output;
 /// Resource handling for mdca.

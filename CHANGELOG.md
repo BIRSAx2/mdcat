@@ -16,6 +16,17 @@ Use `cargo release` to create a new release.
   in bold and its description(s) indented underneath.
 - `--list-themes` prints a short sample rendered with every built-in theme,
   to help pick one.
+- Configuration file at `~/.config/mdcat/config.toml`: a `[defaults]` table
+  sets default values for `--margin`, `--smart-punctuation`, `--columns`,
+  `--local`, and `--fail` (the CLI flag always wins when passed); a `[theme]`
+  table picks a built-in theme as a starting point (`base`) and overrides
+  individual styles on top of it via a `[theme.palette]` of named colors and
+  a `[theme.styles]` table, in the same spirit as editor theme files like
+  Helix's `theme.toml`.
+- `pulldown-cmark-mdcat`: `Theme`'s style fields are now public (previously
+  `pub(crate)`), so themes can be fully customised from outside the crate.
+  Added `Theme::with_h1` to keep the derived `h1_prefix_style` background in
+  sync when changing the H1 style.
 
 ## [2.11.1] – 2026-07-16
 

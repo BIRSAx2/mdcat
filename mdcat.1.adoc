@@ -103,20 +103,35 @@ This is the default when run as `mdcat`.
 --ansi::
     Skip terminal detection and only use ANSI formatting.
 
---columns=_COLUMNS_::
+[[columns-option]]--columns=_COLUMNS_::
     Maximum number of columns to use for text output.
     Defaults to the size of the underlying terminal if omitted.
 
--l::
+[[local-option]]-l::
 --local::
     Do not access remote resources.
 
---fail::
+[[fail-option]]--fail::
     Fail immediately at the first FILE which fails to read.
     By default, mdcat continues with the next file.
 
 --detect-terminal::
     Detect the terminal program, print its name, and exit.
+
+[[theme-option]]--theme=_THEME_::
+    Colour theme to use.
+    _THEME_ is one of `auto`, `dark`, `light`, `catppuccin-mocha`, `catppuccin-latte`, `gruvbox-dark`, `gruvbox-light`, `dracula`, `nord`, `solarized-dark`, or `solarized-light`.
++
+Defaults to `auto`, which detects dark or light mode from the terminal, unless `~/.config/mdcat/config.toml` sets a `base` theme (see <<Configuration file>>).
+
+--list-themes::
+    Print a sample rendered with every built-in theme, to help pick one, and exit.
+
+[[margin-option]]--margin::
+    Add a two-space left margin to all output, reducing the effective render width accordingly.
+
+[[smart-punctuation-option]]--smart-punctuation::
+    Render typographic punctuation: straight quotes become curly, `--`/`---` become en/em dashes, and `...` becomes an ellipsis.
 
 -w::
 --watch::
@@ -137,6 +152,75 @@ This is the default when run as `mdcat`.
     Show the version of mdcat and exit.
     The long flag also includes information about the builtin features.
 
+
+== Configuration file
+
+`mdcat` reads `~/.config/mdcat/config.toml` (or `$XDG_CONFIG_HOME/mdcat/config.toml` if that variable is set) if it exists.
+The file has two parts: a `[defaults]` table setting default values for a few CLI flags, and a `[theme]` table customising a built-in theme.
+
+[source,toml]
+----
+[defaults]
+margin = true
+columns = 100
+
+[theme]
+base = "catppuccin-mocha"
+
+[theme.palette]
+mauve = "#cba6f7"
+
+[theme.styles]
+h2 = { fg = "mauve", modifiers = ["bold"] }
+code = { fg = "bright-yellow" }
+----
+
+=== `[defaults]`
+
+Each key sets the default value for a CLI flag, used only when that flag isn't passed explicitly (and, for `columns`, when `$COLUMNS`/terminal size detection doesn't otherwise apply).
+
+`margin`::
+    Default for <<margin-option,`--margin`>>.
+
+`smart_punctuation`::
+    Default for <<smart-punctuation-option,`--smart-punctuation`>>.
+
+`columns`::
+    Default for <<columns-option,`--columns`>>.
+
+`local_only`::
+    Default for <<local-option,`--local`>>.
+
+`fail_fast`::
+    Default for <<fail-option,`--fail`>>.
+
+=== `[theme]`
+
+The file picks a built-in theme as a starting point (`base`), and overrides individual styles on top of it.
+
+`base`::
+    The built-in theme to start from; see <<theme-option,`--theme`>> for the list of names.
+    If omitted, uses whichever theme `--theme`/`$MDCAT_THEME` would otherwise select.
++
+`--theme`/`$MDCAT_THEME`, if given, always wins over `base`; the `[theme.styles]` overrides below still apply on top regardless.
+
+`rule`::
+    Override for the ruler colour. A plain colour value (see below), since rules have no other style.
+
+`[theme.palette]`::
+    Named colours that `fg`/`bg` below may reference by name, instead of repeating a literal colour.
+
+`[theme.styles]`::
+    Per-element style overrides.
+Each entry is a table with any of:
++
+    * `fg`: foreground colour.
+    * `bg`: background colour.
+    * `modifiers`: a list of `bold`, `dimmed`, `italic`, `underline`, `blink`, `invert`, `hidden`, `strikethrough`.
++
+A colour value is a `#rrggbb` hex code, an ANSI colour name (`black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `white`, or the `bright-` prefixed variant of any of these), or a name defined in `[theme.palette]`.
++
+Valid style names: `html_block`, `inline_html`, `code`, `link`, `image_link`, `quote_border`, `h1_text`, `h2`, `h3`, `h4`, `h5`, `h6`, `footnote`, `math`, `alert_note`, `alert_tip`, `alert_important`, `alert_warning`, `alert_caution`.
 
 == Exit status
 
@@ -237,8 +321,6 @@ https://iterm2.com/documentation-escape-codes.html[Marks].
 == Bugs
 
 Please report bugs to https://github.com/BIRSAx2/mdcat/issues.
-
-Currently does not provide means to customize styles and colours.
 
 == Examples
 
