@@ -1,0 +1,78 @@
+name: "Test & Lint"
+
+on:
+  push:
+    # Don't run CI for tags; there's always a branch for the tag as well so
+    # there's no point in testing it separately
+    tags-ignore: "*"
+    # Only test direct pushes to main; for other branches we can always create a
+    # (draft) PR if we need CI. See https://github.com/orgs/community/discussions/26276#discussioncomment-3251154
+    # for the general idea.
+    branches: main
+    paths-ignore:
+      - screenshots/**
+      - README.md
+      - CHANGELOG.md
+      - LICENSE
+  pull_request:
+
+jobs:
+  # Lint things which are independent from the build target
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Scripts
+      - uses: docker://mvdan/shfmt
+        with:
+          args: -i 4 -l -d scripts/combine-screenshots scripts/package scripts/screenshot-windows
+      - uses: docker://koalaman/shellcheck:stable
+        with:
+          args: -S style -o all scripts/combine-screenshots scripts/package scripts/screenshot-windows
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      # Test formatting
+      - run: cargo fmt --all -- --check
+
+      # Dependency policies
+      - uses: EmbarkStudios/cargo-deny-action@v2
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          arguments: "--no-default-features"
+          manifest-path: "./pulldown-cmark-mdcat/Cargo.toml"
+
+      # Manpage
+      - run: sudo apt-get install -y asciidoctor
+      - run: asciidoctor -b manpage -a reproducible --warnings mdcat.1.adoc
+      - run: man -l --warnings=w --pager=cat mdcat.1
+        env:
+          MANWIDTH: 80
+
+  # Test mdcat itself
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+
+      # Test library with no features
+      - run: cargo clippy -p pulldown-cmark-mdcat --all-targets --locked --no-default-features
+      - run: cargo test -p pulldown-cmark-mdcat --locked --no-default-features
+
+      # Build and test entire workspace in default configuration
+      - run: cargo clippy --workspace --all-targets --locked
+      - run: cargo test --workspace --locked
+
+      # Run on our complete example, just to assert that the CLI doesn't crash
+      - run: cargo run -- sample/common-mark.md
+
+  # No test-windows job here: this runner only registers Linux container
+  # labels (see modules/forgejo.nix). Add a windows-labeled runner instance
+  # later if Windows coverage is needed again.
