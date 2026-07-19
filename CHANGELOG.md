@@ -8,6 +8,16 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+### Added
+- Custom heading markers and GFM alert icons/labels via `text` in a
+  `[theme.styles]` entry in `~/.config/mdcat/config.toml`: set `h2`-`h6` to
+  override the marker written before heading text, or `alert_note`-
+  `alert_caution` to override the icon and label written for that alert
+  (GH #23).
+- `pulldown-cmark-mdcat`: `Theme` gained `h2_marker`-`h6_marker` and
+  `alert_note_label`-`alert_caution_label` fields (all public `String`s)
+  controlling the text previously hardcoded in the renderer.
+
 ## [2.12.0] – 2026-07-17
 
 ### Added

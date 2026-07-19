@@ -157,6 +157,7 @@ Defaults to `auto`, which detects dark or light mode from the terminal, unless `
 
 `mdcat` reads `~/.config/mdcat/config.toml` (or `$XDG_CONFIG_HOME/mdcat/config.toml` if that variable is set) if it exists.
 The file has two parts: a `[defaults]` table setting default values for a few CLI flags, and a `[theme]` table customising a built-in theme.
+See `config.toml.example` in the mdcat source repository for a fully annotated example.
 
 [source,toml]
 ----
@@ -171,8 +172,9 @@ base = "catppuccin-mocha"
 mauve = "#cba6f7"
 
 [theme.styles]
-h2 = { fg = "mauve", modifiers = ["bold"] }
+h2 = { fg = "mauve", modifiers = ["bold"], text = "» " }
 code = { fg = "bright-yellow" }
+alert_note = { text = " NOTE" }
 ----
 
 === `[defaults]`
@@ -217,6 +219,7 @@ Each entry is a table with any of:
     * `fg`: foreground colour.
     * `bg`: background colour.
     * `modifiers`: a list of `bold`, `dimmed`, `italic`, `underline`, `blink`, `invert`, `hidden`, `strikethrough`.
+    * `text`: for `h2`-`h6`, the marker written before the heading text (default `━━ `, `── `, `┄ `, `╌ `, `· `); for `alert_note`-`alert_caution`, the icon and label written for that alert (default `ℹ NOTE`, `◆ TIP`, `★ IMPORTANT`, `⚠ WARNING`, `✖ CAUTION`). Ignored for other style names.
 +
 A colour value is a `#rrggbb` hex code, an ANSI colour name (`black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `white`, or the `bright-` prefixed variant of any of these), or a name defined in `[theme.palette]`.
 +

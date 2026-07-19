@@ -30,7 +30,8 @@ Then it
 - adds jump marks for headings in [iTerm2] (jump forwards and backwards with <key>⇧⌘↓</key> and <key>⇧⌘↑</key>),
 - ships eight built-in colour themes (`catppuccin-mocha`, `catppuccin-latte`, `gruvbox-dark`, `gruvbox-light`,
   `dracula`, `nord`, `solarized-dark`, `solarized-light`) plus auto dark/light detection,
-  and lets you fully customise colours and styles via `~/.config/mdcat/config.toml`,
+  and lets you fully customise colours, heading markers, and GFM alert icons/labels via
+  `~/.config/mdcat/config.toml` (see [config.toml.example](./config.toml.example)),
 - can render typographic punctuation (curly quotes, en/em dashes, an ellipsis) with `--smart-punctuation`,
 - can watch a file and re-render it on every save with `--watch`, for a live preview while editing.
 
@@ -85,9 +86,10 @@ $ MDCAT_THEME=dracula mdcat sample.md
 $ mdcat --list-themes  # preview every built-in theme
 ```
 
-To customise colours and styles, or set defaults for flags like `--margin`, `--smart-punctuation`,
-or `--columns`, create `~/.config/mdcat/config.toml`; see the [mdcat(1)](./mdcat.1.adoc) manpage's
-"Configuration file" section for the format.
+To customise colours, heading markers, and GFM alert icons/labels, or set defaults for flags like
+`--margin`, `--smart-punctuation`, or `--columns`, create `~/.config/mdcat/config.toml`.
+See [config.toml.example](./config.toml.example) for a fully annotated example, or the
+[mdcat(1)](./mdcat.1.adoc) manpage's "Configuration file" section for the reference.
 
 To use a [bat] syntax-highlighting theme for code blocks:
 

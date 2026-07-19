@@ -63,7 +63,8 @@ pub struct ThemeConfig {
     pub styles: HashMap<String, StyleConfig>,
 }
 
-/// A single style override: foreground/background color and text effects.
+/// A single style override: foreground/background color, text effects, and, for headings and
+/// alerts, the marker/label text itself.
 #[derive(Debug, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct StyleConfig {
@@ -75,6 +76,9 @@ pub struct StyleConfig {
     /// `strikethrough`.
     #[serde(default)]
     pub modifiers: Vec<String>,
+    /// The marker written before heading text (`h2`-`h6`), or the icon and label written for an
+    /// alert (`alert_note`-`alert_caution`). Ignored for other style names.
+    pub text: Option<String>,
 }
 
 /// Return the path to the user's config file, if the platform has a config directory.
@@ -206,20 +210,68 @@ pub fn apply_theme(config: &ThemeConfig, base: Theme) -> Result<Theme> {
             "link" => theme.link_style = resolve(theme.link_style)?,
             "image_link" => theme.image_link_style = resolve(theme.image_link_style)?,
             "quote_border" => theme.quote_border_style = resolve(theme.quote_border_style)?,
-            "h2" => theme.h2_style = resolve(theme.h2_style)?,
-            "h3" => theme.h3_style = resolve(theme.h3_style)?,
-            "h4" => theme.h4_style = resolve(theme.h4_style)?,
-            "h5" => theme.h5_style = resolve(theme.h5_style)?,
-            "h6" => theme.h6_style = resolve(theme.h6_style)?,
+            "h2" => {
+                theme.h2_style = resolve(theme.h2_style)?;
+                if let Some(text) = &style_config.text {
+                    theme.h2_marker = text.clone();
+                }
+            }
+            "h3" => {
+                theme.h3_style = resolve(theme.h3_style)?;
+                if let Some(text) = &style_config.text {
+                    theme.h3_marker = text.clone();
+                }
+            }
+            "h4" => {
+                theme.h4_style = resolve(theme.h4_style)?;
+                if let Some(text) = &style_config.text {
+                    theme.h4_marker = text.clone();
+                }
+            }
+            "h5" => {
+                theme.h5_style = resolve(theme.h5_style)?;
+                if let Some(text) = &style_config.text {
+                    theme.h5_marker = text.clone();
+                }
+            }
+            "h6" => {
+                theme.h6_style = resolve(theme.h6_style)?;
+                if let Some(text) = &style_config.text {
+                    theme.h6_marker = text.clone();
+                }
+            }
             "footnote" => theme.footnote_style = resolve(theme.footnote_style)?,
             "math" => theme.math_style = resolve(theme.math_style)?,
-            "alert_note" => theme.alert_note_style = resolve(theme.alert_note_style)?,
-            "alert_tip" => theme.alert_tip_style = resolve(theme.alert_tip_style)?,
-            "alert_important" => {
-                theme.alert_important_style = resolve(theme.alert_important_style)?
+            "alert_note" => {
+                theme.alert_note_style = resolve(theme.alert_note_style)?;
+                if let Some(text) = &style_config.text {
+                    theme.alert_note_label = text.clone();
+                }
             }
-            "alert_warning" => theme.alert_warning_style = resolve(theme.alert_warning_style)?,
-            "alert_caution" => theme.alert_caution_style = resolve(theme.alert_caution_style)?,
+            "alert_tip" => {
+                theme.alert_tip_style = resolve(theme.alert_tip_style)?;
+                if let Some(text) = &style_config.text {
+                    theme.alert_tip_label = text.clone();
+                }
+            }
+            "alert_important" => {
+                theme.alert_important_style = resolve(theme.alert_important_style)?;
+                if let Some(text) = &style_config.text {
+                    theme.alert_important_label = text.clone();
+                }
+            }
+            "alert_warning" => {
+                theme.alert_warning_style = resolve(theme.alert_warning_style)?;
+                if let Some(text) = &style_config.text {
+                    theme.alert_warning_label = text.clone();
+                }
+            }
+            "alert_caution" => {
+                theme.alert_caution_style = resolve(theme.alert_caution_style)?;
+                if let Some(text) = &style_config.text {
+                    theme.alert_caution_label = text.clone();
+                }
+            }
             "h1_text" => {
                 let style = resolve(theme.h1_text_style)?;
                 theme = theme.with_h1(style);
@@ -278,6 +330,7 @@ mod tests {
             fg: Some("bright-red".to_string()),
             bg: None,
             modifiers: vec!["bold".to_string(), "italic".to_string()],
+            text: None,
         };
         let style = resolve_style(&config, Style::new(), &HashMap::new()).unwrap();
         assert_eq!(
@@ -363,6 +416,45 @@ mod tests {
         let toml = "typo_field = true";
         let result: Result<Config, _> = toml::from_str(toml);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn overrides_heading_marker_text() {
+        let toml = r##"
+            [styles]
+            h2 = { text = "» " }
+        "##;
+        let config: ThemeConfig = toml::from_str(toml).unwrap();
+        let theme = apply_theme(&config, Theme::dark()).unwrap();
+        assert_eq!(theme.h2_marker, "» ");
+        // Other markers are untouched.
+        assert_eq!(theme.h3_marker, "── ");
+    }
+
+    #[test]
+    fn overrides_alert_label_text() {
+        let toml = r##"
+            [styles]
+            alert_note = { text = " NOTE", fg = "bright-blue" }
+        "##;
+        let config: ThemeConfig = toml::from_str(toml).unwrap();
+        let theme = apply_theme(&config, Theme::dark()).unwrap();
+        assert_eq!(theme.alert_note_label, " NOTE");
+        assert_eq!(
+            theme.alert_note_style.get_fg_color(),
+            Some(Color::Ansi(AnsiColor::BrightBlue))
+        );
+    }
+
+    #[test]
+    fn style_without_text_leaves_marker_at_default() {
+        let toml = r##"
+            [styles]
+            h4 = { fg = "bright-red" }
+        "##;
+        let config: ThemeConfig = toml::from_str(toml).unwrap();
+        let theme = apply_theme(&config, Theme::dark()).unwrap();
+        assert_eq!(theme.h4_marker, "┄ ");
     }
 
     #[test]

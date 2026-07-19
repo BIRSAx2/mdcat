@@ -1,0 +1,75 @@
+# Example configuration for mdcat.
+#
+# Copy the parts you want to ~/.config/mdcat/config.toml (or
+# $XDG_CONFIG_HOME/mdcat/config.toml, if that variable is set). Every key is optional; anything
+# you don't set falls back to mdcat's built-in defaults.
+#
+# See `man 1 mdcat`'s "Configuration file" section for the full reference.
+
+# [defaults] sets default values for a handful of CLI flags. Each one only applies when the
+# corresponding flag isn't passed explicitly on the command line — the CLI flag always wins.
+[defaults]
+# Add a two-space left margin to all output (same as --margin).
+margin = true
+# Render typographic punctuation: curly quotes, en/em dashes, an ellipsis (same as
+# --smart-punctuation).
+smart_punctuation = true
+# Maximum number of columns to wrap output to (same as --columns). Omit to use the terminal
+# width, capped at 80.
+columns = 100
+# Never load remote resources like images (same as --local).
+local_only = false
+# Stop at the first file that fails to render, instead of continuing with the next one (same as
+# --fail).
+fail_fast = false
+
+# [theme] customises colours and styles, starting from a built-in theme.
+[theme]
+# The built-in theme to start from. One of: auto, dark, light, catppuccin-mocha,
+# catppuccin-latte, gruvbox-dark, gruvbox-light, dracula, nord, solarized-dark, solarized-light.
+#
+# --theme/$MDCAT_THEME, if given, always wins over this; the [theme.styles] overrides below
+# still apply on top regardless of which one wins.
+base = "catppuccin-mocha"
+
+# Override the horizontal rule's colour. This is the one "plain colour" field — rules have no
+# other style to override — so it takes a bare string rather than a { fg = ... } table.
+rule = "mauve"
+
+# Named colours that fg/bg in [theme.styles] below may reference instead of repeating a literal
+# colour. Purely for convenience/reuse; you can also just write "#cba6f7" directly everywhere.
+[theme.palette]
+mauve = "#cba6f7"
+peach = "#fab387"
+blue = "#89b4fa"
+
+# Per-element style overrides. Each entry is a table with any of:
+#   fg:        foreground colour — "#rrggbb" hex, an ANSI name (see below), or a palette name.
+#   bg:        background colour — same formats as fg.
+#   modifiers: a list of bold, dimmed, italic, underline, blink, invert, hidden, strikethrough.
+#   text:      for h2-h6, the marker written before the heading text; for
+#              alert_note/alert_tip/alert_important/alert_warning/alert_caution, the icon and
+#              label written for that alert (e.g. swap in a Nerd Font glyph). Ignored for every
+#              other style name.
+#
+# ANSI colour names: black, red, green, yellow, blue, magenta, cyan, white, and the same 8 with a
+# "bright-" prefix (e.g. bright-blue).
+#
+# Valid style names: html_block, inline_html, code, link, image_link, quote_border, h1_text,
+# h2, h3, h4, h5, h6, footnote, math, alert_note, alert_tip, alert_important, alert_warning,
+# alert_caution.
+[theme.styles]
+# Headings: recolour H2/H3, and swap H2's "━━ " marker for "» ".
+h2 = { fg = "mauve", modifiers = ["bold"], text = "» " }
+h3 = { fg = "blue" }
+
+# Inline code, links, and blockquote borders.
+code = { fg = "peach" }
+link = { fg = "blue", modifiers = ["underline"] }
+quote_border = { fg = "blue" }
+
+# GFM alerts (> [!NOTE], > [!TIP], etc.): recolour and swap the default "ℹ NOTE" / "◆ TIP" / ...
+# icon+label for plain text labels. Leave `text` out on any of these to keep its default icon.
+alert_note = { fg = "blue", modifiers = ["bold"], text = " NOTE" }
+alert_tip = { fg = "peach", modifiers = ["bold"], text = " TIP" }
+alert_warning = { fg = "peach", modifiers = ["bold"], text = " WARNING" }

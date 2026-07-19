@@ -357,27 +357,27 @@ pub fn write_start_heading<W: Write>(
         }
         HeadingLevel::H2 => {
             let s = theme.h2_style.on_top_of(&context_style);
-            write_styled(writer, capabilities, &s, "━━ ")?;
+            write_styled(writer, capabilities, &s, &theme.h2_marker)?;
             s
         }
         HeadingLevel::H3 => {
             let s = theme.h3_style.on_top_of(&context_style);
-            write_styled(writer, capabilities, &s, "── ")?;
+            write_styled(writer, capabilities, &s, &theme.h3_marker)?;
             s
         }
         HeadingLevel::H4 => {
             let s = theme.h4_style.on_top_of(&context_style);
-            write_styled(writer, capabilities, &s, "┄ ")?;
+            write_styled(writer, capabilities, &s, &theme.h4_marker)?;
             s
         }
         HeadingLevel::H5 => {
             let s = theme.h5_style.on_top_of(&context_style);
-            write_styled(writer, capabilities, &s, "╌ ")?;
+            write_styled(writer, capabilities, &s, &theme.h5_marker)?;
             s
         }
         HeadingLevel::H6 => {
             let s = theme.h6_style.on_top_of(&context_style);
-            write_styled(writer, capabilities, &s, "· ")?;
+            write_styled(writer, capabilities, &s, &theme.h6_marker)?;
             s
         }
     };

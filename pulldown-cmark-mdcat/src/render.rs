@@ -43,13 +43,22 @@ use crate::terminal::capabilities::{ImageCapability, StyleCapability};
 use crate::terminal::osc::{clear_link, set_link_url};
 pub use data::StateData;
 
-fn alert_style_and_label(kind: BlockQuoteKind, theme: &Theme) -> (Style, &'static str) {
+fn alert_style_and_label(kind: BlockQuoteKind, theme: &Theme) -> (Style, &str) {
     match kind {
-        BlockQuoteKind::Note => (theme.alert_note_style, "ℹ NOTE"),
-        BlockQuoteKind::Tip => (theme.alert_tip_style, "◆ TIP"),
-        BlockQuoteKind::Important => (theme.alert_important_style, "★ IMPORTANT"),
-        BlockQuoteKind::Warning => (theme.alert_warning_style, "⚠ WARNING"),
-        BlockQuoteKind::Caution => (theme.alert_caution_style, "✖ CAUTION"),
+        BlockQuoteKind::Note => (theme.alert_note_style, theme.alert_note_label.as_str()),
+        BlockQuoteKind::Tip => (theme.alert_tip_style, theme.alert_tip_label.as_str()),
+        BlockQuoteKind::Important => (
+            theme.alert_important_style,
+            theme.alert_important_label.as_str(),
+        ),
+        BlockQuoteKind::Warning => (
+            theme.alert_warning_style,
+            theme.alert_warning_label.as_str(),
+        ),
+        BlockQuoteKind::Caution => (
+            theme.alert_caution_style,
+            theme.alert_caution_label.as_str(),
+        ),
     }
 }
 
