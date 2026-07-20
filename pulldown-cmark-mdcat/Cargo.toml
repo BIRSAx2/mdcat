@@ -48,8 +48,8 @@ ratex-layout = "0.1.11"
 ratex-render = { version = "0.1.11", features = ["embed-fonts"] }
 ratex-types = "0.1.11"
 icy_sixel = { version = "0.5.0", optional = true }
-ratatui = { version = "0.29.0", optional = true, default-features = false }
-ratatui-image = { version = "8.0.1", optional = true, default-features = false, features = ["image-defaults", "crossterm"] }
+ratatui = { version = "0.30", optional = true, default-features = false }
+ratatui-image = { version = "11.0", optional = true, default-features = false, features = ["image-defaults", "crossterm"] }
 two-face = { version = "0.5.1", optional = true, default-features = false, features = ["syntect-fancy"] }
 
 [dev-dependencies]
