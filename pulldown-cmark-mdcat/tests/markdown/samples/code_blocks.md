@@ -23,3 +23,13 @@ object HelloWorld {
   }
 }
 ```
+
+A highlighted code block nested in a list item, to check that every line of
+the block keeps the same indentation:
+
+- item
+
+  ```sql
+  SELECT 1
+  FROM t;
+  ```

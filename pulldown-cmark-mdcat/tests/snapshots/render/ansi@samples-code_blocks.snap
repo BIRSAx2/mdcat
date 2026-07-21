@@ -27,3 +27,13 @@ Or Scala:
     println("[36mHello, world![0m")
   }
 }
+
+
+A highlighted code block nested in a list item, to check that every line of the
+block keeps the same indentation:
+
+• item
+
+
+    [32mSELECT[0m [95m1[0m
+    [32mFROM[0m t;

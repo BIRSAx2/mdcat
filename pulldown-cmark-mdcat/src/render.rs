@@ -995,6 +995,7 @@ pub fn write_event<'a, W: Write>(
                         highlighting::write_as_ansi(writer, regions)?;
                     }
                 }
+                write_indent(writer, attrs.indent)?;
             }
             stack.current(attrs.into()).and_data(data).ok()
         }

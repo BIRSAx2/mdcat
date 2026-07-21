@@ -27,3 +27,13 @@ object HelloWorld {
     println("Hello, world!")
   }
 }
+
+
+A highlighted code block nested in a list item, to check that every line of the
+block keeps the same indentation:
+
+• item
+
+
+    SELECT 1
+    FROM t;

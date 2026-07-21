@@ -18,6 +18,12 @@ Use `cargo release` to create a new release.
   `alert_note_label`-`alert_caution_label` fields (all public `String`s)
   controlling the text previously hardcoded in the renderer.
 
+### Fixed
+- Syntax-highlighted fenced code blocks nested inside list items (or other
+  indented blocks) lost their indentation on every line after the first,
+  because only untagged (non-highlighted) code blocks re-applied indentation
+  after each line.
+
 ## [2.12.0] – 2026-07-17
 
 ### Added
