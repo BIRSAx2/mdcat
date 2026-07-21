@@ -222,13 +222,13 @@ impl KittyGraphicsProtocol {
             }
         };
 
-        match downsize_to_columns(&image, terminal_size) {
-            Some(downsized_image) => {
+        match fit_image_to_terminal(&image, terminal_size) {
+            Some(resized_image) => {
                 event!(
                     Level::DEBUG,
-                    "Image scaled down to column limit, rendering RGB data"
+                    "Image resized to fit terminal cells, rendering RGB data"
                 );
-                Ok(self.render_as_rgb_or_rgba(downsized_image))
+                Ok(self.render_as_rgb_or_rgba(resized_image))
             }
             None if mime_data.mime_type_essence() == Some("image/png") => {
                 event!(

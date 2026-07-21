@@ -34,6 +34,25 @@ impl SixelProtocol {
         }
     }
 
+    /// Inject a sixel "set raster attributes" command (`"Pan;Pad;Ph;Pv`) declaring the image's
+    /// true pixel size, right after the DCS introducer and before the colour/band data.
+    ///
+    /// icy_sixel never emits this command itself; it only writes data in bands of 6 rows
+    /// (rounding the row count up), so a terminal has no way to know the exact height short of
+    /// counting bands, and ends up treating the image as up to 5px taller than it is. On a
+    /// terminal whose cell height isn't itself a multiple of 6, that's enough to push the
+    /// post-image cursor row (see DECSET 8452 in [`Self::render_sixel`]) one row further down
+    /// than intended, and that compounds with every consecutive image into a descending
+    /// staircase.
+    fn inject_raster_attributes(sixel: &str, width: u32, height: u32) -> String {
+        let intro_end = sixel.find('q').map_or(0, |i| i + 1);
+        format!(
+            "{}\"1;1;{width};{height}{}",
+            &sixel[..intro_end],
+            &sixel[intro_end..]
+        )
+    }
+
     fn render_sixel(writer: &mut dyn Write, img: image::DynamicImage) -> io::Result<()> {
         let (w, h) = img.dimensions();
         let rgba = img.to_rgba8();
@@ -42,7 +61,14 @@ impl SixelProtocol {
             .map_err(io::Error::other)?
             .encode()
             .map_err(io::Error::other)?;
-        write!(writer, "{sixel}")
+        let sixel = Self::inject_raster_attributes(&sixel, w, h);
+        // By default a terminal moves the cursor to the left margin of the line below a sixel
+        // image, regardless of the image's height; DECSET 8452 instead leaves the cursor to the
+        // right of the image, on the row it started on. Without this, images meant to flow
+        // inline with surrounding text (e.g. several badges in a row) stack vertically instead,
+        // one below the other, and can scroll the earlier ones out of view. Scope the mode to
+        // just this image so we don't leave the terminal's sixel behaviour altered afterwards.
+        write!(writer, "\x1b[?8452h{sixel}\x1b[?8452l")
     }
 
     /// Write raw PNG bytes inline to the terminal.
@@ -65,12 +91,31 @@ impl crate::resources::InlineImageProtocol for SixelProtocol {
         let mime = resource_handler.read_resource(url)?;
         let image = SixelProtocol::load_image(mime)?;
 
-        let image = if let Some(downsized) = downsize_to_columns(&image, terminal_size) {
+        let image = if let Some(downsized) = fit_image_to_terminal(&image, terminal_size) {
             downsized
         } else {
             image
         };
 
         SixelProtocol::render_sixel(writer, image)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn raster_attributes_are_inserted_right_after_the_dcs_introducer() {
+        let sixel = "\x1bP9;1;0q#0;2;0;0;0$-";
+        let with_raster = SixelProtocol::inject_raster_attributes(sixel, 108, 20);
+        assert_eq!(with_raster, "\x1bP9;1;0q\"1;1;108;20#0;2;0;0;0$-");
+    }
+
+    #[test]
+    fn raster_attributes_reflect_the_true_dimensions() {
+        let sixel = "\x1bP0;0;0q#0;2;0;0;0$-";
+        let with_raster = SixelProtocol::inject_raster_attributes(sixel, 1, 1);
+        assert!(with_raster.contains("\"1;1;1;1"));
     }
 }

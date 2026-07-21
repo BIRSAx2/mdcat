@@ -115,9 +115,15 @@ mod cli {
     }
 
     fn image_markdown() -> String {
-        let image =
-            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("sample/rust-logo-128x128.png");
-        format!("![alt]({})\n", image.display())
+        let image = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("sample")
+            .join("rust-logo-128x128.png");
+        // Embed a proper `file://` URL rather than a native path: on Windows, a bare
+        // `D:\...` path isn't valid relative-reference syntax, so resolving it as a
+        // Markdown link destination fails and the image silently falls back to a
+        // plain link instead of actually rendering.
+        let url = url::Url::from_file_path(&image).expect("absolute path");
+        format!("![alt]({url})\n")
     }
 
     #[test]
