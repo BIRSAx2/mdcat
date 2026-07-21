@@ -51,6 +51,7 @@ fn watch_file(
     output: &mut Output,
     margin: bool,
     smart_punctuation: bool,
+    toc: bool,
 ) -> anyhow::Result<()> {
     let path = Path::new(filename)
         .canonicalize()
@@ -78,6 +79,7 @@ fn watch_file(
             output,
             margin,
             smart_punctuation,
+            toc,
         ) {
             eprintln!("Error: {filename}: {error:#}");
         }
@@ -346,6 +348,7 @@ fn main() {
     let columns = args.columns.or_else(|| defaults.and_then(|d| d.columns));
     let local_only = args.local_only || defaults.and_then(|d| d.local_only).unwrap_or(false);
     let fail_fast = args.fail_fast || defaults.and_then(|d| d.fail_fast).unwrap_or(false);
+    let toc = args.toc;
 
     let terminal = if args.no_colour {
         TerminalProgram::Dumb
@@ -435,6 +438,7 @@ fn main() {
                         &mut output,
                         margin,
                         smart_punctuation,
+                        toc,
                     ) {
                         Ok(()) => 0,
                         Err(error) => {
@@ -453,6 +457,7 @@ fn main() {
                                 &mut output,
                                 margin,
                                 smart_punctuation,
+                                toc,
                             )
                             .map(|_| code)
                             .or_else(|error| {

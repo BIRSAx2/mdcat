@@ -138,6 +138,11 @@ Defaults to `auto`, which detects dark or light mode from the terminal, unless `
     Watch the input file and re-render on every change.
     Requires exactly one FILE argument, and does not work with standard input or `--paginate`.
 
+--toc::
+    Print a table of contents generated from the document's headings before its content.
++
+Entries are numbered, nested by heading level, and, if `FILE` isn't standard input, wrapped in an OSC 8 link to `FILE#slug` (a GitHub-style anchor derived from the heading text) so that terminals and later viewers that support OSC 8 and resolve such anchors can jump to that heading. On standard input entries are plain text, since there's no file to link to.
+
 --completions=_SHELL_::
     Generate completions for _SHELL_ to standard output and exit.
 

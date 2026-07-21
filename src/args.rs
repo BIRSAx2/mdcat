@@ -167,6 +167,12 @@ pub struct CommonArgs {
     /// Print a sample rendered with every built-in theme, to help pick one, and exit.
     #[arg(long)]
     pub list_themes: bool,
+    /// Print a table of contents generated from the document's headings before its content.
+    /// Entries link to the source file, for terminals and later viewers that support OSC 8
+    /// links and resolve GitHub-style heading anchors; plain text on standard input, since
+    /// there's no file to link to.
+    #[arg(long)]
+    pub toc: bool,
 }
 
 /// What resources mdcat may access.

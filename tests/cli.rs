@@ -81,6 +81,40 @@ mod cli {
     }
 
     #[test]
+    fn toc_lists_headings_before_content() {
+        let output = run_cargo_mdcat(["--no-colour", "--toc", "sample/common-mark.md"]);
+        let stdout = std::str::from_utf8(&output.stdout).unwrap();
+        assert!(output.status.success());
+        let toc_pos = stdout
+            .find("Table of Contents")
+            .expect("TOC heading missing");
+        let content_pos = stdout
+            .find("CommonMark sample document")
+            .expect("document content missing");
+        assert!(
+            toc_pos < content_pos,
+            "TOC must come before the document content"
+        );
+        assert!(stdout.contains("common-mark.md#basic-inline-formatting"));
+    }
+
+    #[test]
+    fn toc_on_stdin_has_no_links() {
+        let mut child = cargo_mdcat()
+            .args(["--no-colour", "--toc", "-"])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .unwrap();
+        write!(child.stdin.take().unwrap(), "# One\n\n# Two\n").unwrap();
+        let output = child.wait_with_output().unwrap();
+        let stdout = std::str::from_utf8(&output.stdout).unwrap();
+        assert!(output.status.success());
+        assert!(stdout.contains("Table of Contents"));
+        assert!(!stdout.contains(".md#"));
+    }
+
+    #[test]
     fn ignore_broken_pipe() {
         let mut child = cargo_mdcat()
             .stdin(Stdio::piped())

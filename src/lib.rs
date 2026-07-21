@@ -38,6 +38,8 @@ pub mod config;
 pub mod output;
 /// Resource handling for mdca.
 pub mod resources;
+/// Table of contents generation.
+pub mod toc;
 
 /// Default read size limit for resources.
 pub static DEFAULT_RESOURCE_READ_LIMIT: u64 = 104_857_600;
@@ -119,7 +121,10 @@ pub fn read_input<T: AsRef<str>>(filename: T) -> Result<(PathBuf, String)> {
 /// must shrink `settings.terminal_size` by 2 columns beforehand so wrapping
 /// still respects the requested output width. If `smart_punctuation` is
 /// `true`, render typographic punctuation (curly quotes, en/em dashes,
-/// ellipsis) instead of the literal input characters.
+/// ellipsis) instead of the literal input characters. If `toc` is `true`,
+/// prepend a table of contents generated from the document's headings; on
+/// standard input (`filename` is `-`) its entries are plain text, since
+/// there is no file to link to, otherwise they link to `filename#slug`.
 #[instrument(skip(output, settings, resource_handler), level = "debug")]
 pub fn process_file(
     filename: &str,
@@ -128,6 +133,7 @@ pub fn process_file(
     output: &mut Output,
     margin: bool,
     smart_punctuation: bool,
+    toc: bool,
 ) -> Result<()> {
     let (base_dir, input) = read_input(filename)?;
     let input = strip_frontmatter(&input);
@@ -136,7 +142,22 @@ pub fn process_file(
         "Read input, using {} as base directory",
         base_dir.display()
     );
-    let parser = Parser::new_ext(input, markdown_options(smart_punctuation));
+    let options = markdown_options(smart_punctuation);
+    let toc_events = if toc {
+        let file_ref = (filename != "-")
+            .then(|| {
+                std::path::Path::new(filename)
+                    .file_name()
+                    .and_then(|s| s.to_str())
+            })
+            .flatten();
+        toc::build_toc_events(input, options, file_ref)
+    } else {
+        Vec::new()
+    };
+    let parser = toc_events
+        .into_iter()
+        .chain(Parser::new_ext(input, options));
     let env = Environment::for_local_directory(&base_dir)?;
 
     let ignore_broken_pipe = |error: io::Error| {

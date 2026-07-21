@@ -17,6 +17,11 @@ Use `cargo release` to create a new release.
 - `pulldown-cmark-mdcat`: `Theme` gained `h2_marker`-`h6_marker` and
   `alert_note_label`-`alert_caution_label` fields (all public `String`s)
   controlling the text previously hardcoded in the renderer.
+- `--toc` prints a numbered table of contents, generated from the document's
+  headings and nested by level, before its content. Entries link to
+  `FILE#slug` (a GitHub-style anchor) via OSC 8 so that terminals and later
+  viewers that resolve such anchors can jump to that heading; on standard
+  input entries are plain text, since there's no file to link to.
 
 ### Fixed
 - Syntax-highlighted fenced code blocks nested inside list items (or other
