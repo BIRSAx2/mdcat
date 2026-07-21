@@ -151,6 +151,13 @@ _PROTOCOL_ is one of `none` (disable inline images entirely), `iterm2`, `kitty`,
 +
 Also settable via `$MDCAT_IMAGE_PROTOCOL`; the flag wins if both are given.
 
+[[tabs-option]]--tabs=_COLUMNS_::
+    Expand tabs in the input to spaces, using a tab stop width of _COLUMNS_, before parsing.
++
+Off by default, so literal tabs pass through unchanged; without this, a tab inside text content (not part of the Markdown block structure) throws off line-wrapping and alignment width calculations, since terminals render it as jumping to the next tab stop rather than occupying a single column.
++
+Also settable via `defaults.tabs` in `~/.config/mdcat/config.toml`.
+
 --completions=_SHELL_::
     Generate completions for _SHELL_ to standard output and exit.
 
@@ -212,6 +219,9 @@ Each key sets the default value for a CLI flag, used only when that flag isn't p
 `image_protocol`::
     Default for <<image-protocol-option,`--image-protocol`>>/`$MDCAT_IMAGE_PROTOCOL`.
     One of `none`, `iterm2`, `kitty`, or `sixel`.
+
+`tabs`::
+    Default for <<tabs-option,`--tabs`>>.
 
 === `[theme]`
 

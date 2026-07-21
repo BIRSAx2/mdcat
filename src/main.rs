@@ -49,9 +49,7 @@ fn watch_file(
     settings: &Settings,
     resource_handler: &dyn ResourceUrlHandler,
     output: &mut Output,
-    margin: bool,
-    smart_punctuation: bool,
-    toc: bool,
+    render_options: mdcat::RenderOptions,
 ) -> anyhow::Result<()> {
     let path = Path::new(filename)
         .canonicalize()
@@ -72,15 +70,9 @@ fn watch_file(
 
     let render = |output: &mut Output| {
         clear_screen();
-        if let Err(error) = process_file(
-            filename,
-            settings,
-            resource_handler,
-            output,
-            margin,
-            smart_punctuation,
-            toc,
-        ) {
+        if let Err(error) =
+            process_file(filename, settings, resource_handler, output, render_options)
+        {
             eprintln!("Error: {filename}: {error:#}");
         }
     };
@@ -362,6 +354,13 @@ fn main() {
             None => None,
         },
     };
+    let tabs = args.tabs.or_else(|| defaults.and_then(|d| d.tabs));
+    let render_options = mdcat::RenderOptions {
+        margin,
+        smart_punctuation,
+        toc,
+        tabs,
+    };
 
     let terminal = if args.no_colour {
         TerminalProgram::Dumb
@@ -461,9 +460,7 @@ fn main() {
                         &settings,
                         &resource_handler,
                         &mut output,
-                        margin,
-                        smart_punctuation,
-                        toc,
+                        render_options,
                     ) {
                         Ok(()) => 0,
                         Err(error) => {
@@ -480,9 +477,7 @@ fn main() {
                                 &settings,
                                 &resource_handler,
                                 &mut output,
-                                margin,
-                                smart_punctuation,
-                                toc,
+                                render_options,
                             )
                             .map(|_| code)
                             .or_else(|error| {

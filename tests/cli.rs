@@ -114,6 +114,43 @@ mod cli {
         assert!(!stdout.contains(".md#"));
     }
 
+    #[test]
+    fn tabs_flag_expands_tabs_in_code_blocks() {
+        let mut child = cargo_mdcat()
+            .args(["--no-colour", "--tabs", "4", "-"])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .unwrap();
+        write!(child.stdin.take().unwrap(), "```\na\tb\n```\n").unwrap();
+        let output = child.wait_with_output().unwrap();
+        let stdout = std::str::from_utf8(&output.stdout).unwrap();
+        assert!(output.status.success());
+        assert!(
+            !stdout.contains('\t'),
+            "tabs should be expanded: {stdout:?}"
+        );
+        assert!(
+            stdout.contains("a   b"),
+            "expected tab-stop-aligned spaces: {stdout:?}"
+        );
+    }
+
+    #[test]
+    fn without_tabs_flag_tabs_pass_through_unchanged() {
+        let mut child = cargo_mdcat()
+            .args(["--no-colour", "-"])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .unwrap();
+        write!(child.stdin.take().unwrap(), "```\na\tb\n```\n").unwrap();
+        let output = child.wait_with_output().unwrap();
+        let stdout = std::str::from_utf8(&output.stdout).unwrap();
+        assert!(output.status.success());
+        assert!(stdout.contains('\t'), "tab should pass through: {stdout:?}");
+    }
+
     fn image_markdown() -> String {
         let image = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("sample")
@@ -221,6 +258,44 @@ mod cli {
         assert!(
             !overridden.contains("\x1b_G"),
             "explicit flag should override the config default, got: {overridden:?}"
+        );
+
+        std::fs::remove_dir_all(&config_dir).unwrap();
+    }
+
+    #[test]
+    fn tabs_config_default_is_used_and_overridable() {
+        let config_dir = std::env::temp_dir().join(format!(
+            "mdcat-cli-test-config-{}-{}",
+            std::process::id(),
+            "tabs_config_default_is_used_and_overridable"
+        ));
+        std::fs::create_dir_all(config_dir.join("mdcat")).unwrap();
+        std::fs::write(
+            config_dir.join("mdcat/config.toml"),
+            "[defaults]\ntabs = 4\n",
+        )
+        .unwrap();
+
+        let run = |extra_args: &[&str]| {
+            let mut child = cargo_mdcat()
+                .args(["--no-colour"])
+                .args(extra_args)
+                .arg("-")
+                .env("XDG_CONFIG_HOME", &config_dir)
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .spawn()
+                .unwrap();
+            write!(child.stdin.take().unwrap(), "```\na\tb\n```\n").unwrap();
+            let output = child.wait_with_output().unwrap();
+            String::from_utf8(output.stdout).unwrap()
+        };
+
+        let from_config = run(&[]);
+        assert!(
+            !from_config.contains('\t'),
+            "config default should expand tabs, got: {from_config:?}"
         );
 
         std::fs::remove_dir_all(&config_dir).unwrap();

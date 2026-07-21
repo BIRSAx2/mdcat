@@ -210,6 +210,14 @@ pub struct CommonArgs {
     /// `$MDCAT_IMAGE_PROTOCOL`.
     #[arg(long, env = "MDCAT_IMAGE_PROTOCOL", value_name = "PROTOCOL")]
     pub image_protocol: Option<ImageProtocolChoice>,
+    /// Expand tabs in the input to spaces, using a tab stop width of COLUMNS, before parsing.
+    /// Off by default, so literal tabs pass through unchanged; without this, a tab inside text
+    /// content (not part of the Markdown block structure) throws off line-wrapping and alignment
+    /// width calculations, since terminals render it as jumping to the next tab stop rather than
+    /// occupying a single column. Also settable via `defaults.tabs` in
+    /// `~/.config/mdcat/config.toml`.
+    #[arg(long, value_name = "COLUMNS")]
+    pub tabs: Option<u16>,
 }
 
 /// What resources mdcat may access.

@@ -25,6 +25,9 @@ fail_fast = false
 # Force a specific inline image protocol instead of auto-detecting one from the terminal (same
 # as --image-protocol/$MDCAT_IMAGE_PROTOCOL). One of: none, iterm2, kitty, sixel.
 image_protocol = "kitty"
+# Expand tabs in the input to spaces, using this tab stop width, before parsing (same as --tabs).
+# Off by default (omit this key), so literal tabs pass through unchanged.
+tabs = 4
 
 # [theme] customises colours and styles, starting from a built-in theme.
 [theme]

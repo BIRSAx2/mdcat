@@ -174,6 +174,48 @@ pub fn strip_frontmatter(input: &str) -> &str {
     input
 }
 
+/// Expand literal tab characters in `input` to spaces, using a tab stop width of `tab_width`.
+///
+/// CommonMark treats tabs specially only for block structure (e.g. list/code indentation),
+/// internally assuming a tab stop of 4; a literal tab inside text content (a paragraph, inline
+/// code, a fenced code block, ...) passes through parsing untouched. Since mdcat's line-wrapping
+/// and alignment treat every character as one column wide, such a leftover tab throws off width
+/// calculations downstream, as terminals render it as jumping to the next tab stop rather than
+/// occupying a single column. Expanding tabs to spaces before parsing avoids that mismatch.
+///
+/// Tracks the current column per line, resetting after each `\n`, and inserts enough spaces to
+/// reach the next multiple of `tab_width`. Column tracking counts one column per `char`; wide
+/// characters (e.g. CJK) are not accounted for, matching the rest of mdcat's width handling.
+///
+/// Returns `input` unchanged, without allocating, if `tab_width` is `0` or `input` has no tabs.
+pub fn expand_tabs(input: &str, tab_width: u16) -> std::borrow::Cow<'_, str> {
+    if tab_width == 0 || !input.contains('\t') {
+        return std::borrow::Cow::Borrowed(input);
+    }
+
+    let tab_width = usize::from(tab_width);
+    let mut output = String::with_capacity(input.len());
+    let mut column = 0;
+    for c in input.chars() {
+        match c {
+            '\t' => {
+                let spaces = tab_width - (column % tab_width);
+                output.extend(std::iter::repeat_n(' ', spaces));
+                column += spaces;
+            }
+            '\n' => {
+                output.push('\n');
+                column = 0;
+            }
+            _ => {
+                output.push(c);
+                column += 1;
+            }
+        }
+    }
+    std::borrow::Cow::Owned(output)
+}
+
 /// Write markdown to a TTY.
 ///
 /// Iterate over Markdown AST `events`, format each event for TTY output and
@@ -246,6 +288,36 @@ mod tests {
     fn markdown_options_smart_punctuation_toggle() {
         assert!(!markdown_options(false).contains(Options::ENABLE_SMART_PUNCTUATION));
         assert!(markdown_options(true).contains(Options::ENABLE_SMART_PUNCTUATION));
+    }
+
+    #[test]
+    fn expand_tabs_zero_width_leaves_input_unchanged() {
+        assert_eq!(expand_tabs("a\tb", 0), "a\tb");
+    }
+
+    #[test]
+    fn expand_tabs_without_tabs_does_not_allocate() {
+        assert!(matches!(
+            expand_tabs("no tabs here", 4),
+            std::borrow::Cow::Borrowed(_)
+        ));
+    }
+
+    #[test]
+    fn expand_tabs_advances_to_next_tab_stop() {
+        assert_eq!(expand_tabs("a\tb", 4), "a   b");
+        assert_eq!(expand_tabs("ab\tc", 4), "ab  c");
+        assert_eq!(expand_tabs("abcd\te", 4), "abcd    e");
+    }
+
+    #[test]
+    fn expand_tabs_resets_column_at_newline() {
+        assert_eq!(expand_tabs("a\tb\nc\td", 4), "a   b\nc   d");
+    }
+
+    #[test]
+    fn expand_tabs_handles_consecutive_tabs() {
+        assert_eq!(expand_tabs("a\t\tb", 4), "a       b");
     }
 
     fn render_definition_list(markup: &str) -> Result<String> {

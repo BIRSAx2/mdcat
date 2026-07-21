@@ -28,12 +28,24 @@ Use `cargo release` to create a new release.
   Useful inside tmux/screen, where the outer terminal's capabilities usually
   aren't visible to auto-detection. Precedence: `--image-protocol` wins over
   `$MDCAT_IMAGE_PROTOCOL`, which wins over the config default.
+- `--tabs`/`defaults.tabs` in `~/.config/mdcat/config.toml` expands literal
+  tabs in the input to spaces, using the given tab stop width, before
+  parsing. Off by default, so tabs pass through unchanged; without this, a
+  tab inside text content throws off line-wrapping and alignment width
+  calculations, since terminals render it as jumping to the next tab stop
+  rather than occupying a single column.
 
 ### Fixed
 - Syntax-highlighted fenced code blocks nested inside list items (or other
   indented blocks) lost their indentation on every line after the first,
   because only untagged (non-highlighted) code blocks re-applied indentation
   after each line.
+- Inline images (badges, icons) rendered too small on Sixel and iTerm2, only
+  filling part of their allotted terminal row, since they were sent at
+  native pixel resolution rather than scaled to a whole number of cell
+  rows. Sixel images also drifted into a descending staircase when several
+  appeared in a row (e.g. consecutive README badges), and iTerm2 never
+  applied any explicit sizing at all (GH #22).
 
 ## [2.12.0] – 2026-07-17
 

@@ -22,7 +22,9 @@ use pulldown_cmark::Parser;
 use pulldown_cmark_mdcat::resources::{
     DispatchingResourceHandler, FileResourceHandler, ResourceUrlHandler,
 };
-use pulldown_cmark_mdcat::{markdown_options, strip_frontmatter, Environment, Settings};
+use pulldown_cmark_mdcat::{
+    expand_tabs, markdown_options, strip_frontmatter, Environment, Settings,
+};
 use resources::CurlResourceHandler;
 use tracing::{event, instrument, Level};
 
@@ -114,36 +116,53 @@ pub fn read_input<T: AsRef<str>>(filename: T) -> Result<(PathBuf, String)> {
     }
 }
 
+/// Render-time options for [`process_file`], bundling the flags that control how the document
+/// is transformed before and during rendering.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct RenderOptions {
+    /// Prepend a two-space left margin to every rendered line.
+    ///
+    /// Callers must shrink `settings.terminal_size` by 2 columns beforehand so wrapping still
+    /// respects the requested output width.
+    pub margin: bool,
+    /// Render typographic punctuation (curly quotes, en/em dashes, ellipsis) instead of the
+    /// literal input characters.
+    pub smart_punctuation: bool,
+    /// Prepend a table of contents generated from the document's headings.
+    ///
+    /// On standard input (`filename` is `-`) its entries are plain text, since there is no file
+    /// to link to; otherwise they link to `filename#slug`.
+    pub toc: bool,
+    /// If `Some`, expand literal tabs in the input to spaces using that tab stop width before
+    /// parsing (see [`pulldown_cmark_mdcat::expand_tabs`]).
+    pub tabs: Option<u16>,
+}
+
 /// Process a single file.
 ///
-/// Read from `filename` and render the contents to `output`. If `margin` is
-/// `true`, prepend a two-space left margin to every rendered line; callers
-/// must shrink `settings.terminal_size` by 2 columns beforehand so wrapping
-/// still respects the requested output width. If `smart_punctuation` is
-/// `true`, render typographic punctuation (curly quotes, en/em dashes,
-/// ellipsis) instead of the literal input characters. If `toc` is `true`,
-/// prepend a table of contents generated from the document's headings; on
-/// standard input (`filename` is `-`) its entries are plain text, since
-/// there is no file to link to, otherwise they link to `filename#slug`.
+/// Read from `filename` and render the contents to `output` according to `render_options`.
 #[instrument(skip(output, settings, resource_handler), level = "debug")]
 pub fn process_file(
     filename: &str,
     settings: &Settings,
     resource_handler: &dyn ResourceUrlHandler,
     output: &mut Output,
-    margin: bool,
-    smart_punctuation: bool,
-    toc: bool,
+    render_options: RenderOptions,
 ) -> Result<()> {
     let (base_dir, input) = read_input(filename)?;
     let input = strip_frontmatter(&input);
+    let input = match render_options.tabs {
+        Some(tab_width) => expand_tabs(input, tab_width),
+        None => std::borrow::Cow::Borrowed(input),
+    };
+    let input = input.as_ref();
     event!(
         Level::TRACE,
         "Read input, using {} as base directory",
         base_dir.display()
     );
-    let options = markdown_options(smart_punctuation);
-    let toc_events = if toc {
+    let options = markdown_options(render_options.smart_punctuation);
+    let toc_events = if render_options.toc {
         let file_ref = (filename != "-")
             .then(|| {
                 std::path::Path::new(filename)
@@ -172,7 +191,7 @@ pub fn process_file(
 
     let mut sink = BufWriter::new(output.writer());
     writeln!(sink).or_else(&ignore_broken_pipe)?;
-    if margin {
+    if render_options.margin {
         let mut padded = MarginWriter::new(&mut sink);
         pulldown_cmark_mdcat::push_tty(settings, &env, resource_handler, &mut padded, parser)
             .and_then(|_| {
