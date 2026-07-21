@@ -57,7 +57,7 @@ members = ["pulldown-cmark-mdcat"]
 [workspace.package]
 homepage = "https://github.com/BIRSAx2/mdcat"
 repository = "https://github.com/BIRSAx2/mdcat"
-version = "2.12.0"
+version = "2.13.0"
 categories = ["command-line-utilities", "text-processing"]
 license = "MPL-2.0 AND Apache-2.0"
 authors = ["Sebastian Wiesner <sebastian@swsnr.de>", "Mouhieddine Sabir <me@mouhieddine.dev>"]
@@ -75,7 +75,7 @@ url = "2.5.2"
 
 # Our own crates; pinned to an exact version because we release all of this repo
 # in a single version. cargo release takes care of updating these.
-pulldown-cmark-mdcat = { version = "=2.12.0", path = "pulldown-cmark-mdcat", default-features = false }
+pulldown-cmark-mdcat = { version = "=2.13.0", path = "pulldown-cmark-mdcat", default-features = false }
 
 [workspace.metadata.release]
 allow-branch = ["main"]

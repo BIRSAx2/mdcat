@@ -8,6 +8,8 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+## [2.13.0] – 2026-07-21
+
 ### Added
 - Custom heading markers and GFM alert icons/labels via `text` in a
   `[theme.styles]` entry in `~/.config/mdcat/config.toml`: set `h2`-`h6` to
@@ -1015,7 +1017,8 @@ Use `cargo release` to create a new release.
 - Support ordered and unordered lists, with nest.
 - Show links, with references grouped by section.
 
-[Unreleased]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.12.0...HEAD
+[Unreleased]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.13.0...HEAD
+[2.13.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.12.0...mdcat-2.13.0
 [2.12.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.11.1...mdcat-2.12.0
 [2.11.1]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.11.0...mdcat-2.11.1
 [2.11.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.10.1...mdcat-2.11.0
