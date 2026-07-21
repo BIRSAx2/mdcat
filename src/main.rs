@@ -30,7 +30,7 @@ use tracing_subscriber::EnvFilter;
 use two_face::syntax::extra_newlines;
 use two_face::theme::{EmbeddedThemeName, LazyThemeSet};
 
-use mdcat::args::{Args, ThemeChoice};
+use mdcat::args::{Args, ImageProtocolChoice, ThemeChoice};
 use mdcat::output::Output;
 
 /// Clear the terminal screen and scrollback, then move the cursor home.
@@ -349,6 +349,19 @@ fn main() {
     let local_only = args.local_only || defaults.and_then(|d| d.local_only).unwrap_or(false);
     let fail_fast = args.fail_fast || defaults.and_then(|d| d.fail_fast).unwrap_or(false);
     let toc = args.toc;
+    let image_protocol = match args.image_protocol {
+        Some(choice) => Some(choice),
+        None => match defaults.and_then(|d| d.image_protocol.as_deref()) {
+            Some(name) => match ImageProtocolChoice::from_str(name, true) {
+                Ok(choice) => Some(choice),
+                Err(_) => {
+                    eprintln!("Error: Invalid image protocol {name:?} in config file");
+                    std::process::exit(1);
+                }
+            },
+            None => None,
+        },
+    };
 
     let terminal = if args.no_colour {
         TerminalProgram::Dumb
@@ -360,6 +373,18 @@ fn main() {
         TerminalProgram::Dumb
     } else {
         TerminalProgram::detect()
+    };
+
+    let terminal_capabilities = {
+        let mut caps = terminal.capabilities();
+        // Only override image support on terminals that get any formatting at all; forcing
+        // images into `--no-colour`/piped output would just corrupt the plain text stream.
+        if terminal != TerminalProgram::Dumb {
+            if let Some(choice) = image_protocol {
+                caps.image = choice.to_image_capability();
+            }
+        }
+        caps
     };
 
     if args.detect_and_exit {
@@ -410,7 +435,7 @@ fn main() {
         let exit_code = match Output::new(args.paginate()) {
             Ok(mut output) => {
                 let settings = Settings {
-                    terminal_capabilities: terminal.capabilities(),
+                    terminal_capabilities,
                     terminal_size,
                     syntax_set: &extra_newlines(),
                     theme,

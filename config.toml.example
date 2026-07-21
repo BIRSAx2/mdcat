@@ -22,6 +22,9 @@ local_only = false
 # Stop at the first file that fails to render, instead of continuing with the next one (same as
 # --fail).
 fail_fast = false
+# Force a specific inline image protocol instead of auto-detecting one from the terminal (same
+# as --image-protocol/$MDCAT_IMAGE_PROTOCOL). One of: none, iterm2, kitty, sixel.
+image_protocol = "kitty"
 
 # [theme] customises colours and styles, starting from a built-in theme.
 [theme]

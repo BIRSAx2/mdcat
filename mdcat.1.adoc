@@ -143,6 +143,14 @@ Defaults to `auto`, which detects dark or light mode from the terminal, unless `
 +
 Entries are numbered, nested by heading level, and, if `FILE` isn't standard input, wrapped in an OSC 8 link to `FILE#slug` (a GitHub-style anchor derived from the heading text) so that terminals and later viewers that support OSC 8 and resolve such anchors can jump to that heading. On standard input entries are plain text, since there's no file to link to.
 
+[[image-protocol-option]]--image-protocol=_PROTOCOL_::
+    Force a specific inline image protocol instead of auto-detecting one from the terminal.
+    Useful inside tmux/screen, where the outer terminal's capabilities usually aren't visible to auto-detection.
++
+_PROTOCOL_ is one of `none` (disable inline images entirely), `iterm2`, `kitty`, or `sixel`.
++
+Also settable via `$MDCAT_IMAGE_PROTOCOL`; the flag wins if both are given.
+
 --completions=_SHELL_::
     Generate completions for _SHELL_ to standard output and exit.
 
@@ -200,6 +208,10 @@ Each key sets the default value for a CLI flag, used only when that flag isn't p
 
 `fail_fast`::
     Default for <<fail-option,`--fail`>>.
+
+`image_protocol`::
+    Default for <<image-protocol-option,`--image-protocol`>>/`$MDCAT_IMAGE_PROTOCOL`.
+    One of `none`, `iterm2`, `kitty`, or `sixel`.
 
 === `[theme]`
 

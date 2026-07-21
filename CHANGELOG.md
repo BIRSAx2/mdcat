@@ -22,6 +22,12 @@ Use `cargo release` to create a new release.
   `FILE#slug` (a GitHub-style anchor) via OSC 8 so that terminals and later
   viewers that resolve such anchors can jump to that heading; on standard
   input entries are plain text, since there's no file to link to.
+- `--image-protocol`/`$MDCAT_IMAGE_PROTOCOL`/`defaults.image_protocol` in
+  `~/.config/mdcat/config.toml` forces a specific inline image protocol
+  (`none`, `iterm2`, `kitty`, or `sixel`), overriding terminal auto-detection.
+  Useful inside tmux/screen, where the outer terminal's capabilities usually
+  aren't visible to auto-detection. Precedence: `--image-protocol` wins over
+  `$MDCAT_IMAGE_PROTOCOL`, which wins over the config default.
 
 ### Fixed
 - Syntax-highlighted fenced code blocks nested inside list items (or other

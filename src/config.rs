@@ -45,6 +45,8 @@ pub struct Defaults {
     pub local_only: Option<bool>,
     /// Default for `--fail`.
     pub fail_fast: Option<bool>,
+    /// Default for `--image-protocol`: `"none"`, `"iterm2"`, `"kitty"`, or `"sixel"`.
+    pub image_protocol: Option<String>,
 }
 
 /// Theme customisation: a built-in theme as a starting point, plus style overrides.
@@ -465,6 +467,7 @@ mod tests {
         assert_eq!(config.defaults.columns, None);
         assert_eq!(config.defaults.local_only, None);
         assert_eq!(config.defaults.fail_fast, None);
+        assert_eq!(config.defaults.image_protocol, None);
         assert!(config.theme.is_none());
     }
 }

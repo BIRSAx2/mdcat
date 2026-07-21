@@ -114,6 +114,112 @@ mod cli {
         assert!(!stdout.contains(".md#"));
     }
 
+    fn image_markdown() -> String {
+        let image =
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("sample/rust-logo-128x128.png");
+        format!("![alt]({})\n", image.display())
+    }
+
+    #[test]
+    fn image_protocol_flag_forces_kitty_escape_sequence() {
+        let mut child = cargo_mdcat()
+            .args(["--ansi", "--image-protocol=kitty", "-"])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .unwrap();
+        write!(child.stdin.take().unwrap(), "{}", image_markdown()).unwrap();
+        let output = child.wait_with_output().unwrap();
+        let stdout = std::str::from_utf8(&output.stdout).unwrap();
+        assert!(output.status.success());
+        assert!(
+            stdout.contains("\x1b_G"),
+            "expected a kitty graphics escape sequence, got: {stdout:?}"
+        );
+    }
+
+    #[test]
+    fn image_protocol_env_var_forces_iterm2_escape_sequence() {
+        let mut child = cargo_mdcat()
+            .args(["--ansi", "-"])
+            .env("MDCAT_IMAGE_PROTOCOL", "iterm2")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .unwrap();
+        write!(child.stdin.take().unwrap(), "{}", image_markdown()).unwrap();
+        let output = child.wait_with_output().unwrap();
+        let stdout = std::str::from_utf8(&output.stdout).unwrap();
+        assert!(output.status.success());
+        assert!(
+            stdout.contains("\x1b]1337;File="),
+            "expected an iTerm2 inline image escape sequence, got: {stdout:?}"
+        );
+    }
+
+    #[test]
+    fn image_protocol_flag_overrides_env_var() {
+        let mut child = cargo_mdcat()
+            .args(["--ansi", "--image-protocol=kitty", "-"])
+            .env("MDCAT_IMAGE_PROTOCOL", "none")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .unwrap();
+        write!(child.stdin.take().unwrap(), "{}", image_markdown()).unwrap();
+        let output = child.wait_with_output().unwrap();
+        let stdout = std::str::from_utf8(&output.stdout).unwrap();
+        assert!(output.status.success());
+        assert!(
+            stdout.contains("\x1b_G"),
+            "explicit --image-protocol should win over $MDCAT_IMAGE_PROTOCOL, got: {stdout:?}"
+        );
+    }
+
+    #[test]
+    fn image_protocol_config_default_is_used_and_overridable() {
+        let config_dir = std::env::temp_dir().join(format!(
+            "mdcat-cli-test-config-{}-{}",
+            std::process::id(),
+            "image_protocol_config_default_is_used_and_overridable"
+        ));
+        std::fs::create_dir_all(config_dir.join("mdcat")).unwrap();
+        std::fs::write(
+            config_dir.join("mdcat/config.toml"),
+            "[defaults]\nimage_protocol = \"kitty\"\n",
+        )
+        .unwrap();
+
+        let run = |extra_args: &[&str]| {
+            let mut child = cargo_mdcat()
+                .args(["--ansi"])
+                .args(extra_args)
+                .arg("-")
+                .env("XDG_CONFIG_HOME", &config_dir)
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .spawn()
+                .unwrap();
+            write!(child.stdin.take().unwrap(), "{}", image_markdown()).unwrap();
+            let output = child.wait_with_output().unwrap();
+            String::from_utf8(output.stdout).unwrap()
+        };
+
+        let from_config = run(&[]);
+        assert!(
+            from_config.contains("\x1b_G"),
+            "config default should force kitty, got: {from_config:?}"
+        );
+
+        let overridden = run(&["--image-protocol=none"]);
+        assert!(
+            !overridden.contains("\x1b_G"),
+            "explicit flag should override the config default, got: {overridden:?}"
+        );
+
+        std::fs::remove_dir_all(&config_dir).unwrap();
+    }
+
     #[test]
     fn ignore_broken_pipe() {
         let mut child = cargo_mdcat()

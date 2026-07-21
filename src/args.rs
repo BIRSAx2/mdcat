@@ -41,6 +41,37 @@ pub enum ThemeChoice {
     SolarizedLight,
 }
 
+/// Which inline image protocol to use, overriding auto-detection.
+#[derive(Debug, Clone, Copy, ValueEnum)]
+pub enum ImageProtocolChoice {
+    /// Disable inline images entirely.
+    None,
+    /// iTerm2's inline image protocol.
+    #[value(name = "iterm2")]
+    ITerm2,
+    /// The kitty terminal graphics protocol.
+    Kitty,
+    /// The sixel image protocol.
+    Sixel,
+}
+
+impl ImageProtocolChoice {
+    /// The image capability this choice maps to, or `None` to disable inline images.
+    pub fn to_image_capability(
+        self,
+    ) -> Option<pulldown_cmark_mdcat::terminal::capabilities::ImageCapability> {
+        use pulldown_cmark_mdcat::terminal::capabilities::{iterm2, kitty, sixel, ImageCapability};
+        match self {
+            ImageProtocolChoice::None => None,
+            ImageProtocolChoice::ITerm2 => Some(ImageCapability::ITerm2(iterm2::ITerm2Protocol)),
+            ImageProtocolChoice::Kitty => {
+                Some(ImageCapability::Kitty(kitty::KittyGraphicsProtocol))
+            }
+            ImageProtocolChoice::Sixel => Some(ImageCapability::Sixel(sixel::SixelProtocol)),
+        }
+    }
+}
+
 fn after_help() -> &'static str {
     "See 'man 1 mdcat' for more information.
 
@@ -173,6 +204,12 @@ pub struct CommonArgs {
     /// there's no file to link to.
     #[arg(long)]
     pub toc: bool,
+    /// Force a specific inline image protocol instead of auto-detecting one from the terminal.
+    /// Useful inside tmux/screen, where the outer terminal's capabilities usually aren't visible
+    /// to auto-detection. `none` disables inline images entirely. Also settable via
+    /// `$MDCAT_IMAGE_PROTOCOL`.
+    #[arg(long, env = "MDCAT_IMAGE_PROTOCOL", value_name = "PROTOCOL")]
+    pub image_protocol: Option<ImageProtocolChoice>,
 }
 
 /// What resources mdcat may access.
