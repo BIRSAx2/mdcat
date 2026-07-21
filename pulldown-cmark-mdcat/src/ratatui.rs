@@ -25,7 +25,7 @@ pub use ::ratatui_image::picker::{
     Capability as ImageCapability, Picker as ImagePicker, ProtocolType as ImageProtocol,
 };
 use ::ratatui_image::protocol::StatefulProtocol;
-use ::ratatui_image::StatefulImage;
+use ::ratatui_image::{FontSize, StatefulImage};
 use pulldown_cmark::{Event, LinkType, Parser, Tag, TagEnd};
 use syntect::parsing::SyntaxSet;
 use url::Url;
@@ -251,7 +251,7 @@ fn renderer_hash(options: &RenderOptions<'_>) -> u64 {
         ImageMode::Auto => std::hash::Hash::hash(&1_u8, &mut hasher),
         ImageMode::Picker(picker) => {
             std::hash::Hash::hash(&2_u8, &mut hasher);
-            let (width, height) = picker.font_size();
+            let FontSize { width, height } = picker.font_size();
             std::hash::Hash::hash(&width, &mut hasher);
             std::hash::Hash::hash(&height, &mut hasher);
             std::hash::Hash::hash(&(picker.protocol_type() as u8), &mut hasher);
@@ -550,7 +550,10 @@ fn collect_markdown_assets(markdown: &str) -> MarkdownAssets {
 }
 
 fn terminal_size_for_picker(picker: &ImagePicker, columns: u16) -> TerminalSize {
-    let (font_width, font_height) = picker.font_size();
+    let FontSize {
+        width: font_width,
+        height: font_height,
+    } = picker.font_size();
     TerminalSize {
         columns,
         rows: TerminalSize::default().rows,
@@ -567,7 +570,10 @@ fn image_size_in_cells(
     picker: &ImagePicker,
     max_width: u16,
 ) -> (u16, u16) {
-    let (font_width, font_height) = picker.font_size();
+    let FontSize {
+        width: font_width,
+        height: font_height,
+    } = picker.font_size();
     let width = image.width().div_ceil(font_width.max(1).into());
     let height = image.height().div_ceil(font_height.max(1).into());
     (
