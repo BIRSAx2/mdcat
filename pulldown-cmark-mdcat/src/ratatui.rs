@@ -1438,8 +1438,7 @@ mod tests {
             .unwrap();
         let file_handler = FileResourceHandler::new(20_000_000);
         let environment = Environment::for_local_directory(&sample_dir).unwrap();
-        let mut picker = ImagePicker::from_fontsize((10, 20));
-        picker.set_protocol_type(ImageProtocol::Halfblocks);
+        let picker = ImagePicker::halfblocks();
         let renderer = Renderer::new(
             RenderOptions::default()
                 .environment(environment)
@@ -1476,8 +1475,7 @@ mod tests {
 
     #[test]
     fn mdcat_widget_renders_inline_math_images() {
-        let mut picker = ImagePicker::from_fontsize((10, 20));
-        picker.set_protocol_type(ImageProtocol::Halfblocks);
+        let picker = ImagePicker::halfblocks();
         let renderer = Renderer::new(RenderOptions::default().images(ImageMode::Picker(picker)));
         let backend = TestBackend::new(80, 4);
         let mut terminal = Terminal::new(backend).unwrap();
@@ -1516,8 +1514,7 @@ mod tests {
 
     #[test]
     fn mdcat_widget_state_tracks_configured_image_picker() {
-        let mut picker = ImagePicker::from_fontsize((10, 20));
-        picker.set_protocol_type(ImageProtocol::Halfblocks);
+        let picker = ImagePicker::halfblocks();
         let renderer = Renderer::new(RenderOptions::default().images(ImageMode::Picker(picker)));
         let backend = TestBackend::new(20, 3);
         let mut terminal = Terminal::new(backend).unwrap();
