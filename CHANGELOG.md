@@ -18,6 +18,10 @@ Use `cargo release` to create a new release.
 - `<br>` inside a table cell now starts a new line within that cell, instead
   of being dropped or printed literally (GH #27).
 
+### Fixed
+- Inline and display math inside table cells now use the Unicode fallback
+  instead of panicking (GH #28).
+
 ## [2.13.0] – 2026-07-21
 
 ### Added
