@@ -53,26 +53,36 @@ impl CurrentLine {
 }
 
 /// A cell in the table.
+///
+/// A cell consists of one or more explicit lines, split apart by `<br>`
+/// tags; each line holds a sequence of styled text fragments which are
+/// later word-wrapped to fit the column width.
 #[derive(Debug)]
 pub struct TableCell<'a> {
-    /// Styled text fragments in a table cell.
-    pub(super) fragments: Vec<(Style, CowStr<'a>)>,
+    /// Explicit lines of the cell, as introduced by `<br>`.
+    pub(super) lines: Vec<Vec<(Style, CowStr<'a>)>>,
 }
 
 impl TableCell<'_> {
-    /// A new empty table cell.
+    /// A new empty table cell, with a single empty line.
     pub(super) fn empty() -> Self {
         Self {
-            fragments: Vec::new(),
+            lines: vec![Vec::new()],
         }
     }
 
-    /// Display width of the cell's text content (no ANSI sequences).
+    /// Display width of the cell's text content (no ANSI sequences), i.e.
+    /// the width of its widest explicit line.
     pub(super) fn text_width(&self) -> usize {
-        self.fragments
+        self.lines
             .iter()
-            .map(|(_, t)| textwrap::core::display_width(t.as_ref()))
-            .sum()
+            .map(|line| {
+                line.iter()
+                    .map(|(_, t)| textwrap::core::display_width(t.as_ref()))
+                    .sum()
+            })
+            .max()
+            .unwrap_or(0)
     }
 }
 
@@ -152,15 +162,29 @@ impl<'a> CurrentTable<'a> {
     /// Push a plain text fragment using the current inline markup state.
     pub(super) fn push_text(mut self, text: CowStr<'a>) -> Self {
         let style = self.effective_style(Style::new());
-        self.current_row.current_cell.fragments.push((style, text));
+        self.current_line_mut().push((style, text));
         self
     }
 
     /// Push a text fragment with a specific base style (e.g. code or inline HTML).
     pub(super) fn push_styled_text(mut self, text: CowStr<'a>, base: Style) -> Self {
         let style = self.effective_style(base);
-        self.current_row.current_cell.fragments.push((style, text));
+        self.current_line_mut().push((style, text));
         self
+    }
+
+    /// Start a new explicit line within the current cell, as introduced by `<br>`.
+    pub(super) fn push_break(mut self) -> Self {
+        self.current_row.current_cell.lines.push(Vec::new());
+        self
+    }
+
+    fn current_line_mut(&mut self) -> &mut Vec<(Style, CowStr<'a>)> {
+        self.current_row
+            .current_cell
+            .lines
+            .last_mut()
+            .expect("a table cell always has at least one line")
     }
 
     pub(super) fn enter_strong(mut self) -> Self {

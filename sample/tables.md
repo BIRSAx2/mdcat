@@ -1,42 +1,27 @@
 # Tables
 
-## Basic table
+## Line breaks in cells
 
-| Name       | Version | License   |
-|:-----------|:-------:|----------:|
-| mdcat      | 2.10.0  | MPL-2.0   |
-| pulldown-cmark | 0.12 | MIT   |
-| syntect    | 5.3     | MIT       |
-| two-face   | 0.5     | MIT       |
+`<br>` starts a new line inside a cell instead of being dropped or printed literally:
 
-## Inline markup in cells
+| Tool  | Description                                 |
+|:------|:---------------------------------------------|
+| mdcat | Renders Markdown<br>right in your terminal   |
+| bat   | `cat` clone<br>with syntax highlighting      |
 
-| Feature         | Status          | Notes                        |
-|:----------------|:---------------:|:-----------------------------|
-| **Bold**        | ✓ works         | Use `**text**`               |
-| *Italic*        | ✓ works         | Use `*text*` or `_text_`     |
-| ~~Strikethrough~~ | ✓ works       | Use `~~text~~`               |
-| `inline code`   | ✓ works         | Use `` `code` ``             |
-| ***Bold italic*** | ✓ works       | Nesting works too            |
-| ~~**both**~~    | ✓ works         | Strike + bold                |
+## Wide cells wrap to fit the terminal
 
-## Mixed alignments
+A cell wider than the terminal wraps across multiple lines instead of overflowing:
 
-| Left          |    Center     |         Right |
-|:--------------|:-------------:|--------------:|
-| `alpha`       |   *middle*    |    **right**  |
-| longer text   |    ~~gone~~   |          1234 |
-| short         |   ***wow***   |             0 |
+| Feature       | Notes                                                                                                          |
+|:--------------|:-----------------------------------------------------------------------------------------------------------|
+| Table layout  | Column widths are distributed proportionally and shrunk to fit the terminal, wrapping cell content as needed instead of letting it run off the edge of the screen. |
 
-## Table without body
+## Proportional column widths
 
-| Column A | Column B | Column C |
-|----------|----------|----------|
+Columns shrink proportionally to their content, but never break a short word apart just to make room for a long neighbour:
 
-## Links in cells
-
-| Tool                        | Purpose                  |
-|:----------------------------|:-------------------------|
-| [mdcat](https://github.com/BIRSAx2/mdcat) | Render Markdown in the terminal |
-| [bat](https://github.com/sharkdp/bat)     | `cat` with syntax highlighting  |
-| [delta](https://github.com/dandavison/delta) | Syntax-highlighting pager for git |
+| Tool  | Purpose                                                                                       |
+|:------|:-----------------------------------------------------------------------------------------------|
+| mdcat | Render Markdown in the terminal, with syntax highlighting, images, and now wrapped table cells |
+| bat   | `cat` with syntax highlighting, Git integration, and automatic paging                          |

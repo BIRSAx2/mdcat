@@ -100,6 +100,18 @@ fn quote_line_prefix(
     };
     (prefix, depth * 2)
 }
+/// Whether `text` is a `<br>` tag (in any of its HTML spellings).
+fn is_br_tag(text: &str) -> bool {
+    let inner = text
+        .trim()
+        .strip_prefix('<')
+        .and_then(|s| s.strip_suffix('>'))
+        .unwrap_or(text)
+        .trim_end_matches('/')
+        .trim();
+    inner.eq_ignore_ascii_case("br")
+}
+
 pub use state::State;
 pub use state::StateAndData;
 
@@ -1628,9 +1640,12 @@ pub fn write_event<'a, W: Write>(
                 .ok()
         }
         (Stacked(stack, TableBlock(attrs)), InlineHtml(text)) => {
-            let current_table = data
-                .current_table
-                .push_styled_text(text, settings.theme.inline_html_style);
+            let current_table = if is_br_tag(&text) {
+                data.current_table.push_break()
+            } else {
+                data.current_table
+                    .push_styled_text(text, settings.theme.inline_html_style)
+            };
             Stacked(stack, TableBlock(attrs))
                 .and_data(StateData {
                     current_table,

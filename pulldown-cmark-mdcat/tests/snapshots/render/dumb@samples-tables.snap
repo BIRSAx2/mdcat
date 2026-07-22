@@ -1,38 +1,33 @@
 ---
 source: pulldown-cmark-mdcat/tests/render.rs
-assertion_line: 122
 expression: "render_to_string(markdown_file, &dumb_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/samples/tables.md
 ---
-Normal table:
+Explicit line breaks in a cell:
 
-─────────────────────────────────────────────────────
- left aligned  centered  right aligned  no alignment 
-─────────────────────────────────────────────────────
- cell            cell             cell  cell         
- cell            cell             cell  cell         
- cell            cell             cell  cell         
-─────────────────────────────────────────────────────
+──────────
+ a      b 
+──────────
+ line1  x 
+ line2    
+ b      c 
+──────────
 
-Table without body:
+Wide cell content wraps to fit the terminal:
 
-──────
- head 
-──────
-──────
+────────────────────────────────────────────────────────────────────────────────
+ head                                                                           
+────────────────────────────────────────────────────────────────────────────────
+ This is a long cell that should wrap across multiple lines because its content 
+ exceeds the eighty column default terminal width used in these render tests.   
+────────────────────────────────────────────────────────────────────────────────
 
-Table with empty cells:
+Column widths are distributed proportionally, without breaking a short word
+apart just to make room for a long neighbour:
 
-──────
- a  b 
-──────
-      
-──────
-
-Inline markups in table:
-
-───────
- head  
-───────
- a b c 
-───────
+────────────────────────────────────────────────────────────────────────────────
+ a      b                                                                       
+────────────────────────────────────────────────────────────────────────────────
+ short  this cell has quite a lot of content that needs wrapping to fit, unlike 
+        its narrow single-word neighbour                                        
+────────────────────────────────────────────────────────────────────────────────

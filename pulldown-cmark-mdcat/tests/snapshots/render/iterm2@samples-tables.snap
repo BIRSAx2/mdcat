@@ -3,35 +3,31 @@ source: pulldown-cmark-mdcat/tests/render.rs
 expression: "render_to_string(markdown_file, &iterm2_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/samples/tables.md
 ---
-Normal table:
+Explicit line breaks in a cell:
 
-─────────────────────────────────────────────────────
- [1mleft aligned[0m  [1mcentered[0m  [1mright aligned[0m  [1mno alignment[0m 
-─────────────────────────────────────────────────────
- cell            cell             cell  cell         
- cell            cell             cell  cell         
- cell            cell             cell  cell         
-─────────────────────────────────────────────────────
+──────────
+ [1ma[0m      [1mb[0m 
+──────────
+ line1  x 
+ line2    
+ b      c 
+──────────
 
-Table without body:
+Wide cell content wraps to fit the terminal:
 
-──────
- [1mhead[0m 
-──────
-──────
+────────────────────────────────────────────────────────────────────────────────
+ [1mhead[0m                                                                           
+────────────────────────────────────────────────────────────────────────────────
+ This is a long cell that should wrap across multiple lines because its content 
+ exceeds the eighty column default terminal width used in these render tests.   
+────────────────────────────────────────────────────────────────────────────────
 
-Table with empty cells:
+Column widths are distributed proportionally, without breaking a short word
+apart just to make room for a long neighbour:
 
-──────
- [1ma[0m  [1mb[0m 
-──────
-      
-──────
-
-Inline markups in table:
-
-───────
- [1mhead[0m  
-───────
- [3ma[0m [1mb[0m [33mc[0m 
-───────
+────────────────────────────────────────────────────────────────────────────────
+ [1ma[0m      [1mb[0m                                                                       
+────────────────────────────────────────────────────────────────────────────────
+ short  this cell has quite a lot of content that needs wrapping to fit, unlike 
+        its narrow single-word neighbour                                        
+────────────────────────────────────────────────────────────────────────────────

@@ -8,6 +8,16 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+### Added
+- Tables now use true layout: column widths are distributed proportionally
+  and shrunk to fit the terminal, with cell content word-wrapped (rather
+  than overflowing) across as many lines as needed. Columns are shrunk no
+  further than their longest word where space allows, so wrapping a wide
+  neighbour column doesn't force an unrelated narrow column to break a
+  short word apart.
+- `<br>` inside a table cell now starts a new line within that cell, instead
+  of being dropped or printed literally (GH #27).
+
 ## [2.13.0] – 2026-07-21
 
 ### Added
