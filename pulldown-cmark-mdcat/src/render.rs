@@ -1533,6 +1533,17 @@ pub fn write_event<'a, W: Write>(
             };
             Stacked(stack, TableBlock(attrs)).and_data(data).ok()
         }
+        (Stacked(stack, TableBlock(attrs)), InlineMath(math) | DisplayMath(math)) => {
+            let rendered = math::render_math_unicode(&math);
+            let current_table = data
+                .current_table
+                .push_styled_text(rendered.into(), settings.theme.math_style);
+            let data = StateData {
+                current_table,
+                ..data
+            };
+            Stacked(stack, TableBlock(attrs)).and_data(data).ok()
+        }
         (Stacked(stack, TableBlock(attrs)), End(TagEnd::Table)) => {
             let (prefix, prefix_cols) = quote_line_prefix(
                 &settings.terminal_capabilities,

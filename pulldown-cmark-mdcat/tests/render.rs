@@ -159,6 +159,25 @@ fn table_as_first_list_item_block_does_not_panic() {
 }
 
 #[test]
+fn math_in_table_cells_does_not_panic() {
+    let settings = Settings {
+        terminal_capabilities: TerminalProgram::Dumb.capabilities(),
+        terminal_size: TerminalSize::default(),
+        theme: Theme::default(),
+        syntax_set: syntax_set(),
+        syntax_theme: None,
+    };
+    let cwd = std::env::current_dir().expect("Require working directory");
+    let output = render_markdown_to_string(
+        "| Math |\n| - |\n| $\\alpha$ |\n| $$\\frac{1}{2}$$ |",
+        &cwd,
+        &settings,
+    );
+
+    assert_eq!(output, "──────\n Math \n──────\n α    \n 1/2  \n──────\n");
+}
+
+#[test]
 fn inline_math_kitty_placement_does_not_move_cursor() {
     let settings = Settings {
         terminal_capabilities: TerminalProgram::Kitty.capabilities(),
