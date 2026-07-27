@@ -8,6 +8,8 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+## [2.14.0] – 2026-07-27
+
 ### Added
 - Tables now use true layout: column widths are distributed proportionally
   and shrunk to fit the terminal, with cell content word-wrapped (rather
@@ -1031,7 +1033,8 @@ Use `cargo release` to create a new release.
 - Support ordered and unordered lists, with nest.
 - Show links, with references grouped by section.
 
-[Unreleased]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.13.0...HEAD
+[Unreleased]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.14.0...HEAD
+[2.14.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.13.0...mdcat-2.14.0
 [2.13.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.12.0...mdcat-2.13.0
 [2.12.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.11.1...mdcat-2.12.0
 [2.11.1]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.11.0...mdcat-2.11.1
