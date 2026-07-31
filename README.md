@@ -25,6 +25,8 @@ Then it
 - highlights code blocks with syntax definitions from [bat] (TOML, TypeScript, Dockerfile, Zig, Nix, and more),
   using the colour theme of your choice — including any theme [bat] supports via `$BAT_THEME`,
 - renders inline and display math, as PNGs through the iTerm2 or kitty image protocol, and as Unicode substitutions otherwise,
+- renders [Mermaid][mermaid] diagrams (flowcharts, sequence diagrams, and more) in fenced ` ```mermaid ` code blocks,
+  as PNGs through an image protocol, and as Unicode diagrams otherwise,
 - renders [GFM alerts][gfm-alerts] (`[!NOTE]`, `[!TIP]`, `[!WARNING]`, etc.) with coloured borders and icons,
 - shows [links][osc8], and also images inline in supported terminals (see above, where "Rust" is a clickable link!),
 - adds jump marks for headings in [iTerm2] (jump forwards and backwards with <key>⇧⌘↓</key> and <key>⇧⌘↑</key>),
@@ -75,6 +77,7 @@ Not supported:
 [foot]: https://codeberg.org/dnkl/foot
 [xterm]: https://invisible-island.net/xterm/xterm.html
 [fzf]: https://github.com/junegunn/fzf
+[mermaid]: https://mermaid.js.org
 
 ## Usage
 
@@ -105,7 +108,9 @@ To get a live preview while editing:
 $ mdcat --watch sample.md
 ```
 
-See [sample/math.md](./sample/math.md) for math examples, [sample/alerts.md](./sample/alerts.md) for GFM alerts, and [sample/tables.md](./sample/tables.md) for table rendering.
+See [sample/math.md](./sample/math.md) for math examples, [sample/mermaid.md](./sample/mermaid.md) for Mermaid
+diagrams, [sample/alerts.md](./sample/alerts.md) for GFM alerts, and [sample/tables.md](./sample/tables.md) for
+table rendering.
 
 To fuzzy-find and open a Markdown file below the current directory (requires [fzf]):
 

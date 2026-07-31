@@ -11,7 +11,6 @@ return {
 	term = "wezterm",
 	font = wezterm.font("JetBrains Mono"),
 	initial_cols = 60,
-	-- We need 40 rows for the wrapped showcase document
-	initial_rows = 40,
+	initial_rows = 30,
 	exit_behavior = "Hold",
 }

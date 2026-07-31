@@ -1,0 +1,20 @@
+---
+source: pulldown-cmark-mdcat/tests/render.rs
+expression: output
+---
+
+┌───────┐
+│       │
+│ Start │
+│       │
+└───┬───┘
+    │    
+    │    
+    │    
+    │    
+    ▼    
+┌───────┐
+│       │
+│  Done │
+│       │
+└───────┘

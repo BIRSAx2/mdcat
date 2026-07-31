@@ -240,6 +240,16 @@ pub struct LiteralBlockAttrs {
     pub(super) style: Style,
 }
 
+/// Attributes for a Mermaid diagram block, collecting source text until it's fully read and can
+/// be rendered.
+#[derive(Debug, PartialEq)]
+pub struct MermaidBlockAttrs {
+    /// The indent for this block.
+    pub(super) indent: u16,
+    /// The diagram source accumulated so far.
+    pub(super) source: String,
+}
+
 #[derive(Debug, PartialEq)]
 pub struct HtmlBlockAttrs {
     /// The initial indent for this block.
@@ -260,6 +270,8 @@ pub enum StackedState {
     HighlightBlock(HighlightBlockAttrs),
     /// A literal block without highlighting.
     LiteralBlock(LiteralBlockAttrs),
+    /// A Mermaid diagram block, accumulating source text.
+    MermaidBlock(MermaidBlockAttrs),
     /// A block of HTML contents.
     HtmlBlock(HtmlBlockAttrs),
     /// A rendered inline image.
@@ -296,6 +308,12 @@ impl From<LiteralBlockAttrs> for StackedState {
 impl From<HtmlBlockAttrs> for StackedState {
     fn from(attrs: HtmlBlockAttrs) -> Self {
         StackedState::HtmlBlock(attrs)
+    }
+}
+
+impl From<MermaidBlockAttrs> for StackedState {
+    fn from(attrs: MermaidBlockAttrs) -> Self {
+        StackedState::MermaidBlock(attrs)
     }
 }
 

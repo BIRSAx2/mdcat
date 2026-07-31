@@ -10,7 +10,13 @@ use std::io::Result;
 
 /// Render an SVG image to a PNG pixel graphic for display.
 pub fn render_svg_to_png(svg: &[u8]) -> Result<Vec<u8>> {
-    implementation::render_svg_to_png(svg)
+    implementation::render_svg_to_png(svg, 1.0)
+}
+
+/// Render an SVG image to a PNG pixel graphic, scaled up by `scale` (e.g. `2.0` renders at
+/// twice the SVG's native pixel size, uniformly enlarging every element).
+pub fn render_svg_to_png_scaled(svg: &[u8], scale: f32) -> Result<Vec<u8>> {
+    implementation::render_svg_to_png(svg, scale)
 }
 
 #[cfg(feature = "svg")]
@@ -81,29 +87,36 @@ mod implementation {
         Ok(usvg::Tree::from_data(svg, &options)?)
     }
 
-    fn render_svg_to_png_with_resvg(svg: &[u8]) -> Result<Vec<u8>, RenderSvgError> {
+    fn render_svg_to_png_with_resvg(svg: &[u8], scale: f32) -> Result<Vec<u8>, RenderSvgError> {
         let tree = parse_svg(svg)?;
-        let size = tree.size().to_int_size();
+        let native_size = tree.size().to_int_size();
+        let width = ((native_size.width() as f32) * scale).round().max(1.0) as u32;
+        let height = ((native_size.height() as f32) * scale).round().max(1.0) as u32;
+        let size = IntSize::from_wh(width, height).unwrap_or(native_size);
         let mut pixmap = Pixmap::new(size.width(), size.height())
             .ok_or(RenderSvgError::FailedToCreatePixmap(size))?;
         // We create a pixmap of the appropriate size so the size transform in render cannot fail, so
         // if it fails it's a bug in our code or in resvg which we should fix and not hide.  Hence we
         // unwrap the result.
-        resvg::render(&tree, Transform::default(), &mut pixmap.as_mut());
+        resvg::render(
+            &tree,
+            Transform::from_scale(scale, scale),
+            &mut pixmap.as_mut(),
+        );
         pixmap
             .encode_png()
             .map_err(|err| RenderSvgError::EncodePngError(Box::new(err)))
     }
 
-    pub fn render_svg_to_png(svg: &[u8]) -> std::io::Result<Vec<u8>> {
-        render_svg_to_png_with_resvg(svg).map_err(Into::into)
+    pub fn render_svg_to_png(svg: &[u8], scale: f32) -> std::io::Result<Vec<u8>> {
+        render_svg_to_png_with_resvg(svg, scale).map_err(Into::into)
     }
 }
 
 #[cfg(not(feature = "svg"))]
 mod implementation {
     use std::io::{Error, ErrorKind, Result};
-    pub fn render_svg_to_png(_svg: &[u8]) -> Result<Vec<u8>> {
+    pub fn render_svg_to_png(_svg: &[u8], _scale: f32) -> Result<Vec<u8>> {
         Err(Error::new(
             ErrorKind::Unsupported,
             "SVG rendering not enabled in this build",

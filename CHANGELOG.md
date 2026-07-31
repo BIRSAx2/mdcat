@@ -13,6 +13,14 @@ Use `cargo release` to create a new release.
   fuzzy-finds a Markdown file below a directory with [fzf](https://github.com/junegunn/fzf),
   honouring `.gitignore`, then renders the selection through a pager, like
   `mdless` (GH #21).
+- Mermaid diagrams in fenced ` ```mermaid ` code blocks now render as PNG images on terminals
+  with an image protocol, or as Unicode diagrams otherwise, via
+  [merman](https://github.com/Latias94/merman). A theme's `mermaid` style controls the colour of
+  arrows, borders, and text in both the PNG and Unicode rendering, so diagrams match the active
+  theme instead of Mermaid's own default (near-black) palette.
+
+### Changed
+- Raised the minimum supported Rust version to 1.95, required by `merman`.
 
 ## [2.14.0] – 2026-07-27
 

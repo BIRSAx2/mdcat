@@ -209,3 +209,64 @@ fn display_math_kitty_placement_does_not_add_extra_newline() {
     assert!(output.contains("\u{1b}\\\n\u{1b}_Ga=T,t=d,I=1,f=100,m=0,q=2;"));
     assert!(!output.contains("\u{1b}\\\n\n\u{1b}_Ga=T,t=d,I=1,f=100,m=0,q=2;"));
 }
+
+// Mermaid PNGs go through resvg's system font database, so exact bytes aren't reproducible
+// across machines; check structurally instead of snapshotting, unlike the Unicode fallback below.
+
+#[test]
+fn mermaid_flowchart_renders_as_unicode_when_no_image_support() {
+    let settings = Settings {
+        terminal_capabilities: TerminalProgram::Dumb.capabilities(),
+        terminal_size: TerminalSize::default(),
+        theme: Theme::default(),
+        syntax_set: syntax_set(),
+        syntax_theme: None,
+    };
+    let cwd = std::env::current_dir().expect("Require working directory");
+    let output = render_markdown_to_string(
+        "```mermaid\nflowchart TD\n    A[Start] --> B[Done]\n```\n",
+        &cwd,
+        &settings,
+    );
+
+    assert_snapshot!(output);
+}
+
+#[test]
+#[cfg(feature = "svg")]
+fn mermaid_flowchart_renders_as_kitty_image() {
+    let settings = Settings {
+        terminal_capabilities: TerminalProgram::Kitty.capabilities(),
+        terminal_size: TerminalSize::default(),
+        theme: Theme::default(),
+        syntax_set: syntax_set(),
+        syntax_theme: None,
+    };
+    let cwd = std::env::current_dir().expect("Require working directory");
+    let output = render_markdown_to_string(
+        "```mermaid\nflowchart TD\n    A[Start] --> B[Done]\n```\n",
+        &cwd,
+        &settings,
+    );
+
+    assert!(output.contains("\u{1b}_Ga=T,t=d,I=1,f=100"));
+}
+
+#[test]
+fn mermaid_unparsable_diagram_falls_back_to_literal_source() {
+    let settings = Settings {
+        terminal_capabilities: TerminalProgram::Dumb.capabilities(),
+        terminal_size: TerminalSize::default(),
+        theme: Theme::default(),
+        syntax_set: syntax_set(),
+        syntax_theme: None,
+    };
+    let cwd = std::env::current_dir().expect("Require working directory");
+    let output = render_markdown_to_string(
+        "```mermaid\nnot a mermaid diagram at all {{{\n```\n",
+        &cwd,
+        &settings,
+    );
+
+    assert!(output.contains("not a mermaid diagram at all {{{"));
+}
