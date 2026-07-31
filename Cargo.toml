@@ -19,6 +19,7 @@ anyhow = { version = "1.0.89", default-features = false, features = ["std"] }
 clap = { version = "4.5.17", default-features = false, features = ["std", "derive", "help", "usage", "error-context", "env"] }
 clap_complete = "4.5.28"
 curl = "0.4.47"
+ignore = "0.4.31"
 mime = { workspace = true}
 notify = "8.2.0"
 pulldown-cmark = { workspace = true, features = ['simd'] }

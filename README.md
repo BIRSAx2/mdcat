@@ -33,7 +33,8 @@ Then it
   and lets you fully customise colours, heading markers, and GFM alert icons/labels via
   `~/.config/mdcat/config.toml` (see [config.toml.example](./config.toml.example)),
 - can render typographic punctuation (curly quotes, en/em dashes, an ellipsis) with `--smart-punctuation`,
-- can watch a file and re-render it on every save with `--watch`, for a live preview while editing.
+- can watch a file and re-render it on every save with `--watch`, for a live preview while editing,
+- can fuzzy-find a Markdown file to render, via `mdpick` (see below), if you have [fzf] installed.
 
 | Terminal           | Basic syntax | Syntax highlighting | Images | Math  | Jump marks |
 | :----------------- | :----------: | :-----------------: | :----: | :---: | :--------: |
@@ -73,6 +74,7 @@ Not supported:
 [Ghostty]: https://mitchellh.com/ghostty
 [foot]: https://codeberg.org/dnkl/foot
 [xterm]: https://invisible-island.net/xterm/xterm.html
+[fzf]: https://github.com/junegunn/fzf
 
 ## Usage
 
@@ -105,6 +107,29 @@ $ mdcat --watch sample.md
 
 See [sample/math.md](./sample/math.md) for math examples, [sample/alerts.md](./sample/alerts.md) for GFM alerts, and [sample/tables.md](./sample/tables.md) for table rendering.
 
+To fuzzy-find and open a Markdown file below the current directory (requires [fzf]):
+
+```console
+$ mdpick
+$ mdpick docs  # search below docs instead
+```
+
+### `mdless` and `mdpick`
+
+`mdcat` looks at the name it was invoked as (`argv[0]`) to decide how to behave:
+
+- Invoked as `mdless`, it automatically paginates output, as if `--paginate` were given.
+- Invoked as `mdpick`, it skips straight to the interactive picker described above, instead of expecting a file argument.
+
+Both are the same binary as `mdcat`, just under a different name, so you get them for free by linking or copying the binary:
+
+```console
+$ ln -s "$(command -v mdcat)" ~/.local/bin/mdless
+$ ln -s "$(command -v mdcat)" ~/.local/bin/mdpick
+```
+
+(make sure `~/.local/bin`, or wherever you put the links, is on `$PATH`). A hardlink or plain copy works just as well as a symlink.
+
 ## Installation
 
 - [Release binaries](https://github.com/BIRSAx2/mdcat/releases/) built on Github Actions.
@@ -112,7 +137,7 @@ See [sample/math.md](./sample/math.md) for math examples, [sample/alerts.md](./s
 - 3rd party packages at [Repology](https://repology.org/project/mdcat/versions)
 - You can also build `mdcat` manually with `cargo install mdcat` (see below for details).
 
-`mdcat` can be linked or copied to `mdless`; if invoked as `mdless` it automatically uses pagination.
+`mdcat` can be linked or copied to `mdless` or `mdpick` (see [`mdless` and `mdpick`](#mdless-and-mdpick) above).
 
 ## Building
 
@@ -124,17 +149,20 @@ Building requires `libcurl`.
 
 When packaging `mdcat` you may wish to include the following additional artifacts:
 
-- A symlink or hardlink from `mdless` to `mdcat` (see above).
+- A symlink or hardlink from `mdless` to `mdcat` (see above), and, if you want to ship the picker, likewise from `mdpick` to `mdcat`. `mdpick` additionally needs [fzf] installed to work; consider depending on it in your package.
 - Shell completions for relevant shells, by invoking `mdcat --completions` after building, e.g.
 
   ```console
   $ mdcat --completions fish > /usr/share/fish/vendor_completions.d/mdcat.fish
   $ mdcat --completions bash > /usr/share/bash-completion/completions/mdcat
   $ mdcat --completions zsh > /usr/share/zsh/site-functions/_mdcat
-  # Same for mdless if you include it
+  # Same for mdless and mdpick if you include them
   $ mdless --completions fish > /usr/share/fish/vendor_completions.d/mdless.fish
   $ mdless --completions bash > /usr/share/bash-completion/completions/mdless
   $ mdless --completions zsh > /usr/share/zsh/site-functions/_mdless
+  $ mdpick --completions fish > /usr/share/fish/vendor_completions.d/mdpick.fish
+  $ mdpick --completions bash > /usr/share/bash-completion/completions/mdpick
+  $ mdpick --completions zsh > /usr/share/zsh/site-functions/_mdpick
   ```
 
 - A build of the man page `mdcat.1.adoc`, using [AsciiDoctor]:
@@ -142,8 +170,9 @@ When packaging `mdcat` you may wish to include the following additional artifact
   ```console
   $ asciidoctor -b manpage -a reproducible -o /usr/share/man/man1/mdcat.1 mdcat.1.adoc
   $ gzip /usr/share/man/man1/mdcat.1
-  # If you include a mdless as above, you may also want to support man mdless
+  # If you include mdless and/or mdpick as above, you may also want to support their man pages
   $ ln -s mdcat.1.gz /usr/share/man/man1/mdless.1.gz
+  $ ln -s mdcat.1.gz /usr/share/man/man1/mdpick.1.gz
   ```
 
 [AsciiDoctor]: https://asciidoctor.org/

@@ -76,7 +76,8 @@ fn after_help() -> &'static str {
     "See 'man 1 mdcat' for more information.
 
 mdcat can be installed as or linked to mdless,
-for automatic pagination.
+for automatic pagination, or to mdpick, to fuzzy-find
+a file with fzf before rendering it.
 
 Report issues to <https://github.com/BIRSAx2/mdcat>."
 }
@@ -124,6 +125,21 @@ pub enum Command {
         #[arg(short, long)]
         paginate: bool,
     },
+    /// Fuzzy-find a Markdown file below the current directory with fzf, then render it.
+    ///
+    /// The FILENAMES argument, if given, is instead taken as the single directory to search
+    /// below (default: the current directory). Requires fzf <https://github.com/junegunn/fzf>.
+    #[command(version, about, after_help = after_help(), long_version = long_version())]
+    Mdpick {
+        #[command(flatten)]
+        args: CommonArgs,
+        /// Do not paginate output (default for mdcat).
+        #[arg(short = 'P', long, overrides_with = "paginate")]
+        no_pager: bool,
+        /// Paginate the output of mdcat with a pager like less (default). Overrides an earlier --no-pager.
+        #[arg(short, long)]
+        paginate: bool,
+    },
 }
 
 impl Command {
@@ -133,6 +149,7 @@ impl Command {
             // behaviour; the overrides above are configured accordingly.
             Command::Mdcat { paginate, .. } => paginate,
             Command::Mdless { no_pager, .. } => !no_pager,
+            Command::Mdpick { no_pager, .. } => !no_pager,
         }
     }
 }
@@ -144,6 +161,7 @@ impl std::ops::Deref for Command {
         match self {
             Command::Mdcat { args, .. } => args,
             Command::Mdless { args, .. } => args,
+            Command::Mdpick { args, .. } => args,
         }
     }
 }

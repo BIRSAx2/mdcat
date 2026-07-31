@@ -33,6 +33,8 @@ use two_face::theme::{EmbeddedThemeName, LazyThemeSet};
 use mdcat::args::{Args, ImageProtocolChoice, ThemeChoice};
 use mdcat::output::Output;
 
+mod picker;
+
 /// Clear the terminal screen and scrollback, then move the cursor home.
 fn clear_screen() {
     print!("\x1B[3J\x1B[H\x1B[2J");
@@ -308,6 +310,7 @@ fn main() {
         let binary = match args {
             mdcat::args::Command::Mdcat { .. } => "mdcat",
             mdcat::args::Command::Mdless { .. } => "mdless",
+            mdcat::args::Command::Mdpick { .. } => "mdpick",
         };
         let mut command = Args::command();
         let subcommand = command.find_subcommand_mut(binary).unwrap();
@@ -407,11 +410,35 @@ fn main() {
             terminal_size
         };
 
+        let filenames: Vec<String> = if let mdcat::args::Command::Mdpick { .. } = &args {
+            match args.filenames.as_slice() {
+                [] | [_] => {}
+                _ => {
+                    eprintln!("Error: mdpick takes at most one directory argument");
+                    std::process::exit(1);
+                }
+            }
+            let directory = match args.filenames.first().map(String::as_str) {
+                None | Some("-") => Path::new("."),
+                Some(directory) => Path::new(directory),
+            };
+            match picker::pick_markdown_file(directory) {
+                Ok(Some(file)) => vec![file.to_string_lossy().into_owned()],
+                Ok(None) => std::process::exit(0),
+                Err(error) => {
+                    eprintln!("Error: {error:#}");
+                    std::process::exit(1);
+                }
+            }
+        } else {
+            args.filenames.clone()
+        };
+
         if args.watch && args.paginate() {
             eprintln!("Error: --watch cannot be combined with --paginate");
             std::process::exit(1);
         }
-        if args.watch && (args.filenames.len() != 1 || args.filenames[0] == "-") {
+        if args.watch && (filenames.len() != 1 || filenames[0] == "-") {
             eprintln!("Error: --watch requires exactly one file argument (not stdin)");
             std::process::exit(1);
         }
@@ -456,7 +483,7 @@ fn main() {
                 let resource_handler = create_resource_handler(resource_access).unwrap();
                 if args.watch {
                     match watch_file(
-                        &args.filenames[0],
+                        &filenames[0],
                         &settings,
                         &resource_handler,
                         &mut output,
@@ -469,7 +496,7 @@ fn main() {
                         }
                     }
                 } else {
-                    args.filenames
+                    filenames
                         .iter()
                         .try_fold(0, |code, filename| {
                             process_file(

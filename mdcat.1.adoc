@@ -16,12 +16,16 @@ mdcat - render CommonMark Markdown to text terminals
 
 *mdless* [_OPTIONS_] [FILE]...
 
+*mdpick* [_OPTIONS_] [DIRECTORY]
+
 == Description
 
 mdcat renders Markdown ``FILE``s in CommonMark dialect to text terminals with sophisticated formatting.
 If no `FILE` is given, or if `FILE` is '-', it reads from standard input.
 
 If invoked as `mdless` automatically use a pager to display the output, see below.
+
+If invoked as `mdpick`, instead fuzzy-find a Markdown file below `DIRECTORY` (the current directory by default) with `fzf`, then render the selected file as `mdless` would. See section <<Interactive picking>> below.
 
 === CommonMark and terminal support
 
@@ -47,6 +51,14 @@ The environment variables `$MDCAT_PAGER` and `$PAGER` control the pager used.
 Note that common pagers do not support proprietary terminal codes for e.g. image support, so mdcat falls back to pure ANSI formatting when pagination is enabled.
 In particular this disables all image support which relies on proprietary escape codes.
 Math rendering remains enabled, but uses Unicode substitutions instead of PNG images.
+
+=== Interactive picking
+
+`mdpick` requires https://github.com/junegunn/fzf[fzf] to be installed and on `$PATH`; it exits with an error if `fzf` cannot be found.
+
+It recursively collects `.md` files below `DIRECTORY`, honouring `.gitignore` and other ignore files the same way `fzf` and `rg` do, then hands that list to `fzf` for fuzzy selection.
+If the picker is cancelled, e.g. with kbd:[Esc] or kbd:[Ctrl+C], `mdpick` exits with status 0 without rendering anything.
+Once a file is selected, `mdpick` renders it exactly as `mdless` would, paginating by default.
 
 === Image support
 
@@ -256,7 +268,7 @@ Valid style names: `html_block`, `inline_html`, `code`, `link`, `image_link`, `q
 
 mdcat exits with 0 if no error occurred, or 1 otherwise.
 
-If run as `mdless` or if `--paginate` is given and the pager fails to start mdcat exists with 128.
+If run as `mdless` or `mdpick`, or if `--paginate` is given, and the pager fails to start mdcat exits with 128.
 
 == Environment
 
@@ -358,6 +370,10 @@ mdcat hello - world::
     Render markdown in `hello`, then from standard input, then from `world`.
 
 mdless hello:: Render markdown from `mdless` through a pager.
+
+mdpick:: Fuzzy-find a Markdown file below the current directory with `fzf`, then render it through a pager.
+
+mdpick docs:: Same, but search below `docs` instead of the current directory.
 
 == See also
 

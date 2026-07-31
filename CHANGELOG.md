@@ -8,6 +8,12 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+### Added
+- New `mdpick` entry point (same binary as `mdcat`, invoked under that name):
+  fuzzy-finds a Markdown file below a directory with [fzf](https://github.com/junegunn/fzf),
+  honouring `.gitignore`, then renders the selection through a pager, like
+  `mdless` (GH #21).
+
 ## [2.14.0] – 2026-07-27
 
 ### Added

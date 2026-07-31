@@ -329,3 +329,99 @@ mod cli {
         assert_eq!(exit_code.code().unwrap(), 0);
     }
 }
+
+/// Exercises `mdpick`, i.e. the multicall entry point invoked as `mdpick`.
+///
+/// Unix-only: relies on symlinks to fake `argv[0]` and on a `sh` script standing in for `fzf`.
+#[cfg(unix)]
+mod mdpick {
+    use std::os::unix::fs::symlink;
+    use std::os::unix::fs::PermissionsExt;
+    use std::process::{Command, Output};
+
+    /// A scratch directory holding a `mdpick` symlink to the test binary and a stub `fzf`,
+    /// cleaned up on drop.
+    struct Sandbox {
+        dir: std::path::PathBuf,
+    }
+
+    impl Sandbox {
+        /// Set up a sandbox whose stub `fzf` runs `fzf_script` (a `sh` script body) and exposes
+        /// `mdpick` on `$PATH`.
+        fn new(fzf_script: &str) -> Self {
+            let dir = std::env::temp_dir().join(format!(
+                "mdcat-mdpick-test-{}-{:?}",
+                std::process::id(),
+                std::thread::current().id()
+            ));
+            std::fs::create_dir_all(&dir).unwrap();
+            symlink(env!("CARGO_BIN_EXE_mdcat"), dir.join("mdpick")).unwrap();
+            let fzf_path = dir.join("fzf");
+            std::fs::write(&fzf_path, format!("#!/bin/sh\n{fzf_script}\n")).unwrap();
+            std::fs::set_permissions(&fzf_path, std::fs::Permissions::from_mode(0o755)).unwrap();
+            Sandbox { dir }
+        }
+
+        fn run<I, S>(&self, args: I) -> Output
+        where
+            I: IntoIterator<Item = S>,
+            S: AsRef<std::ffi::OsStr>,
+        {
+            let path = format!("{}:{}", self.dir.display(), std::env::var("PATH").unwrap());
+            Command::new(self.dir.join("mdpick"))
+                .args(args)
+                .env("PATH", path)
+                .output()
+                .unwrap()
+        }
+    }
+
+    impl Drop for Sandbox {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.dir);
+        }
+    }
+
+    #[test]
+    fn renders_the_file_selected_in_fzf() {
+        let sandbox = Sandbox::new("grep -m1 math");
+        let output = sandbox.run(["sample", "--no-colour"]);
+        let stdout = std::str::from_utf8(&output.stdout).unwrap();
+        assert!(
+            output.status.success(),
+            "non-zero exit code: {:?}, stderr: {}",
+            output.status,
+            std::str::from_utf8(&output.stderr).unwrap(),
+        );
+        assert!(stdout.contains("Math rendering"), "stdout: {stdout}");
+    }
+
+    #[test]
+    fn exits_cleanly_when_the_picker_is_cancelled() {
+        let sandbox = Sandbox::new("cat >/dev/null; exit 130");
+        let output = sandbox.run(["sample"]);
+        assert!(output.status.success());
+        assert!(output.stdout.is_empty());
+    }
+
+    #[test]
+    fn errors_when_the_directory_has_no_markdown_files() {
+        let sandbox = Sandbox::new("cat >/dev/null; echo should-not-be-selected");
+        let empty = sandbox.dir.join("empty");
+        std::fs::create_dir_all(&empty).unwrap();
+        let output = sandbox.run([empty.to_str().unwrap()]);
+        let stderr = std::str::from_utf8(&output.stderr).unwrap();
+        assert!(!output.status.success());
+        assert!(stderr.contains("No Markdown files found"), "{stderr}");
+    }
+
+    #[test]
+    fn errors_with_more_than_one_directory_argument() {
+        let sandbox = Sandbox::new("cat >/dev/null");
+        let output = sandbox.run(["sample", "sample2"]);
+        assert!(!output.status.success());
+        assert!(std::str::from_utf8(&output.stderr)
+            .unwrap()
+            .contains("at most one directory"));
+    }
+}
