@@ -315,6 +315,13 @@ pub fn write_start_code_block<W: Write>(
     write_indent(writer, indent)?;
 
     match (&settings.terminal_capabilities.style, block_kind) {
+        (_, CodeBlockKind::Fenced(name)) if name.eq_ignore_ascii_case("mermaid") => {
+            Ok(MermaidBlockAttrs {
+                indent,
+                source: String::new(),
+            }
+            .into())
+        }
         (Some(StyleCapability::Ansi), CodeBlockKind::Fenced(name)) if !name.is_empty() => {
             match settings.syntax_set.find_syntax_by_token(&name) {
                 None => Ok(LiteralBlockAttrs {

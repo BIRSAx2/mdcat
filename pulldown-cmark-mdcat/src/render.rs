@@ -30,6 +30,7 @@ use crate::{Environment, Settings, Theme};
 mod data;
 mod highlighting;
 pub(crate) mod math;
+pub(crate) mod mermaid;
 mod state;
 mod write;
 
@@ -138,6 +139,47 @@ fn write_math_image<W: Write>(
     writer: &mut W,
     settings: &Settings,
     img: math::MathImage,
+    move_cursor: bool,
+) -> Result<(u16, u16, bool)> {
+    let dims = (img.width_columns, img.height_rows);
+    let cursor_moved = match settings.terminal_capabilities.image.as_ref() {
+        Some(ImageCapability::Kitty(k)) => {
+            k.write_png_data(writer, img.png, move_cursor)?;
+            move_cursor
+        }
+        Some(ImageCapability::ITerm2(i)) => {
+            i.write_png_data(writer, &img.png)?;
+            false
+        }
+        #[cfg(feature = "sixel")]
+        Some(ImageCapability::Sixel(s)) => {
+            s.write_png_data(writer, &img.png)?;
+            false
+        }
+        None => return Ok((0, 0, false)),
+    };
+    Ok((dims.0, dims.1, cursor_moved))
+}
+
+fn render_mermaid_image(settings: &Settings, source: &str) -> Option<mermaid::MermaidImage> {
+    match settings.terminal_capabilities.image.as_ref()? {
+        ImageCapability::Kitty(_) | ImageCapability::ITerm2(_) => {}
+        #[cfg(feature = "sixel")]
+        ImageCapability::Sixel(_) => {}
+    }
+    mermaid::render_mermaid_png(
+        source,
+        &settings.terminal_size,
+        &settings.theme.mermaid_style,
+        settings.theme.is_dark,
+    )
+}
+
+/// Write a prepared Mermaid PNG image. Returns (width_cols, height_rows, cursor_moved) on success.
+fn write_mermaid_image<W: Write>(
+    writer: &mut W,
+    settings: &Settings,
+    img: mermaid::MermaidImage,
     move_cursor: bool,
 ) -> Result<(u16, u16, bool)> {
     let dims = (img.width_columns, img.height_rows);
@@ -1012,6 +1054,54 @@ pub fn write_event<'a, W: Write>(
             stack.current(attrs.into()).and_data(data).ok()
         }
         (Stacked(stack, HighlightBlock(_)), End(TagEnd::CodeBlock)) => {
+            write_code_block_border(
+                writer,
+                &settings.theme,
+                &settings.terminal_capabilities,
+                &settings.terminal_size,
+            )?;
+            stack.pop().and_data(data).ok()
+        }
+
+        // Mermaid diagram blocks: collect the whole source, then render on `End`.
+        (Stacked(stack, MermaidBlock(mut attrs)), Text(text)) => {
+            attrs.source.push_str(&text);
+            stack.current(attrs.into()).and_data(data).ok()
+        }
+        (Stacked(stack, MermaidBlock(attrs)), End(TagEnd::CodeBlock)) => {
+            let MermaidBlockAttrs { indent, source } = attrs;
+            if let Some(img) = render_mermaid_image(settings, &source) {
+                let (_, _, cursor_moved) = write_mermaid_image(writer, settings, img, true)?;
+                if !cursor_moved {
+                    writeln!(writer)?;
+                }
+            } else if let Some(text) = mermaid::render_mermaid_text(&source) {
+                for line in LinesWithEndings::from(&text) {
+                    write_indent(writer, indent)?;
+                    write_styled(
+                        writer,
+                        &settings.terminal_capabilities,
+                        &settings.theme.mermaid_style,
+                        line,
+                    )?;
+                    if !line.ends_with('\n') {
+                        writeln!(writer)?;
+                    }
+                }
+            } else {
+                for line in LinesWithEndings::from(&source) {
+                    write_indent(writer, indent)?;
+                    write_styled(
+                        writer,
+                        &settings.terminal_capabilities,
+                        &settings.theme.code_style,
+                        line,
+                    )?;
+                    if !line.ends_with('\n') {
+                        writeln!(writer)?;
+                    }
+                }
+            }
             write_code_block_border(
                 writer,
                 &settings.theme,

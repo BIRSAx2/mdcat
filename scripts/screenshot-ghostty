@@ -1,0 +1,92 @@
+#!/bin/bash
+# Copyright Mouhieddine Sabir <me@mouhieddine.dev>
+
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Captures themed screenshots of sample/showcase.md rendered in Ghostty, for
+# screenshots/showcase_*.png. macOS only.
+#
+# Requires Screen Recording permission granted to whatever GUI app is hosting the terminal this
+# script runs in (System Settings -> Privacy & Security -> Screen Recording); the app must be
+# restarted after granting for the permission to take effect.
+
+set -euo pipefail
+
+TOPLEVEL="$(git rev-parse --show-toplevel)"
+cd "${TOPLEVEL}"
+
+MDCAT="${TOPLEVEL}/target/release/mdcat"
+if [[ ! -x "${MDCAT}" ]]; then
+    echo "error: ${MDCAT} not found; run 'cargo build --release' first" >&2
+    exit 1
+fi
+
+SAMPLE="${TOPLEVEL}/sample/showcase.md"
+LIST_WINDOWS="${TOPLEVEL}/scripts/screenshot-ghostty-list-windows.swift"
+OUT_DIR="${TOPLEVEL}/screenshots"
+mkdir -p "${OUT_DIR}"
+
+# Crop away Ghostty's window chrome (title bar, shell login banner, "process exited" status bar)
+# and the empty space below the rendered content, tuned for sample/showcase.md at
+# --font-family="JetBrains Mono" default size. Re-tune by hand (crop_test.png trick: `sips -c
+# <h> <w> --cropOffset <y> <x> in.png --out out.png`, inspect, repeat) if the sample or font
+# changes.
+CROP_WIDTH=1150
+CROP_HEIGHT=1720
+CROP_Y=195
+CROP_X=0
+
+# Find the PID of whatever Ghostty window is hosting this very shell session (if any), so
+# capture_theme never touches it.
+live_pid=""
+walk_pid="$$"
+while true; do
+    comm="$(ps -o comm= -p "${walk_pid}" 2>/dev/null || true)"
+    if [[ "${comm}" == *Ghostty* ]]; then
+        live_pid="${walk_pid}"
+        break
+    fi
+    parent="$(ps -o ppid= -p "${walk_pid}" 2>/dev/null | tr -d ' ')"
+    if [[ -z "${parent}" || "${parent}" == "${walk_pid}" || "${parent}" == "1" ]]; then
+        break
+    fi
+    walk_pid="${parent}"
+done
+
+capture_theme() {
+    local theme="$1" out="$2"
+    open -na Ghostty.app --args \
+        --font-family="JetBrains Mono" \
+        --wait-after-command=true \
+        -e bash -c "'${MDCAT}' --theme '${theme}' --columns 50 '${SAMPLE}'"
+
+    local window=""
+    for _ in $(seq 1 20); do
+        sleep 0.5
+        window="$(swift "${LIST_WINDOWS}" "${live_pid:--1}")"
+        [[ -n "${window}" ]] && break
+    done
+    if [[ -z "${window}" ]]; then
+        echo "error: no Ghostty window appeared for theme ${theme}" >&2
+        return 1
+    fi
+
+    local wid wpid
+    wid="$(cut -f1 <<<"${window}")"
+    wpid="$(cut -f2 <<<"${window}")"
+    sleep 0.5
+    screencapture -l"${wid}" -o "${out}"
+    kill "${wpid}" 2>/dev/null || true
+    sips -c "${CROP_HEIGHT}" "${CROP_WIDTH}" --cropOffset "${CROP_Y}" "${CROP_X}" "${out}" \
+        --out "${out}" >/dev/null
+    echo "captured ${theme} -> ${out}"
+}
+
+capture_theme catppuccin-mocha "${OUT_DIR}/showcase_catpuccin_mocha.png"
+capture_theme dracula "${OUT_DIR}/showcase_dracula.png"
+capture_theme nord "${OUT_DIR}/showcase_nord.png"
+
+echo "Done. Inspect the screenshots, then combine them with:"
+echo "  scripts/combine-screenshots ${OUT_DIR}/showcase_catpuccin_mocha.png ${OUT_DIR}/showcase_dracula.png ${OUT_DIR}/showcase_nord.png"

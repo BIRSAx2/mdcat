@@ -134,7 +134,7 @@ pub(crate) fn render_math_unicode(input: &str) -> String {
     unicodeit::replace(&s)
 }
 
-fn ansi_to_ratex_color(color: anstyle::AnsiColor) -> ratex_types::Color {
+pub(crate) fn ansi_to_ratex_color(color: anstyle::AnsiColor) -> ratex_types::Color {
     use anstyle::AnsiColor::*;
     match color {
         Black => ratex_types::Color::rgb(0.0, 0.0, 0.0),
@@ -156,7 +156,7 @@ fn ansi_to_ratex_color(color: anstyle::AnsiColor) -> ratex_types::Color {
     }
 }
 
-fn style_to_ratex_color(style: &anstyle::Style) -> ratex_types::Color {
+pub(crate) fn style_to_ratex_color(style: &anstyle::Style) -> ratex_types::Color {
     match style.get_fg_color() {
         Some(anstyle::Color::Ansi(c)) => ansi_to_ratex_color(c),
         Some(anstyle::Color::Ansi256(c)) => {
@@ -171,7 +171,7 @@ fn style_to_ratex_color(style: &anstyle::Style) -> ratex_types::Color {
     }
 }
 
-fn font_size_from_terminal(terminal_size: &TerminalSize) -> f32 {
+pub(crate) fn font_size_from_terminal(terminal_size: &TerminalSize) -> f32 {
     if let Some(cell) = terminal_size.cell {
         (cell.y as f32 * 0.85).max(8.0)
     } else {
@@ -179,7 +179,7 @@ fn font_size_from_terminal(terminal_size: &TerminalSize) -> f32 {
     }
 }
 
-fn png_dimensions(data: &[u8]) -> (u32, u32) {
+pub(crate) fn png_dimensions(data: &[u8]) -> (u32, u32) {
     if data.len() < 28 {
         return (0, 0);
     }

@@ -25,6 +25,10 @@ ignore = [
     # support. No direct dependency and no upgrade path (harfrust migration not yet
     # available in resvg).
     "RUSTSEC-2026-0206",
+    # cgmath is unmaintained; pulled in transitively via merman-render -> roughr-merman ->
+    # svg_path_ops for Mermaid diagram layout. No direct dependency and no upgrade path
+    # available yet.
+    "RUSTSEC-2026-0196",
 ]
 
 [licenses]

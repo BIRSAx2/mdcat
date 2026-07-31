@@ -15,6 +15,8 @@ use anstyle::{AnsiColor, Color, RgbColor, Style};
 /// background); use [`Theme::with_h1`] to keep the two in sync when changing the H1 background.
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Theme {
+    /// Whether this theme targets a dark terminal background.
+    pub is_dark: bool,
     /// Style for HTML blocks.
     pub html_block_style: Style,
     /// Style for inline HTML.
@@ -53,6 +55,9 @@ pub struct Theme {
     pub footnote_style: Style,
     /// Style for math expressions.
     pub math_style: Style,
+    /// Style for the Unicode/text fallback of Mermaid diagrams (used when no image protocol is
+    /// available).
+    pub mermaid_style: Style,
     /// Style for `[!NOTE]` alerts.
     pub alert_note_style: Style,
     /// Icon and label written for `[!NOTE]` alerts (default `"ℹ NOTE"`).
@@ -154,6 +159,7 @@ impl Theme {
             alert_caution_label,
         ) = default_markers_and_labels();
         Self {
+            is_dark: true,
             html_block_style: Style::new().fg_color(Some(AnsiColor::Green.into())),
             inline_html_style: Style::new().fg_color(Some(AnsiColor::Green.into())),
             code_style: Style::new().fg_color(Some(AnsiColor::Yellow.into())),
@@ -170,6 +176,7 @@ impl Theme {
                 .bold(),
             footnote_style: Style::new().fg_color(Some(AnsiColor::Cyan.into())),
             math_style: Style::new().fg_color(Some(AnsiColor::Yellow.into())),
+            mermaid_style: Style::new().fg_color(Some(AnsiColor::Yellow.into())),
             alert_note_style: Style::new()
                 .fg_color(Some(AnsiColor::BrightBlue.into()))
                 .bold(),
@@ -224,6 +231,7 @@ impl Theme {
             alert_caution_label,
         ) = default_markers_and_labels();
         Self {
+            is_dark: false,
             html_block_style: Style::new().fg_color(Some(AnsiColor::Green.into())),
             inline_html_style: Style::new().fg_color(Some(AnsiColor::Green.into())),
             code_style: Style::new().fg_color(Some(AnsiColor::Blue.into())),
@@ -240,6 +248,7 @@ impl Theme {
             h6_style: Style::new().fg_color(Some(AnsiColor::Red.into())).bold(),
             footnote_style: Style::new().fg_color(Some(AnsiColor::Cyan.into())),
             math_style: Style::new().fg_color(Some(AnsiColor::Blue.into())),
+            mermaid_style: Style::new().fg_color(Some(AnsiColor::Blue.into())),
             alert_note_style: Style::new().fg_color(Some(AnsiColor::Blue.into())).bold(),
             alert_tip_style: Style::new().fg_color(Some(AnsiColor::Green.into())).bold(),
             alert_important_style: Style::new()
@@ -280,6 +289,7 @@ impl Theme {
             alert_caution_label,
         ) = default_markers_and_labels();
         Self {
+            is_dark: true,
             html_block_style: Style::new().fg_color(Some(rgb(250, 179, 135))),
             inline_html_style: Style::new().fg_color(Some(rgb(250, 179, 135))),
             code_style: Style::new().fg_color(Some(rgb(137, 220, 235))),
@@ -294,6 +304,7 @@ impl Theme {
             h6_style: Style::new().fg_color(Some(rgb(250, 179, 135))).bold(),
             footnote_style: Style::new().fg_color(Some(rgb(108, 112, 134))),
             math_style: Style::new().fg_color(Some(rgb(137, 220, 235))),
+            mermaid_style: Style::new().fg_color(Some(rgb(137, 220, 235))),
             alert_note_style: Style::new().fg_color(Some(rgb(116, 199, 236))).bold(),
             alert_tip_style: Style::new().fg_color(Some(rgb(166, 227, 161))).bold(),
             alert_important_style: Style::new().fg_color(Some(rgb(203, 166, 247))).bold(),
@@ -330,6 +341,7 @@ impl Theme {
             alert_caution_label,
         ) = default_markers_and_labels();
         Self {
+            is_dark: false,
             html_block_style: Style::new().fg_color(Some(rgb(254, 100, 11))),
             inline_html_style: Style::new().fg_color(Some(rgb(254, 100, 11))),
             code_style: Style::new().fg_color(Some(rgb(4, 165, 229))),
@@ -344,6 +356,7 @@ impl Theme {
             h6_style: Style::new().fg_color(Some(rgb(254, 100, 11))).bold(),
             footnote_style: Style::new().fg_color(Some(rgb(124, 127, 147))),
             math_style: Style::new().fg_color(Some(rgb(4, 165, 229))),
+            mermaid_style: Style::new().fg_color(Some(rgb(4, 165, 229))),
             alert_note_style: Style::new().fg_color(Some(rgb(32, 159, 181))).bold(),
             alert_tip_style: Style::new().fg_color(Some(rgb(64, 160, 43))).bold(),
             alert_important_style: Style::new().fg_color(Some(rgb(136, 57, 239))).bold(),
@@ -380,6 +393,7 @@ impl Theme {
             alert_caution_label,
         ) = default_markers_and_labels();
         Self {
+            is_dark: true,
             html_block_style: Style::new().fg_color(Some(rgb(214, 93, 14))),
             inline_html_style: Style::new().fg_color(Some(rgb(214, 93, 14))),
             code_style: Style::new().fg_color(Some(rgb(131, 165, 152))),
@@ -394,6 +408,7 @@ impl Theme {
             h6_style: Style::new().fg_color(Some(rgb(254, 128, 25))).bold(),
             footnote_style: Style::new().fg_color(Some(rgb(146, 131, 116))),
             math_style: Style::new().fg_color(Some(rgb(131, 165, 152))),
+            mermaid_style: Style::new().fg_color(Some(rgb(131, 165, 152))),
             alert_note_style: Style::new().fg_color(Some(rgb(131, 165, 152))).bold(),
             alert_tip_style: Style::new().fg_color(Some(rgb(184, 187, 38))).bold(),
             alert_important_style: Style::new().fg_color(Some(rgb(211, 134, 155))).bold(),
@@ -430,6 +445,7 @@ impl Theme {
             alert_caution_label,
         ) = default_markers_and_labels();
         Self {
+            is_dark: false,
             html_block_style: Style::new().fg_color(Some(rgb(175, 58, 3))),
             inline_html_style: Style::new().fg_color(Some(rgb(175, 58, 3))),
             code_style: Style::new().fg_color(Some(rgb(7, 102, 120))),
@@ -444,6 +460,7 @@ impl Theme {
             h6_style: Style::new().fg_color(Some(rgb(175, 58, 3))).bold(),
             footnote_style: Style::new().fg_color(Some(rgb(124, 111, 100))),
             math_style: Style::new().fg_color(Some(rgb(7, 102, 120))),
+            mermaid_style: Style::new().fg_color(Some(rgb(7, 102, 120))),
             alert_note_style: Style::new().fg_color(Some(rgb(7, 102, 120))).bold(),
             alert_tip_style: Style::new().fg_color(Some(rgb(121, 116, 14))).bold(),
             alert_important_style: Style::new().fg_color(Some(rgb(143, 63, 113))).bold(),
@@ -480,6 +497,7 @@ impl Theme {
             alert_caution_label,
         ) = default_markers_and_labels();
         Self {
+            is_dark: true,
             html_block_style: Style::new().fg_color(Some(rgb(255, 184, 108))),
             inline_html_style: Style::new().fg_color(Some(rgb(255, 184, 108))),
             code_style: Style::new().fg_color(Some(rgb(241, 250, 140))),
@@ -494,6 +512,7 @@ impl Theme {
             h6_style: Style::new().fg_color(Some(rgb(255, 184, 108))).bold(),
             footnote_style: Style::new().fg_color(Some(rgb(98, 114, 164))),
             math_style: Style::new().fg_color(Some(rgb(241, 250, 140))),
+            mermaid_style: Style::new().fg_color(Some(rgb(241, 250, 140))),
             alert_note_style: Style::new().fg_color(Some(rgb(139, 233, 253))).bold(),
             alert_tip_style: Style::new().fg_color(Some(rgb(80, 250, 123))).bold(),
             alert_important_style: Style::new().fg_color(Some(rgb(255, 121, 198))).bold(),
@@ -530,6 +549,7 @@ impl Theme {
             alert_caution_label,
         ) = default_markers_and_labels();
         Self {
+            is_dark: true,
             html_block_style: Style::new().fg_color(Some(rgb(208, 135, 112))),
             inline_html_style: Style::new().fg_color(Some(rgb(208, 135, 112))),
             code_style: Style::new().fg_color(Some(rgb(143, 188, 187))),
@@ -544,6 +564,7 @@ impl Theme {
             h6_style: Style::new().fg_color(Some(rgb(235, 203, 139))).bold(),
             footnote_style: Style::new().fg_color(Some(rgb(76, 86, 106))),
             math_style: Style::new().fg_color(Some(rgb(143, 188, 187))),
+            mermaid_style: Style::new().fg_color(Some(rgb(143, 188, 187))),
             alert_note_style: Style::new().fg_color(Some(rgb(143, 188, 187))).bold(),
             alert_tip_style: Style::new().fg_color(Some(rgb(163, 190, 140))).bold(),
             alert_important_style: Style::new().fg_color(Some(rgb(180, 142, 173))).bold(),
@@ -580,6 +601,7 @@ impl Theme {
             alert_caution_label,
         ) = default_markers_and_labels();
         Self {
+            is_dark: true,
             html_block_style: Style::new().fg_color(Some(rgb(203, 75, 22))),
             inline_html_style: Style::new().fg_color(Some(rgb(203, 75, 22))),
             code_style: Style::new().fg_color(Some(rgb(42, 161, 152))),
@@ -594,6 +616,7 @@ impl Theme {
             h6_style: Style::new().fg_color(Some(rgb(203, 75, 22))).bold(),
             footnote_style: Style::new().fg_color(Some(rgb(88, 110, 117))),
             math_style: Style::new().fg_color(Some(rgb(42, 161, 152))),
+            mermaid_style: Style::new().fg_color(Some(rgb(42, 161, 152))),
             alert_note_style: Style::new().fg_color(Some(rgb(108, 113, 196))).bold(),
             alert_tip_style: Style::new().fg_color(Some(rgb(133, 153, 0))).bold(),
             alert_important_style: Style::new().fg_color(Some(rgb(211, 54, 130))).bold(),
@@ -618,6 +641,7 @@ impl Theme {
     pub fn solarized_light() -> Self {
         let (h1_prefix_style, h1_text_style) = h1(rgb(38, 139, 210), rgb(253, 246, 227));
         Self {
+            is_dark: false,
             h1_prefix_style,
             h1_text_style,
             ..Self::solarized_dark()

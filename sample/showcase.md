@@ -3,51 +3,33 @@
 ## Markup
 
 ![Rust](./rust-logo-128x128.png)
-
-— `mdcat` supports _italic_, **bold**, ~~strikethrough~~, `inline code`, and **_combined_** styles.
+— mdcat supports _italic_, **bold**, ~~strikethrough~~, and `inline code`.
 
 > [!TIP]
-> Set `$BAT_THEME` to use any bat syntax-highlighting theme for code blocks.
-
-## Punctuation
-
-Run with `--smart-punctuation` to see this rendered with curly quotes,
-en/em dashes, and an ellipsis: "straight quotes" become curly -- an em dash
----like this--- and a trailing thought...
+> Set `$BAT_THEME` to use any bat syntax theme for code blocks.
 
 ## Code
 
 ```rust
-fn fibonacci(n: u64) -> u64 {
-    match n {
-        0 | 1 => n,
-        _ => fibonacci(n - 1) + fibonacci(n - 2),
-    }
+fn add(a: i32, b: i32) -> i32 {
+    a + b
 }
 ```
 
-## Definitions
-
-mdcat
-: A CLI tool that renders Markdown to the terminal.
-: Also a mood after a long refactor.
-
 ## Tables
 
-| Language |    Paradigm    |    Typing |
-| :------- | :------------: | --------: |
-| **Rust** |    Systems     |  _static_ |
-| Python   | Multi-paradigm | `dynamic` |
-| ~~Java~~ |      OOP       |    static |
+| Language |   Paradigm   |
+| :------- | :----------: |
+| **Rust** |   Systems    |
+| Python   | Multi-paradigm |
 
-## Alerts
+## Diagrams
 
-> [!NOTE]
-> `mdcat` auto-detects dark or light mode from your terminal.
-
-> [!WARNING]
-> Sixel inline math can affect line layout in some terminals.
+```mermaid
+flowchart LR
+    A[Markdown] --> B[mdcat] --> C[Terminal]
+```
 
 ## Math
 
-Inline: $E = mc^2$ and $\sqrt{\pi} = \int_{-\infty}^{\infty} e^{-x^2} dx$
+Inline: $E = mc^2$

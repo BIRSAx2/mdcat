@@ -246,6 +246,7 @@ pub fn apply_theme(config: &ThemeConfig, base: Theme) -> Result<Theme> {
             }
             "footnote" => theme.footnote_style = resolve(theme.footnote_style)?,
             "math" => theme.math_style = resolve(theme.math_style)?,
+            "mermaid" => theme.mermaid_style = resolve(theme.mermaid_style)?,
             "alert_note" => {
                 theme.alert_note_style = resolve(theme.alert_note_style)?;
                 if let Some(text) = &style_config.text {

@@ -76,6 +76,19 @@ Otherwise it uses Unicode substitutions.
 For PNG output mdcat uses RaTeX.
 If an expression cannot be rendered as an image, mdcat uses the Unicode fallback for that expression.
 
+=== Mermaid support
+
+mdcat renders https://mermaid.js.org[Mermaid] diagrams in fenced ` ```mermaid ` code blocks.
+On terminals with an image protocol it renders diagrams as PNG images; otherwise it uses a Unicode diagram
+rendering.
+If a diagram can be rendered as neither, mdcat falls back to printing its source as a literal code block.
+
+Diagram arrows, borders, and text use the theme's `mermaid` style, so diagrams match the active theme instead
+of Mermaid's own default colours.
+
+For diagram rendering mdcat uses https://github.com/Latias94/merman[merman], a headless Rust implementation of
+Mermaid.
+
 === SVG support
 
 In iTerm2, kitty, WezTerm, and Ghostty mdcat renders SVG images into pixel graphics using the https://github.com/RazrFalcon/resvg[resvg] library.
@@ -262,7 +275,7 @@ Each entry is a table with any of:
 +
 A colour value is a `#rrggbb` hex code, an ANSI colour name (`black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `white`, or the `bright-` prefixed variant of any of these), or a name defined in `[theme.palette]`.
 +
-Valid style names: `html_block`, `inline_html`, `code`, `link`, `image_link`, `quote_border`, `h1_text`, `h2`, `h3`, `h4`, `h5`, `h6`, `footnote`, `math`, `alert_note`, `alert_tip`, `alert_important`, `alert_warning`, `alert_caution`.
+Valid style names: `html_block`, `inline_html`, `code`, `link`, `image_link`, `quote_border`, `h1_text`, `h2`, `h3`, `h4`, `h5`, `h6`, `footnote`, `math`, `mermaid`, `alert_note`, `alert_tip`, `alert_important`, `alert_warning`, `alert_caution`.
 
 == Exit status
 
