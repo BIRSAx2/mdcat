@@ -139,7 +139,19 @@ $ ln -s "$(command -v mdcat)" ~/.local/bin/mdpick
 
 - [Release binaries](https://github.com/BIRSAx2/mdcat/releases/) built on Github Actions.
   - These binaries are built from Git source on Github Actions; you find provenance attestations at <https://github.com/BIRSAx2/mdcat/attestations>.
-- 3rd party packages at [Repology](https://repology.org/project/mdcat/versions)
+- Package managers — `mdcat` is available from several package managers:
+
+  | Package manager | Command |
+  | --- | --- |
+  | [Homebrew](https://formulae.brew.sh/formula/mdcat) (macOS/Linux) | `brew install mdcat` |
+  | [AUR](https://aur.archlinux.org/packages/mdcat-bin) (Arch Linux) | `paru -S mdcat-bin` |
+  | [Nixpkgs](https://search.nixos.org/packages?query=mdcat) | `nix-env -iA nixpkgs.mdcat` |
+  | [MacPorts](https://ports.macports.org/port/mdcat/) | `sudo port install mdcat` |
+  | [FreeBSD Ports](https://www.freshports.org/sysutils/mdcat/) | `pkg install mdcat` |
+  | [Void Linux](https://voidlinux.org/packages/?q=mdcat) | `sudo xbps-install mdcat` |
+  | [MSYS2](https://packages.msys2.org/base/mingw-w64-mdcat) (Windows) | `pacman -S mingw-w64-x86_64-mdcat` |
+
+  See [Repology](https://repology.org/project/mdcat/versions) for the full list of packages and their versions.
 - You can also build `mdcat` manually with `cargo install mdcat` (see below for details).
 
 `mdcat` can be linked or copied to `mdless` or `mdpick` (see [`mdless` and `mdpick`](#mdless-and-mdpick) above).
