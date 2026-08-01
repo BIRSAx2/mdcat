@@ -8,6 +8,35 @@
 
 use anstyle::{AnsiColor, Color, RgbColor, Style};
 
+/// Which of merman's built-in editor-theme presets a Mermaid diagram's non-accent colors (node
+/// fills, canvas, text) should be based on.
+///
+/// merman ships a handful of hand-tuned presets (`editor_dark`/`light`, `one_dark`,
+/// `gruvbox_dark`/`light`, `ayu_dark`/`light`) matching well-known editor color schemes; picking
+/// the closest one for a given mdcat theme makes a diagram's own colors (not just its accent
+/// line, which is always synced to [`Theme::mermaid_style`]) resemble the terminal theme it's
+/// rendered under, instead of always using the same generic dark/light palette. Chosen by
+/// comparing each theme's well-known standard background color against the presets' canvas
+/// colors (RGB distance), falling back to `Generic` where no preset is a good fit rather than
+/// forcing a tenuous match.
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Default)]
+pub enum MermaidPalette {
+    /// merman's generic `editor_dark`/`editor_light` preset — the default for themes with no
+    /// closer match among merman's named presets.
+    #[default]
+    Generic,
+    /// merman's `one_dark` preset (Atom One Dark).
+    OneDark,
+    /// merman's `gruvbox_dark` preset.
+    GruvboxDark,
+    /// merman's `gruvbox_light` preset.
+    GruvboxLight,
+    /// merman's `ayu_dark` preset.
+    AyuDark,
+    /// merman's `ayu_light` preset.
+    AyuLight,
+}
+
 /// A colour theme for mdcat.
 ///
 /// All fields are public so themes can be fully customised, e.g. from a user config file.
@@ -17,6 +46,9 @@ use anstyle::{AnsiColor, Color, RgbColor, Style};
 pub struct Theme {
     /// Whether this theme targets a dark terminal background.
     pub is_dark: bool,
+    /// Which merman editor-theme preset Mermaid diagrams should be based on (see
+    /// [`MermaidPalette`]).
+    pub mermaid_palette: MermaidPalette,
     /// Style for HTML blocks.
     pub html_block_style: Style,
     /// Style for inline HTML.
@@ -160,6 +192,7 @@ impl Theme {
         ) = default_markers_and_labels();
         Self {
             is_dark: true,
+            mermaid_palette: MermaidPalette::Generic,
             html_block_style: Style::new().fg_color(Some(AnsiColor::Green.into())),
             inline_html_style: Style::new().fg_color(Some(AnsiColor::Green.into())),
             code_style: Style::new().fg_color(Some(AnsiColor::Yellow.into())),
@@ -232,6 +265,7 @@ impl Theme {
         ) = default_markers_and_labels();
         Self {
             is_dark: false,
+            mermaid_palette: MermaidPalette::Generic,
             html_block_style: Style::new().fg_color(Some(AnsiColor::Green.into())),
             inline_html_style: Style::new().fg_color(Some(AnsiColor::Green.into())),
             code_style: Style::new().fg_color(Some(AnsiColor::Blue.into())),
@@ -290,6 +324,7 @@ impl Theme {
         ) = default_markers_and_labels();
         Self {
             is_dark: true,
+            mermaid_palette: MermaidPalette::Generic,
             html_block_style: Style::new().fg_color(Some(rgb(250, 179, 135))),
             inline_html_style: Style::new().fg_color(Some(rgb(250, 179, 135))),
             code_style: Style::new().fg_color(Some(rgb(137, 220, 235))),
@@ -342,6 +377,7 @@ impl Theme {
         ) = default_markers_and_labels();
         Self {
             is_dark: false,
+            mermaid_palette: MermaidPalette::AyuLight,
             html_block_style: Style::new().fg_color(Some(rgb(254, 100, 11))),
             inline_html_style: Style::new().fg_color(Some(rgb(254, 100, 11))),
             code_style: Style::new().fg_color(Some(rgb(4, 165, 229))),
@@ -394,6 +430,7 @@ impl Theme {
         ) = default_markers_and_labels();
         Self {
             is_dark: true,
+            mermaid_palette: MermaidPalette::GruvboxDark,
             html_block_style: Style::new().fg_color(Some(rgb(214, 93, 14))),
             inline_html_style: Style::new().fg_color(Some(rgb(214, 93, 14))),
             code_style: Style::new().fg_color(Some(rgb(131, 165, 152))),
@@ -446,6 +483,7 @@ impl Theme {
         ) = default_markers_and_labels();
         Self {
             is_dark: false,
+            mermaid_palette: MermaidPalette::GruvboxLight,
             html_block_style: Style::new().fg_color(Some(rgb(175, 58, 3))),
             inline_html_style: Style::new().fg_color(Some(rgb(175, 58, 3))),
             code_style: Style::new().fg_color(Some(rgb(7, 102, 120))),
@@ -498,6 +536,7 @@ impl Theme {
         ) = default_markers_and_labels();
         Self {
             is_dark: true,
+            mermaid_palette: MermaidPalette::OneDark,
             html_block_style: Style::new().fg_color(Some(rgb(255, 184, 108))),
             inline_html_style: Style::new().fg_color(Some(rgb(255, 184, 108))),
             code_style: Style::new().fg_color(Some(rgb(241, 250, 140))),
@@ -550,6 +589,7 @@ impl Theme {
         ) = default_markers_and_labels();
         Self {
             is_dark: true,
+            mermaid_palette: MermaidPalette::AyuDark,
             html_block_style: Style::new().fg_color(Some(rgb(208, 135, 112))),
             inline_html_style: Style::new().fg_color(Some(rgb(208, 135, 112))),
             code_style: Style::new().fg_color(Some(rgb(143, 188, 187))),
@@ -602,6 +642,7 @@ impl Theme {
         ) = default_markers_and_labels();
         Self {
             is_dark: true,
+            mermaid_palette: MermaidPalette::Generic,
             html_block_style: Style::new().fg_color(Some(rgb(203, 75, 22))),
             inline_html_style: Style::new().fg_color(Some(rgb(203, 75, 22))),
             code_style: Style::new().fg_color(Some(rgb(42, 161, 152))),
@@ -642,6 +683,7 @@ impl Theme {
         let (h1_prefix_style, h1_text_style) = h1(rgb(38, 139, 210), rgb(253, 246, 227));
         Self {
             is_dark: false,
+            mermaid_palette: MermaidPalette::Generic,
             h1_prefix_style,
             h1_text_style,
             ..Self::solarized_dark()

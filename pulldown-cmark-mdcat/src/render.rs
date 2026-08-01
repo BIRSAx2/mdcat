@@ -172,6 +172,7 @@ fn render_mermaid_image(settings: &Settings, source: &str) -> Option<mermaid::Me
         &settings.terminal_size,
         &settings.theme.mermaid_style,
         settings.theme.is_dark,
+        settings.theme.mermaid_palette,
     )
 }
 
