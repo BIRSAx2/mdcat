@@ -8,6 +8,8 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+## [2.15.0] – 2026-08-03
+
 ### Added
 - New `mdpick` entry point (same binary as `mdcat`, invoked under that name):
   fuzzy-finds a Markdown file below a directory with [fzf](https://github.com/junegunn/fzf),
@@ -1047,7 +1049,8 @@ Use `cargo release` to create a new release.
 - Support ordered and unordered lists, with nest.
 - Show links, with references grouped by section.
 
-[Unreleased]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.14.0...HEAD
+[Unreleased]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.15.0...HEAD
+[2.15.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.14.0...mdcat-2.15.0
 [2.14.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.13.0...mdcat-2.14.0
 [2.13.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.12.0...mdcat-2.13.0
 [2.12.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.11.1...mdcat-2.12.0
