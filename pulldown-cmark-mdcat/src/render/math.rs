@@ -208,7 +208,7 @@ fn pad_png_vertically(data: &[u8], top: u32, bottom: u32) -> Option<Vec<u8>> {
     match info.color_type {
         png::ColorType::Rgba => rgba.extend_from_slice(bytes),
         png::ColorType::Rgb => {
-            for pixel in bytes.chunks_exact(3) {
+            for pixel in bytes.as_chunks::<3>().0 {
                 rgba.extend_from_slice(&[pixel[0], pixel[1], pixel[2], 255]);
             }
         }
@@ -218,7 +218,7 @@ fn pad_png_vertically(data: &[u8], top: u32, bottom: u32) -> Option<Vec<u8>> {
             }
         }
         png::ColorType::GrayscaleAlpha => {
-            for pixel in bytes.chunks_exact(2) {
+            for pixel in bytes.as_chunks::<2>().0 {
                 rgba.extend_from_slice(&[pixel[0], pixel[0], pixel[0], pixel[1]]);
             }
         }

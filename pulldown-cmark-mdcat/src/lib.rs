@@ -34,7 +34,10 @@
 //!   Please **do not report bugs** about inline image rendering with this feature disabled, unless
 //!   the issue can also be reproduced if the feature is enabled.
 //!
-//! - `ratatui` enables rendering markdown into Ratatui `Text` and stateful widgets.
+//! - `ratatui` enables rendering markdown into Ratatui `Text` and stateful widgets.  This feature
+//!   always depends on `image`, independently of `image-processing`, because it uses the
+//!   `ratatui-image` crate to decode and draw images as overlays over the rendered text; disabling
+//!   `image-processing` does not remove this dependency.
 
 #![deny(warnings, missing_docs, clippy::all)]
 #![forbid(unsafe_code)]

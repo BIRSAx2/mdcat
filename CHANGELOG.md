@@ -8,6 +8,14 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+### Changed
+- Lower the "Terminal does not support images, rendering image as link" log message from `INFO`
+  to `DEBUG`.  This message fires on every image when rendering into Ratatui `Text`, because that
+  code path deliberately disables inline image protocols and renders images as overlays instead;
+  at `INFO` it drowned out other diagnostics for `ratatui`-based consumers (see [#37]).
+
+[#37]: https://github.com/BIRSAx2/mdcat/issues/37
+
 ## [2.15.0] – 2026-08-03
 
 ### Added

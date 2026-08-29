@@ -1486,7 +1486,7 @@ pub fn write_event<'a, W: Write>(
                         event!(Level::WARN, url = %url, "Terminal does not support images, want to render image as link but cannot: Already inside a link");
                         None
                     } else {
-                        event!(Level::INFO, url = %url, "Terminal does not support images, rendering image as link");
+                        event!(Level::DEBUG, url = %url, "Terminal does not support images, rendering image as link");
                         match settings.terminal_capabilities.style {
                             Some(StyleCapability::Ansi) => {
                                 set_link_url(writer, url, &environment.hostname)?;
