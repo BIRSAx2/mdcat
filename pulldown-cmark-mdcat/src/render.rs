@@ -310,7 +310,14 @@ pub fn write_event<'a, W: Write>(
 
             State::stack_onto(TopLevelAttrs::margin_before())
                 .current(write_start_code_block(
-                    writer, settings, 0, Style::new(), 0, None, true, kind,
+                    writer,
+                    settings,
+                    0,
+                    Style::new(),
+                    0,
+                    None,
+                    true,
+                    kind,
                 )?)
                 .and_data(data)
                 .ok()
@@ -1025,10 +1032,14 @@ pub fn write_event<'a, W: Write>(
                 border_style,
             );
             for line in LinesWithEndings::from(&text) {
+                write_indent(writer, indent)?;
                 write_styled(writer, &settings.terminal_capabilities, &style, line)?;
                 if !line.ends_with('\n') {
                     writeln!(writer)?;
                 }
+                // The prefix belongs to the line just begun, ahead of the
+                // indent written for it. Empty outside a quote, leaving the
+                // surrounding writes exactly as they were.
                 write!(writer, "{}", prefix)?;
                 write_indent(writer, indent)?;
             }
@@ -1108,6 +1119,7 @@ pub fn write_event<'a, W: Write>(
                     .parse_state
                     .parse_line(line, settings.syntax_set)
                     .expect("syntect parsing shouldn't fail in mdcat");
+                write_indent(writer, attrs.indent)?;
                 match &settings.syntax_theme {
                     Some(theme) => {
                         let h = highlighter_for(theme);
