@@ -38,20 +38,21 @@ Then it
 - can watch a file and re-render it on every save with `--watch`, for a live preview while editing,
 - can fuzzy-find a Markdown file to render, via `mdpick` (see below), if you have [fzf] installed.
 
-| Terminal           | Basic syntax | Syntax highlighting | Images | Math  | Jump marks |
-| :----------------- | :----------: | :-----------------: | :----: | :---: | :--------: |
-| Basic ANSI¹        |      ✓       |          ✓          |        |  ✓³   |            |
-| Windows 10 console |      ✓       |          ✓          |        |  ✓³   |            |
-| [iTerm2]           |      ✓       |          ✓          |   ✓²   |  ✓³   |     ✓      |
-| [kitty]            |      ✓       |          ✓          |   ✓²   |  ✓³   |            |
-| [WezTerm]          |      ✓       |          ✓          |   ✓²   |  ✓³   |            |
-| [VSCode]           |      ✓       |          ✓          |        |  ✓³   |            |
-| [Ghostty]          |      ✓       |          ✓          |   ✓²   |  ✓³   |            |
-| [foot]⁴            |      ✓       |          ✓          |   ✓²   |  ✓³‧⁵ |            |
-| [xterm]⁴           |      ✓       |          ✓          |   ✓²   |  ✓³‧⁵ |            |
+| Terminal                               | Basic syntax | Syntax highlighting | Images | Math  | Jump marks |
+| :------------------------------------- | :----------: | :-----------------: | :----: | :---: | :--------: |
+| Basic ANSI¹                            |      ✓       |          ✓          |        |  ✓³   |            |
+| Windows console (cmd.exe, PowerShell)⁶ |      ✓       |          ✓          |        |  ✓³   |            |
+| Windows Terminal⁶                      |      ✓       |          ✓          |        |  ✓³   |            |
+| [iTerm2]                               |      ✓       |          ✓          |   ✓²   |  ✓³   |     ✓      |
+| [kitty]                                |      ✓       |          ✓          |   ✓²   |  ✓³   |            |
+| [WezTerm]                              |      ✓       |          ✓          |   ✓²   |  ✓³   |            |
+| [VSCode]                               |      ✓       |          ✓          |        |  ✓³   |            |
+| [Ghostty]                              |      ✓       |          ✓          |   ✓²   |  ✓³   |            |
+| [foot]⁴                                |      ✓       |          ✓          |   ✓²   | ✓³‧⁵  |            |
+| [xterm]⁴                               |      ✓       |          ✓          |   ✓²   | ✓³‧⁵  |            |
 
 1. mdcat requires that the terminal supports strikethrough formatting and [inline links][osc8].
-   This includes most modern terminal emulators, such as Windows Terminal, KDE Konsole, or anything based on VTE, GNOME's terminal emulation library.
+   This includes most modern terminal emulators, such as KDE Konsole or anything based on VTE, GNOME's terminal emulation library.
    But mdcat likely won't work well on old terminals that lack these features (e.g. the Linux text console).
 2. SVG images are rendered with [resvg], see [SVG support].
 3. On terminals with the iTerm2, kitty, or Sixel image protocol, math is rendered as PNG images.
@@ -59,6 +60,9 @@ Then it
 4. Uses Sixel for images, which is also supported by many other terminals.
    The capability detection logic would need to be extended to also provide the feature on other terminals, though.
 5. Inline math with Sixel breaks the layout, as it causes vertical scrolling that is not taking into account.
+6. mdcat doesn't detect Windows Terminal or the legacy console host specifically (there's no check for
+   `$WT_SESSION`, for instance), so both fall back to the Basic ANSI tier: no image protocol and no jump marks,
+   regardless of which shell (cmd.exe, PowerShell, or PowerShell 7) runs inside them.
 
 Not supported:
 
