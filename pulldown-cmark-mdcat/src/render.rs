@@ -529,6 +529,19 @@ pub fn write_event<'a, W: Write>(
                 // Add margin
                 writeln!(writer)?;
             }
+            // Inside a block quote every line carries the quote prefix, and
+            // the continuation lines of a wrapped item already write it.
+            // Without it here the bullet line alone lacks the prefix, and the
+            // one on the wrapped line then appears to sit inside the text.
+            // It precedes the indent, being the start of the line rather than
+            // part of what is indented.
+            let (quote_prefix, quote_prefix_cols) = quote_line_prefix(
+                &settings.terminal_capabilities,
+                &settings.theme,
+                quote_depth,
+                attrs.border_style,
+            );
+            write!(writer, "{}", quote_prefix)?;
             write_indent(writer, indent)?;
             let indent = match kind {
                 ListItemKind::Unordered => {
@@ -551,7 +564,7 @@ pub fn write_event<'a, W: Write>(
                     },
                 ))
                 .and_data(data.current_line(CurrentLine {
-                    length: indent,
+                    length: indent + quote_prefix_cols,
                     trailing_space: None,
                 }))
                 .ok()
