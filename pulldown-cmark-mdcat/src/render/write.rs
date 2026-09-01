@@ -13,6 +13,8 @@ use pulldown_cmark::{Alignment, CodeBlockKind, CowStr, HeadingLevel};
 use syntect::highlighting::HighlightState;
 use syntect::parsing::{ParseState, ScopeStack};
 use textwrap::core::{display_width, Word};
+
+use super::quote_line_prefix;
 use textwrap::WordSeparator;
 
 use crate::references::*;
@@ -303,14 +305,30 @@ pub fn write_link_refs<W: Write>(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn write_start_code_block<W: Write>(
     writer: &mut W,
     settings: &Settings,
     indent: u16,
     style: Style,
+    quote_depth: u16,
+    border_style: Option<Style>,
+    // Whether the current line still needs ending. A caller that has just
+    // written a margin line of its own has ended it already, and a second
+    // newline here would leave a blank line with no quote prefix on it.
+    end_current_line: bool,
     block_kind: CodeBlockKind<'_>,
 ) -> Result<StackedState> {
-    writeln!(writer)?;
+    if end_current_line {
+        writeln!(writer)?;
+    }
+    let (prefix, _) = quote_line_prefix(
+        &settings.terminal_capabilities,
+        &settings.theme,
+        quote_depth,
+        border_style,
+    );
+    write!(writer, "{}", prefix)?;
     // And start the indent for the contents of the block
     write_indent(writer, indent)?;
 
@@ -319,6 +337,8 @@ pub fn write_start_code_block<W: Write>(
             Ok(MermaidBlockAttrs {
                 indent,
                 source: String::new(),
+                quote_depth,
+                border_style,
             }
             .into())
         }
@@ -327,6 +347,8 @@ pub fn write_start_code_block<W: Write>(
                 None => Ok(LiteralBlockAttrs {
                     indent,
                     style: settings.theme.code_style.on_top_of(&style),
+                    quote_depth,
+                    border_style,
                 }
                 .into()),
                 Some(syntax) => {
@@ -336,6 +358,8 @@ pub fn write_start_code_block<W: Write>(
                         indent,
                         highlight_state,
                         parse_state,
+                        quote_depth,
+                        border_style,
                     }
                     .into())
                 }
@@ -344,6 +368,8 @@ pub fn write_start_code_block<W: Write>(
         (_, _) => Ok(LiteralBlockAttrs {
             indent,
             style: settings.theme.code_style.on_top_of(&style),
+            quote_depth,
+            border_style,
         }
         .into()),
     }

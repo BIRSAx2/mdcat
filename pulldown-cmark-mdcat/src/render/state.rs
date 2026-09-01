@@ -230,6 +230,10 @@ pub struct HighlightBlockAttrs {
     /// Code blocks in nested blocks such as quotes, lists, etc. gain an additional indent to align
     /// them in the surrounding block.
     pub(super) indent: u16,
+    /// The block quote depth this code block sits at.
+    pub(super) quote_depth: u16,
+    /// The style of the block quote border, if any.
+    pub(super) border_style: Option<Style>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -238,6 +242,10 @@ pub struct LiteralBlockAttrs {
     pub(super) indent: u16,
     /// The outer style to include.
     pub(super) style: Style,
+    /// The block quote depth this code block sits at.
+    pub(super) quote_depth: u16,
+    /// The style of the block quote border, if any.
+    pub(super) border_style: Option<Style>,
 }
 
 /// Attributes for a Mermaid diagram block, collecting source text until it's fully read and can
@@ -248,6 +256,10 @@ pub struct MermaidBlockAttrs {
     pub(super) indent: u16,
     /// The diagram source accumulated so far.
     pub(super) source: String,
+    /// The block quote depth this diagram sits at.
+    pub(super) quote_depth: u16,
+    /// The style of the block quote border, if any.
+    pub(super) border_style: Option<Style>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -267,7 +279,9 @@ pub enum StackedState {
     /// A block with attached style.
     StyledBlock(StyledBlockAttrs),
     /// A highlighted block of code.
-    HighlightBlock(HighlightBlockAttrs),
+    /// Boxed: it carries syntect's parse and highlight state, which is far
+    /// larger than anything else here.
+    HighlightBlock(Box<HighlightBlockAttrs>),
     /// A literal block without highlighting.
     LiteralBlock(LiteralBlockAttrs),
     /// A Mermaid diagram block, accumulating source text.
@@ -295,6 +309,12 @@ impl From<StyledBlockAttrs> for StackedState {
 
 impl From<HighlightBlockAttrs> for StackedState {
     fn from(attrs: HighlightBlockAttrs) -> Self {
+        StackedState::HighlightBlock(Box::new(attrs))
+    }
+}
+
+impl From<Box<HighlightBlockAttrs>> for StackedState {
+    fn from(attrs: Box<HighlightBlockAttrs>) -> Self {
         StackedState::HighlightBlock(attrs)
     }
 }
