@@ -1,9 +1,9 @@
 ---
 source: pulldown-cmark-mdcat/tests/render.rs
+assertion_line: 121
 expression: "render_to_string(markdown_file, &ansi_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/237-block_quotes.md
 ---
-
-
+[36m│[0m 
 
 foo

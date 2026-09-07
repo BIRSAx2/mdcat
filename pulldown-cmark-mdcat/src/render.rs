@@ -83,7 +83,7 @@ fn write_alert_label<W: Write>(
     writeln!(writer)
 }
 
-fn quote_line_prefix(
+pub(super) fn quote_line_prefix(
     capabilities: &TerminalCapabilities,
     theme: &Theme,
     depth: u16,
@@ -314,6 +314,9 @@ pub fn write_event<'a, W: Write>(
                     settings,
                     0,
                     Style::new(),
+                    0,
+                    None,
+                    true,
                     kind,
                 )?)
                 .and_data(data)
@@ -505,13 +508,37 @@ pub fn write_event<'a, W: Write>(
         }
         (Stacked(stack, StyledBlock(attrs)), Start(CodeBlock(kind))) => {
             if attrs.margin_before != NoMargin {
+                // The blank line separating this block from the last is still
+                // a line of the quote, and carries its prefix like the others.
+                let (margin_prefix, _) = quote_line_prefix(
+                    &settings.terminal_capabilities,
+                    &settings.theme,
+                    attrs.quote_depth,
+                    attrs.border_style,
+                );
+                write_indent(writer, attrs.indent)?;
+                write!(writer, "{}", margin_prefix)?;
                 writeln!(writer)?;
             }
-            let StyledBlockAttrs { indent, style, .. } = attrs;
+            // Read before the value is consumed by the push below.
+            let StyledBlockAttrs {
+                indent,
+                style,
+                quote_depth,
+                border_style,
+                ..
+            } = attrs;
             stack
                 .push(attrs.into())
                 .current(write_start_code_block(
-                    writer, settings, indent, style, kind,
+                    writer,
+                    settings,
+                    indent,
+                    style,
+                    quote_depth,
+                    border_style,
+                    false,
+                    kind,
                 )?)
                 .and_data(data)
                 .ok()
@@ -618,10 +645,24 @@ pub fn write_event<'a, W: Write>(
         }
         (Stacked(stack, Inline(ListItem(kind, _), attrs)), Start(CodeBlock(ck))) => {
             writeln!(writer)?;
-            let InlineAttrs { indent, style, .. } = attrs;
+            let InlineAttrs {
+                indent,
+                style,
+                quote_depth,
+                border_style,
+            } = attrs.clone();
             stack
                 .push(Inline(ListItem(kind, ItemBlock), attrs))
-                .current(write_start_code_block(writer, settings, indent, style, ck)?)
+                .current(write_start_code_block(
+                    writer,
+                    settings,
+                    indent,
+                    style,
+                    quote_depth,
+                    border_style,
+                    true,
+                    ck,
+                )?)
                 .and_data(data)
                 .ok()
         }
@@ -866,10 +907,24 @@ pub fn write_event<'a, W: Write>(
         }
         (Stacked(stack, Inline(Definition(part, _), attrs)), Start(CodeBlock(ck))) => {
             writeln!(writer)?;
-            let InlineAttrs { indent, style, .. } = attrs;
+            let InlineAttrs {
+                indent,
+                style,
+                quote_depth,
+                border_style,
+            } = attrs.clone();
             stack
                 .push(Inline(Definition(part, ItemBlock), attrs))
-                .current(write_start_code_block(writer, settings, indent, style, ck)?)
+                .current(write_start_code_block(
+                    writer,
+                    settings,
+                    indent,
+                    style,
+                    quote_depth,
+                    border_style,
+                    true,
+                    ck,
+                )?)
                 .and_data(data)
                 .ok()
         }
@@ -990,16 +1045,42 @@ pub fn write_event<'a, W: Write>(
 
         // Literal blocks without highlighting
         (Stacked(stack, LiteralBlock(attrs)), Text(text)) => {
-            let LiteralBlockAttrs { indent, style, .. } = attrs;
+            let LiteralBlockAttrs {
+                indent,
+                style,
+                quote_depth,
+                border_style,
+            } = attrs;
+            let (prefix, _) = quote_line_prefix(
+                &settings.terminal_capabilities,
+                &settings.theme,
+                quote_depth,
+                border_style,
+            );
             for line in LinesWithEndings::from(&text) {
                 write_indent(writer, indent)?;
                 write_styled(writer, &settings.terminal_capabilities, &style, line)?;
                 if !line.ends_with('\n') {
                     writeln!(writer)?;
                 }
+                // The prefix belongs to the line just begun, ahead of the
+                // indent written for it. Empty outside a quote, leaving the
+                // surrounding writes exactly as they were.
+                write!(writer, "{}", prefix)?;
                 write_indent(writer, indent)?;
             }
-            stack.current(attrs.into()).and_data(data).ok()
+            stack
+                .current(
+                    LiteralBlockAttrs {
+                        indent,
+                        style,
+                        quote_depth,
+                        border_style,
+                    }
+                    .into(),
+                )
+                .and_data(data)
+                .ok()
         }
         (Stacked(stack, LiteralBlock(_)), End(TagEnd::CodeBlock)) => {
             write_code_block_border(
@@ -1053,6 +1134,12 @@ pub fn write_event<'a, W: Write>(
 
         // Highlighted code blocks
         (Stacked(stack, HighlightBlock(mut attrs)), Text(text)) => {
+            let (prefix, _) = quote_line_prefix(
+                &settings.terminal_capabilities,
+                &settings.theme,
+                attrs.quote_depth,
+                attrs.border_style,
+            );
             for line in LinesWithEndings::from(&text) {
                 let ops = attrs
                     .parse_state
@@ -1076,6 +1163,7 @@ pub fn write_event<'a, W: Write>(
                         highlighting::write_as_ansi(writer, regions)?;
                     }
                 }
+                write!(writer, "{}", prefix)?;
                 write_indent(writer, attrs.indent)?;
             }
             stack.current(attrs.into()).and_data(data).ok()
@@ -1096,7 +1184,18 @@ pub fn write_event<'a, W: Write>(
             stack.current(attrs.into()).and_data(data).ok()
         }
         (Stacked(stack, MermaidBlock(attrs)), End(TagEnd::CodeBlock)) => {
-            let MermaidBlockAttrs { indent, source } = attrs;
+            let MermaidBlockAttrs {
+                indent,
+                source,
+                quote_depth,
+                border_style,
+            } = attrs;
+            let (prefix, _) = quote_line_prefix(
+                &settings.terminal_capabilities,
+                &settings.theme,
+                quote_depth,
+                border_style,
+            );
             if let Some(img) = render_mermaid_image(settings, &source) {
                 let (_, _, cursor_moved) = write_mermaid_image(writer, settings, img, true)?;
                 if !cursor_moved {
@@ -1104,6 +1203,7 @@ pub fn write_event<'a, W: Write>(
                 }
             } else if let Some(text) = mermaid::render_mermaid_text(&source) {
                 for line in LinesWithEndings::from(&text) {
+                    write!(writer, "{}", prefix)?;
                     write_indent(writer, indent)?;
                     write_styled(
                         writer,
@@ -1117,6 +1217,7 @@ pub fn write_event<'a, W: Write>(
                 }
             } else {
                 for line in LinesWithEndings::from(&source) {
+                    write!(writer, "{}", prefix)?;
                     write_indent(writer, indent)?;
                     write_styled(
                         writer,
