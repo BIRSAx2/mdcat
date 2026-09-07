@@ -8,6 +8,8 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+## [2.16.0] – 2026-09-07
+
 ### Added
 - New `--full-width` flag (and `defaults.full_width` in `~/.config/mdcat/config.toml`) to use the
   full terminal width instead of capping output at 80 columns, without having to pass
@@ -1077,7 +1079,8 @@ Use `cargo release` to create a new release.
 - Support ordered and unordered lists, with nest.
 - Show links, with references grouped by section.
 
-[Unreleased]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.15.0...HEAD
+[Unreleased]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.16.0...HEAD
+[2.16.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.15.0...mdcat-2.16.0
 [2.15.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.14.0...mdcat-2.15.0
 [2.14.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.13.0...mdcat-2.14.0
 [2.13.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.12.0...mdcat-2.13.0
