@@ -61,8 +61,8 @@ fn write_remaining_lines<W: Write>(
 ) -> Result<CurrentLine> {
     // Finish the previous line
     writeln!(writer)?;
-    write_indent(writer, indent)?;
     write!(writer, "{}", line_prefix)?;
+    write_indent(writer, indent)?;
     // Now write all lines up to the last
     for line in next_lines {
         match line.split_last() {
@@ -77,8 +77,8 @@ fn write_remaining_lines<W: Write>(
                 buffer.push_str(last.word);
                 write_styled(writer, capabilities, style, &buffer)?;
                 writeln!(writer)?;
-                write_indent(writer, indent)?;
                 write!(writer, "{}", line_prefix)?;
+                write_indent(writer, indent)?;
                 buffer.clear();
             }
         };
@@ -139,8 +139,8 @@ pub fn write_styled_and_wrapped<W: Write, S: AsRef<str>>(
                 && max_width < current_width + display_width(first_word) as u16
             {
                 writeln!(writer)?;
-                write_indent(writer, indent)?;
                 write!(writer, "{}", line_prefix)?;
+                write_indent(writer, indent)?;
                 return write_styled_and_wrapped(
                     writer,
                     capabilities,

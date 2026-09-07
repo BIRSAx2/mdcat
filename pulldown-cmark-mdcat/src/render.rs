@@ -529,6 +529,19 @@ pub fn write_event<'a, W: Write>(
                 // Add margin
                 writeln!(writer)?;
             }
+            // Inside a block quote every line carries the quote prefix, and
+            // the continuation lines of a wrapped item already write it.
+            // Without it here the bullet line alone lacks the prefix, and the
+            // one on the wrapped line then appears to sit inside the text.
+            // It precedes the indent, being the start of the line rather than
+            // part of what is indented.
+            let (quote_prefix, _) = quote_line_prefix(
+                &settings.terminal_capabilities,
+                &settings.theme,
+                quote_depth,
+                attrs.border_style,
+            );
+            write!(writer, "{}", quote_prefix)?;
             write_indent(writer, indent)?;
             let indent = match kind {
                 ListItemKind::Unordered => {
@@ -551,6 +564,9 @@ pub fn write_event<'a, W: Write>(
                     },
                 ))
                 .and_data(data.current_line(CurrentLine {
+                    // Not the prefix's width: the wrapping already sets that
+                    // aside by shrinking the width available to the text.
+                    // Counting it here as well wraps the line early.
                     length: indent,
                     trailing_space: None,
                 }))
@@ -561,6 +577,16 @@ pub fn write_event<'a, W: Write>(
                 // Write margin, unless we're at the start of the list item in which case the first line of the
                 // paragraph should go right beside the item bullet.
                 writeln!(writer)?;
+                // A later block of the item begins a line of its own, and
+                // inside a quote that line carries the prefix as the bullet
+                // line does -- otherwise the two stop lining up.
+                let (prefix, _) = quote_line_prefix(
+                    &settings.terminal_capabilities,
+                    &settings.theme,
+                    attrs.quote_depth,
+                    attrs.border_style,
+                );
+                write!(writer, "{}", prefix)?;
                 write_indent(writer, attrs.indent)?;
             }
             stack
