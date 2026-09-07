@@ -129,7 +129,14 @@ impl<'a> RenderOptions<'a> {
         self
     }
 
-    /// Configure image handling for Ratatui widgets.
+    /// Configure image handling for [`MdcatWidget`]/[`MdcatWidgetState`].
+    ///
+    /// This has no effect on [`Renderer::text_from_str`] or [`Renderer::text_from_read`]: those
+    /// produce a plain [`Text`], which cannot carry image data, so images always render as their
+    /// alt text there regardless of this setting. To see actual images, render with
+    /// [`MdcatWidget`], passing an [`ImagePicker`] here or via
+    /// [`MdcatWidgetState::detect_images`]; the widget then draws decoded images as overlays on
+    /// top of the text.
     pub fn images(mut self, image_mode: ImageMode) -> Self {
         self.image_mode = image_mode;
         self
@@ -191,6 +198,11 @@ impl<'a> Renderer<'a> {
     }
 
     /// Render a markdown string into Ratatui text.
+    ///
+    /// Images always render as their alt text (or as a `[N]` reference, like a link) here, never
+    /// as actual images: a [`Text`] is plain styled spans and cannot carry image data, and
+    /// [`RenderOptions::images`] does not change that. Use [`MdcatWidget`] instead if you want
+    /// images to render as overlays on top of the text.
     pub fn text_from_str(&self, markdown: &str) -> Result<Text<'static>> {
         let settings = self.settings(self.options.columns);
         let environment = self.environment()?;
@@ -203,6 +215,8 @@ impl<'a> Renderer<'a> {
     }
 
     /// Render markdown read from `reader` into Ratatui text.
+    ///
+    /// See [`Renderer::text_from_str`]: images never render as actual images here either.
     pub fn text_from_read<R: Read>(&self, mut reader: R) -> Result<Text<'static>> {
         let mut markdown = String::new();
         reader.read_to_string(&mut markdown)?;
@@ -810,6 +824,9 @@ pub fn push_text_str(
 /// The output uses the default mdcat theme and bundled syntax definitions, wraps to `columns`, and
 /// does not read linked resources. Use [`push_text_str`] if you need a custom theme, syntax set,
 /// syntax theme, or local resource access.
+///
+/// See [`Renderer::text_from_str`]: images render as alt text here, never as actual images. Use
+/// [`MdcatWidget`] if you want images to render as overlays on top of the text.
 pub fn text_from_str(markdown: &str, columns: u16) -> Result<Text<'static>> {
     Renderer::new(RenderOptions::default().width(columns)).text_from_str(markdown)
 }

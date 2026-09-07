@@ -32,6 +32,8 @@ frame.render_stateful_widget(MdcatWidget::new(markdown), area, &mut state);
 
 For direct `Text` output, use `text_from_str` or `text_from_read`. For custom themes, syntax sets,
 syntax themes, base directories, or resource access, use `Renderer` with explicit `RenderOptions`.
+A plain `Text` cannot carry image data, so images always render as alt text there; use
+`MdcatWidget` if you want images to render.
 
 Links are rendered as visible references because Ratatui `Text` does not carry hyperlink targets.
 Image protocol probing is available through `MdcatWidgetState::detect_images`; call it after

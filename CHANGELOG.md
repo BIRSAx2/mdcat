@@ -14,6 +14,12 @@ Use `cargo release` to create a new release.
   `--columns $(tput cols)` (see [#42]).
 
 ### Fixed
+- Clarify in the docs that `Renderer::text_from_str`/`text_from_read` (and the free
+  `text_from_str` function) never render actual images, only alt text, because a Ratatui `Text` is
+  plain styled spans that cannot carry image data; `RenderOptions::images` only affects
+  `MdcatWidget`/`MdcatWidgetState`, which draw decoded images as overlays on top of the text. This
+  was a common source of confusion for callers using `Renderer` directly without the widget (see
+  [#36]).
 - Fix a panic when a table cell contains a footnote reference (e.g. `2[^1]`). Table cells handle
   inline events directly instead of going through the generic `Inline` state that footnote
   references were only wired up for, so `FootnoteReference` inside a `TableBlock` fell through to
@@ -26,6 +32,7 @@ Use `cargo release` to create a new release.
   at `INFO` it drowned out other diagnostics for `ratatui`-based consumers (see [#37]).
 
 [#37]: https://github.com/BIRSAx2/mdcat/issues/37
+[#36]: https://github.com/BIRSAx2/mdcat/issues/36
 [#42]: https://github.com/BIRSAx2/mdcat/issues/42
 [#43]: https://github.com/BIRSAx2/mdcat/issues/43
 
