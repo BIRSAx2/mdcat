@@ -41,6 +41,8 @@ pub struct Defaults {
     pub smart_punctuation: Option<bool>,
     /// Default for `--columns`.
     pub columns: Option<u16>,
+    /// Default for `--full-width`.
+    pub full_width: Option<bool>,
     /// Default for `--local`.
     pub local_only: Option<bool>,
     /// Default for `--fail`.
@@ -468,6 +470,7 @@ mod tests {
         assert_eq!(config.defaults.margin, None);
         assert_eq!(config.defaults.smart_punctuation, None);
         assert_eq!(config.defaults.columns, None);
+        assert_eq!(config.defaults.full_width, None);
         assert_eq!(config.defaults.local_only, None);
         assert_eq!(config.defaults.fail_fast, None);
         assert_eq!(config.defaults.image_protocol, None);

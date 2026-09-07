@@ -341,6 +341,7 @@ fn main() {
     let smart_punctuation =
         args.smart_punctuation || defaults.and_then(|d| d.smart_punctuation).unwrap_or(false);
     let columns = args.columns.or_else(|| defaults.and_then(|d| d.columns));
+    let full_width = args.full_width || defaults.and_then(|d| d.full_width).unwrap_or(false);
     let local_only = args.local_only || defaults.and_then(|d| d.local_only).unwrap_or(false);
     let fail_fast = args.fail_fast || defaults.and_then(|d| d.fail_fast).unwrap_or(false);
     let toc = args.toc;
@@ -398,6 +399,7 @@ fn main() {
 
         let terminal_size = TerminalSize::detect().unwrap_or_default();
         let terminal_size = match columns {
+            None if full_width => terminal_size,
             None => terminal_size.with_max_columns(terminal_size.columns.min(80)),
             Some(0) => terminal_size.with_max_columns(u16::MAX),
             Some(max_columns) => terminal_size.with_max_columns(max_columns),

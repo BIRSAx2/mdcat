@@ -17,6 +17,9 @@ smart_punctuation = true
 # Maximum number of columns to wrap output to (same as --columns). Omit to use the terminal
 # width, capped at 80.
 columns = 100
+# Use the full terminal width instead of capping it at 80 columns (same as --full-width).
+# Ignored if columns is set.
+full_width = false
 # Never load remote resources like images (same as --local).
 local_only = false
 # Stop at the first file that fails to render, instead of continuing with the next one (same as

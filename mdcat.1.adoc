@@ -130,7 +130,12 @@ This is the default when run as `mdcat`.
 
 [[columns-option]]--columns=_COLUMNS_::
     Maximum number of columns to use for text output.
-    Defaults to the size of the underlying terminal if omitted.
+    Defaults to the size of the underlying terminal, capped at 80, if omitted.
+    Pass `0` to disable line wrapping entirely.
+
+[[full-width-option]]--full-width::
+    Use the full terminal width instead of capping it at 80 columns.
+    Conflicts with `--columns`.
 
 [[local-option]]-l::
 --local::
@@ -234,6 +239,9 @@ Each key sets the default value for a CLI flag, used only when that flag isn't p
 
 `columns`::
     Default for <<columns-option,`--columns`>>.
+
+`full_width`::
+    Default for <<full-width-option,`--full-width`>>.
 
 `local_only`::
     Default for <<local-option,`--local`>>.
