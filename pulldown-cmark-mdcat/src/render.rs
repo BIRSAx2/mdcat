@@ -1882,6 +1882,18 @@ pub fn write_event<'a, W: Write>(
                 })
                 .ok()
         }
+        (Stacked(stack, TableBlock(attrs)), FootnoteReference(label)) => {
+            let mut data = data;
+            let idx = data.footnote_index(&label);
+            let current_table = data
+                .current_table
+                .push_styled_text(format!("[{idx}]").into(), settings.theme.footnote_style);
+            let data = StateData {
+                current_table,
+                ..data
+            };
+            Stacked(stack, TableBlock(attrs)).and_data(data).ok()
+        }
 
         // Inline math
         (Stacked(stack, Inline(state, attrs)), InlineMath(math)) => {

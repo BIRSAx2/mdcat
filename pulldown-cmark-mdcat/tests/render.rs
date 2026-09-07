@@ -178,6 +178,28 @@ fn math_in_table_cells_does_not_panic() {
 }
 
 #[test]
+fn footnote_reference_in_table_cell_does_not_panic() {
+    let settings = Settings {
+        terminal_capabilities: TerminalProgram::Dumb.capabilities(),
+        terminal_size: TerminalSize::default(),
+        theme: Theme::default(),
+        syntax_set: syntax_set(),
+        syntax_theme: None,
+    };
+    let cwd = std::env::current_dir().expect("Require working directory");
+    let output = render_markdown_to_string(
+        "| Berry | Rs |\n| - | - |\n| Strawberry | 2[^1] |\n\n[^1]: citation needed",
+        &cwd,
+        &settings,
+    );
+
+    assert_eq!(
+        output,
+        "──────────────────\n Berry       Rs   \n──────────────────\n Strawberry  2[1] \n──────────────────\n\n[1]: citation needed\n"
+    );
+}
+
+#[test]
 fn inline_math_kitty_placement_does_not_move_cursor() {
     let settings = Settings {
         terminal_capabilities: TerminalProgram::Kitty.capabilities(),

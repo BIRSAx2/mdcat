@@ -13,6 +13,12 @@ Use `cargo release` to create a new release.
   full terminal width instead of capping output at 80 columns, without having to pass
   `--columns $(tput cols)` (see [#42]).
 
+### Fixed
+- Fix a panic when a table cell contains a footnote reference (e.g. `2[^1]`). Table cells handle
+  inline events directly instead of going through the generic `Inline` state that footnote
+  references were only wired up for, so `FootnoteReference` inside a `TableBlock` fell through to
+  the "impossible event" panic (see [#43]).
+
 ### Changed
 - Lower the "Terminal does not support images, rendering image as link" log message from `INFO`
   to `DEBUG`.  This message fires on every image when rendering into Ratatui `Text`, because that
@@ -21,6 +27,7 @@ Use `cargo release` to create a new release.
 
 [#37]: https://github.com/BIRSAx2/mdcat/issues/37
 [#42]: https://github.com/BIRSAx2/mdcat/issues/42
+[#43]: https://github.com/BIRSAx2/mdcat/issues/43
 
 ## [2.15.0] – 2026-08-03
 
