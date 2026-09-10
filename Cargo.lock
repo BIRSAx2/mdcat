@@ -1993,7 +1993,7 @@ dependencies = [
  "ignore",
  "mime",
  "notify",
- "pulldown-cmark",
+ "pulldown-cmark 0.13.4",
  "pulldown-cmark-mdcat",
  "serde",
  "shell-words",
@@ -2086,7 +2086,7 @@ dependencies = [
  "indexmap",
  "manatee",
  "merman-core",
- "pulldown-cmark",
+ "pulldown-cmark 0.12.2",
  "roughr-merman",
  "rustc-hash",
  "ryu-js",
@@ -2768,6 +2768,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "pulldown-cmark"
+version = "0.13.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e9f068eba8e7071c5f9511831b44f32c740d5adf574e990f946ddb53db2f314e"
+dependencies = [
+ "bitflags 2.13.1",
+ "memchr",
+ "pulldown-cmark-escape",
+ "unicase",
+]
+
+[[package]]
 name = "pulldown-cmark-escape"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2787,7 +2799,7 @@ dependencies = [
  "merman",
  "mime",
  "png 0.18.1",
- "pulldown-cmark",
+ "pulldown-cmark 0.13.4",
  "ratatui",
  "ratatui-image",
  "ratex-layout",
