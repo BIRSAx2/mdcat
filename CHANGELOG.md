@@ -8,6 +8,8 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+## [2.16.1] – 2026-09-10
+
 ### Fixed
 - Stop forcing inline images (via an explicit `--image-protocol`/`image_protocol` config) into
   paginated output. Pagers like `less` cannot handle inline image protocols, so forcing them in
@@ -1085,7 +1087,8 @@ Use `cargo release` to create a new release.
 - Support ordered and unordered lists, with nest.
 - Show links, with references grouped by section.
 
-[Unreleased]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.16.0...HEAD
+[Unreleased]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.16.1...HEAD
+[2.16.1]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.16.0...mdcat-2.16.1
 [2.16.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.15.0...mdcat-2.16.0
 [2.15.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.14.0...mdcat-2.15.0
 [2.14.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.13.0...mdcat-2.14.0
