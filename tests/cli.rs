@@ -220,6 +220,26 @@ mod cli {
     }
 
     #[test]
+    fn image_protocol_flag_has_no_effect_when_paginating() {
+        let mut child = cargo_mdcat()
+            .args(["--paginate", "--image-protocol=kitty", "-"])
+            .env("MDCAT_PAGER", "cat")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .unwrap();
+        write!(child.stdin.take().unwrap(), "{}", image_markdown()).unwrap();
+        let output = child.wait_with_output().unwrap();
+        let stdout = std::str::from_utf8(&output.stdout).unwrap();
+        assert!(output.status.success());
+        assert!(
+            !stdout.contains("\x1b_G"),
+            "paginated output should never contain a kitty graphics escape sequence \
+             (pagers can't handle it, see GH-45), got: {stdout:?}"
+        );
+    }
+
+    #[test]
     fn image_protocol_config_default_is_used_and_overridable() {
         let config_dir = std::env::temp_dir().join(format!(
             "mdcat-cli-test-config-{}-{}",

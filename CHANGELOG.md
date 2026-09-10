@@ -8,6 +8,11 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+### Fixed
+- Stop forcing inline images (via an explicit `--image-protocol`/`image_protocol` config) into
+  paginated output. Pagers like `less` cannot handle inline image protocols, so forcing them in
+  broke scrolling in math-heavy documents rendered with `--paginate` (see [#45]).
+
 ## [2.16.0] – 2026-09-07
 
 ### Added
@@ -37,6 +42,7 @@ Use `cargo release` to create a new release.
 [#36]: https://github.com/BIRSAx2/mdcat/issues/36
 [#42]: https://github.com/BIRSAx2/mdcat/issues/42
 [#43]: https://github.com/BIRSAx2/mdcat/issues/43
+[#45]: https://github.com/BIRSAx2/mdcat/issues/45
 
 ## [2.15.0] – 2026-08-03
 

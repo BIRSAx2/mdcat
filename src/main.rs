@@ -381,8 +381,10 @@ fn main() {
     let terminal_capabilities = {
         let mut caps = terminal.capabilities();
         // Only override image support on terminals that get any formatting at all; forcing
-        // images into `--no-colour`/piped output would just corrupt the plain text stream.
-        if terminal != TerminalProgram::Dumb {
+        // images into `--no-colour`/piped output would just corrupt the plain text stream. Also
+        // never force images into paginated output: pagers generally can't handle inline image
+        // protocols, so doing so just breaks the pager (e.g. scrolling in `less`, see GH-45).
+        if terminal != TerminalProgram::Dumb && !args.paginate() {
             if let Some(choice) = image_protocol {
                 caps.image = choice.to_image_capability();
             }
