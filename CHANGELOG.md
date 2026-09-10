@@ -8,6 +8,11 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+### Added
+- Paginating through [lessi](https://github.com/roblillack/lessi) (a `less` replacement that
+  understands the kitty/Sixel graphics protocols) keeps normal terminal detection and inline
+  images enabled, instead of falling back to plain ANSI formatting like other pagers (see [#48]).
+
 ## [2.16.1] – 2026-09-10
 
 ### Fixed
@@ -45,6 +50,7 @@ Use `cargo release` to create a new release.
 [#42]: https://github.com/BIRSAx2/mdcat/issues/42
 [#43]: https://github.com/BIRSAx2/mdcat/issues/43
 [#45]: https://github.com/BIRSAx2/mdcat/issues/45
+[#48]: https://github.com/BIRSAx2/mdcat/issues/48
 
 ## [2.15.0] – 2026-08-03
 

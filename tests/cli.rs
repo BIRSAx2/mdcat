@@ -234,8 +234,43 @@ mod cli {
         assert!(output.status.success());
         assert!(
             !stdout.contains("\x1b_G"),
-            "paginated output should never contain a kitty graphics escape sequence \
-             (pagers can't handle it, see GH-45), got: {stdout:?}"
+            "paginated output should not contain a kitty graphics escape sequence when the \
+             pager is a plain one that can't handle it (see GH-45), got: {stdout:?}"
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn image_protocol_flag_still_applies_when_paginating_with_lessi() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let dir = std::env::temp_dir().join(format!(
+            "mdcat-cli-test-lessi-{}-{:?}",
+            std::process::id(),
+            std::thread::current().id()
+        ));
+        std::fs::create_dir_all(&dir).unwrap();
+        let lessi_path = dir.join("lessi");
+        std::fs::write(&lessi_path, "#!/bin/sh\ncat\n").unwrap();
+        std::fs::set_permissions(&lessi_path, std::fs::Permissions::from_mode(0o755)).unwrap();
+
+        let mut child = cargo_mdcat()
+            .args(["--paginate", "--image-protocol=kitty", "-"])
+            .env("MDCAT_PAGER", &lessi_path)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .unwrap();
+        write!(child.stdin.take().unwrap(), "{}", image_markdown()).unwrap();
+        let output = child.wait_with_output().unwrap();
+        let stdout = std::str::from_utf8(&output.stdout).unwrap();
+        let _ = std::fs::remove_dir_all(&dir);
+
+        assert!(output.status.success());
+        assert!(
+            stdout.contains("\x1b_G"),
+            "lessi handles image escapes, so --image-protocol should still apply when \
+             paginating through it, got: {stdout:?}"
         );
     }
 

@@ -52,6 +52,9 @@ Note that common pagers do not support proprietary terminal codes for e.g. image
 In particular this disables all image support which relies on proprietary escape codes.
 Math rendering remains enabled, but uses Unicode substitutions instead of PNG images.
 
+The exception is https://github.com/roblillack/lessi[lessi], a `less` replacement that understands the kitty and Sixel graphics protocols and redraws images correctly while scrolling.
+When `$MDCAT_PAGER`/`$PAGER` resolves to `lessi`, mdcat skips the ANSI fallback and keeps normal terminal detection (and inline images) enabled.
+
 === Interactive picking
 
 `mdpick` requires https://github.com/junegunn/fzf[fzf] to be installed and on `$PATH`; it exits with an error if `fzf` cannot be found.
@@ -112,6 +115,7 @@ In this case remote images render as hyperlinks.
 +
 **Note:** When paginating mdcat only uses standard ANSI formatting and hyperlinks, but no images or other proprietary format codes, because pager programs normally do not support any of these.
 Math rendering uses the Unicode fallback when paginating.
+The exception is `lessi`; see <<Pagination>> above.
 +
 This is the default when run as `mdless`.
 

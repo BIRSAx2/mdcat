@@ -31,7 +31,7 @@ use two_face::syntax::extra_newlines;
 use two_face::theme::{EmbeddedThemeName, LazyThemeSet};
 
 use mdcat::args::{Args, ImageProtocolChoice, ThemeChoice};
-use mdcat::output::Output;
+use mdcat::output::{resolved_pager_basename, Output};
 
 mod picker;
 
@@ -366,25 +366,24 @@ fn main() {
         tabs,
     };
 
+    // lessi handles kitty/sixel image escapes without corrupting scrollback (see GH-45),
+    // unlike other pagers, so it's exempt from the ansi-only/no-image restrictions below.
+    let paginating_with_lessi =
+        args.paginate() && resolved_pager_basename().ok().flatten().as_deref() == Some("lessi");
+
     let terminal = if args.no_colour {
         TerminalProgram::Dumb
-    } else if args.paginate() || args.ansi_only {
-        // A pager won't support any terminal-specific features
+    } else if args.ansi_only || (args.paginate() && !paginating_with_lessi) {
         TerminalProgram::Ansi
-    } else if !std::io::IsTerminal::is_terminal(&std::io::stdout()) {
-        // Not a TTY: strip all formatting so ANSI escapes don't pollute pipes
-        TerminalProgram::Dumb
-    } else {
+    } else if paginating_with_lessi || std::io::IsTerminal::is_terminal(&std::io::stdout()) {
         TerminalProgram::detect()
+    } else {
+        TerminalProgram::Dumb
     };
 
     let terminal_capabilities = {
         let mut caps = terminal.capabilities();
-        // Only override image support on terminals that get any formatting at all; forcing
-        // images into `--no-colour`/piped output would just corrupt the plain text stream. Also
-        // never force images into paginated output: pagers generally can't handle inline image
-        // protocols, so doing so just breaks the pager (e.g. scrolling in `less`, see GH-45).
-        if terminal != TerminalProgram::Dumb && !args.paginate() {
+        if terminal != TerminalProgram::Dumb && (!args.paginate() || paginating_with_lessi) {
             if let Some(choice) = image_protocol {
                 caps.image = choice.to_image_capability();
             }

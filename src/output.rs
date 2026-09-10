@@ -60,6 +60,16 @@ fn pager_from_env() -> Result<Vec<String>> {
     Ok(vec!["less".into(), "-r".into()])
 }
 
+/// Get the basename of the pager command that [`Output::new`] would use, or `None` if it's empty.
+pub fn resolved_pager_basename() -> Result<Option<String>> {
+    Ok(pager_from_env()?.first().map(|command| {
+        std::path::Path::new(command).file_stem().map_or_else(
+            || command.clone(),
+            |stem| stem.to_string_lossy().into_owned(),
+        )
+    }))
+}
+
 impl Output {
     /// Get the writer to write to the output.
     ///
