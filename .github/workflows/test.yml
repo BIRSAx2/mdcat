@@ -54,7 +54,10 @@ jobs:
 
   # Test mdcat itself
   test:
-    runs-on: ubuntu-latest
+    runs-on: "${{ matrix.os }}"
+    strategy:
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm]
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
