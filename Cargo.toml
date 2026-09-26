@@ -52,6 +52,9 @@ pre-release-replacements = [
     { file="CHANGELOG.md", search="\\[Unreleased\\]: ", replace = "[Unreleased]: https://github.com/BIRSAx2/mdcat/compare/{{tag_name}}...HEAD\n[{{version}}]: ", exactly = 1 },
 ]
 
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/{ name }-{ version }/{ name }-{ version }-{ target }{ archive-suffix }"
+
 [workspace]
 members = ["pulldown-cmark-mdcat"]
 
