@@ -8,6 +8,8 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+## [2.18.0] – 2026-10-01
+
 ### Added
 - `--emoji`/`defaults.emoji` in `~/.config/mdcat/config.toml` renders GitHub-style emoji
   shortcodes (e.g. `:+1:`) as Unicode emoji, using the same shortcode names GitHub uses. Off by
@@ -1107,7 +1109,8 @@ Use `cargo release` to create a new release.
 - Support ordered and unordered lists, with nest.
 - Show links, with references grouped by section.
 
-[Unreleased]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.17.0...HEAD
+[Unreleased]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.18.0...HEAD
+[2.18.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.17.0...mdcat-2.18.0
 [2.17.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.16.1...mdcat-2.17.0
 [2.16.1]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.16.0...mdcat-2.16.1
 [2.16.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.15.0...mdcat-2.16.0
