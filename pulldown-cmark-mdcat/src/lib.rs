@@ -148,30 +148,33 @@ pub fn markdown_options(smart_punctuation: bool) -> Options {
     options
 }
 
-/// Strip YAML frontmatter from the beginning of a Markdown document.
+/// Strip YAML or TOML frontmatter from the beginning of a Markdown document.
 ///
-/// Frontmatter is a `---` block at the very start of the input, closed by another `---` or `...`
-/// line. If no valid frontmatter block is found, return the input unchanged.
+/// YAML frontmatter is a `---` block at the very start of the input, closed by another `---` or
+/// `...` line. TOML frontmatter is a `+++` block closed by another `+++` line. A leading UTF-8
+/// byte order mark and trailing whitespace on the delimiter lines are ignored. If no valid
+/// frontmatter block is found, return the input unchanged.
 pub fn strip_frontmatter(input: &str) -> &str {
-    let after_open = match input
-        .strip_prefix("---\n")
-        .or_else(|| input.strip_prefix("---\r\n"))
-    {
-        Some(s) => s,
+    let body = input.strip_prefix('\u{feff}').unwrap_or(input);
+    let (first_line, mut rest) = match body.find('\n') {
+        Some(i) => (&body[..i], &body[i + 1..]),
         None => return input,
     };
+    let closers: &[&str] = match first_line.trim_end() {
+        "---" => &["---", "..."],
+        "+++" => &["+++"],
+        _ => return input,
+    };
 
-    let mut start = 0;
-    while start < after_open.len() {
-        let end = after_open[start..]
-            .find('\n')
-            .map_or(after_open.len(), |i| start + i);
-        let line = after_open[start..end].trim_end_matches('\r');
-        let next = (end + 1).min(after_open.len());
-        if line == "---" || line == "..." {
-            return &after_open[next..];
+    while !rest.is_empty() {
+        let (line, next) = match rest.find('\n') {
+            Some(i) => (&rest[..i], &rest[i + 1..]),
+            None => (rest, ""),
+        };
+        if closers.contains(&line.trim_end()) {
+            return next;
         }
-        start = end + 1;
+        rest = next;
     }
 
     input
@@ -319,6 +322,36 @@ mod tests {
     fn markdown_options_smart_punctuation_toggle() {
         assert!(!markdown_options(false).contains(Options::ENABLE_SMART_PUNCTUATION));
         assert!(markdown_options(true).contains(Options::ENABLE_SMART_PUNCTUATION));
+    }
+
+    #[test]
+    fn strip_frontmatter_yaml() {
+        assert_eq!(strip_frontmatter("---\na: 1\n---\n# H\n"), "# H\n");
+        assert_eq!(strip_frontmatter("---\r\na: 1\r\n...\r\n# H\n"), "# H\n");
+    }
+
+    #[test]
+    fn strip_frontmatter_toml() {
+        assert_eq!(strip_frontmatter("+++\na = 1\n+++\n# H\n"), "# H\n");
+        assert_eq!(strip_frontmatter("+++\na = 1\n---\n"), "+++\na = 1\n---\n");
+    }
+
+    #[test]
+    fn strip_frontmatter_bom_and_trailing_whitespace() {
+        assert_eq!(strip_frontmatter("\u{feff}---\na: 1\n---\n# H\n"), "# H\n");
+        assert_eq!(strip_frontmatter("--- \na: 1\n---\t\n# H\n"), "# H\n");
+    }
+
+    #[test]
+    fn strip_frontmatter_without_closing_delimiter_leaves_input_unchanged() {
+        assert_eq!(strip_frontmatter("---\na: 1\n"), "---\na: 1\n");
+        assert_eq!(strip_frontmatter("# H\n---\n"), "# H\n---\n");
+        assert_eq!(strip_frontmatter("---"), "---");
+    }
+
+    #[test]
+    fn strip_frontmatter_closing_delimiter_at_eof() {
+        assert_eq!(strip_frontmatter("---\na: 1\n---"), "");
     }
 
     #[test]

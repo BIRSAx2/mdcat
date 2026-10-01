@@ -14,6 +14,10 @@ Use `cargo release` to create a new release.
   default, to avoid silently changing existing output. Shortcodes inside code spans and code
   blocks are left untouched (see [#50]).
 
+### Fixed
+- Frontmatter is now also stripped when the file starts with a UTF-8 byte order mark, when
+  it uses TOML `+++` delimiters, or when a delimiter line has trailing whitespace (see [#52]).
+
 ## [2.17.0] – 2026-09-15
 
 ### Added
@@ -60,6 +64,7 @@ Use `cargo release` to create a new release.
 [#45]: https://github.com/BIRSAx2/mdcat/issues/45
 [#48]: https://github.com/BIRSAx2/mdcat/issues/48
 [#50]: https://github.com/BIRSAx2/mdcat/issues/50
+[#52]: https://github.com/BIRSAx2/mdcat/issues/52
 
 ## [2.15.0] – 2026-08-03
 
