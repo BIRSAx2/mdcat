@@ -426,6 +426,7 @@ mod mdpick {
             Command::new(self.dir.join("mdpick"))
                 .args(args)
                 .env("PATH", path)
+                .env("MDCAT_PAGER", "cat")
                 .output()
                 .unwrap()
         }
