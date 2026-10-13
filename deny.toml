@@ -29,6 +29,9 @@ ignore = [
     # svg_path_ops for Mermaid diagram layout. No direct dependency and no upgrade path
     # available yet.
     "RUSTSEC-2026-0196",
+    # unsafe-libyaml is unmaintained; pulled in transitively via merman-core -> serde_yaml for
+    # Mermaid diagram parsing. No direct dependency and no safe upgrade available.
+    "RUSTSEC-2024-0449",
 ]
 
 [licenses]
