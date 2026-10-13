@@ -197,7 +197,7 @@ pub fn process_file(
     };
 
     let mut sink = BufWriter::new(output.writer());
-    writeln!(sink).or_else(&ignore_broken_pipe)?;
+    writeln!(sink).or_else(ignore_broken_pipe)?;
     if render_options.margin {
         let mut padded = MarginWriter::new(&mut sink);
         pulldown_cmark_mdcat::push_tty(settings, &env, resource_handler, &mut padded, parser)
@@ -205,13 +205,13 @@ pub fn process_file(
                 event!(Level::TRACE, "Finished rendering, flushing output");
                 padded.flush()
             })
-            .or_else(&ignore_broken_pipe)?;
+            .or_else(ignore_broken_pipe)?;
     } else {
         pulldown_cmark_mdcat::push_tty(settings, &env, resource_handler, &mut sink, parser)
-            .or_else(&ignore_broken_pipe)?;
+            .or_else(ignore_broken_pipe)?;
     }
-    writeln!(sink).or_else(&ignore_broken_pipe)?;
-    sink.flush().or_else(&ignore_broken_pipe)?;
+    writeln!(sink).or_else(ignore_broken_pipe)?;
+    sink.flush().or_else(ignore_broken_pipe)?;
     Ok(())
 }
 

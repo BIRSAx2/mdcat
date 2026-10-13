@@ -276,13 +276,13 @@ fn list_themes() -> anyhow::Result<()> {
             theme: resolved.mdcat,
             syntax_theme,
         };
-        writeln!(writer, "=== {name} ===\n").or_else(&ignore_broken_pipe)?;
+        writeln!(writer, "=== {name} ===\n").or_else(ignore_broken_pipe)?;
         let parser = MarkdownParser::new_ext(THEME_SAMPLE, markdown_options(false));
         push_tty(&settings, &env, &NoopResourceHandler, &mut writer, parser)
-            .or_else(&ignore_broken_pipe)?;
-        writeln!(writer).or_else(&ignore_broken_pipe)?;
+            .or_else(ignore_broken_pipe)?;
+        writeln!(writer).or_else(ignore_broken_pipe)?;
     }
-    writer.flush().or_else(&ignore_broken_pipe)?;
+    writer.flush().or_else(ignore_broken_pipe)?;
     Ok(())
 }
 
