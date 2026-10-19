@@ -173,6 +173,10 @@ Defaults to `auto`, which detects dark or light mode from the terminal, unless `
 [[emoji-option]]--emoji::
     Render GitHub-style emoji shortcodes (e.g. `:+1:`) as Unicode emoji.
 
+[[frontmatter-option]]--frontmatter::
+    Render YAML/TOML frontmatter as a table instead of stripping it.
+    Has no effect if the frontmatter isn't a flat key-value mapping, or fails to parse; it's stripped as usual in that case.
+
 -w::
 --watch::
     Watch the input file and re-render on every change.
@@ -249,6 +253,9 @@ Each key sets the default value for a CLI flag, used only when that flag isn't p
 
 `emoji`::
     Default for <<emoji-option,`--emoji`>>.
+
+`frontmatter`::
+    Default for <<frontmatter-option,`--frontmatter`>>.
 
 `columns`::
     Default for <<columns-option,`--columns`>>.

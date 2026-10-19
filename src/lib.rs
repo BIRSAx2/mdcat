@@ -23,7 +23,7 @@ use pulldown_cmark_mdcat::resources::{
     DispatchingResourceHandler, FileResourceHandler, ResourceUrlHandler,
 };
 use pulldown_cmark_mdcat::{
-    expand_tabs, markdown_options, strip_frontmatter, substitute_emoji, Environment, Settings,
+    expand_tabs, markdown_options, substitute_emoji, Environment, Settings,
 };
 use resources::CurlResourceHandler;
 use tracing::{event, instrument, Level};
@@ -130,6 +130,12 @@ pub struct RenderOptions {
     pub smart_punctuation: bool,
     /// Render GitHub-style `:emoji:` shortcodes as Unicode emoji.
     pub emoji: bool,
+    /// Render YAML/TOML frontmatter as a table instead of stripping it.
+    ///
+    /// Has no effect if the frontmatter isn't a flat key-value mapping, or fails to parse; it's
+    /// stripped as usual in that case (see
+    /// [`pulldown_cmark_mdcat::frontmatter_table_markdown`]).
+    pub frontmatter: bool,
     /// Prepend a table of contents generated from the document's headings.
     ///
     /// On standard input (`filename` is `-`) its entries are plain text, since there is no file
@@ -152,10 +158,24 @@ pub fn process_file(
     render_options: RenderOptions,
 ) -> Result<()> {
     let (base_dir, input) = read_input(filename)?;
-    let input = strip_frontmatter(&input);
+    let (body, frontmatter) = pulldown_cmark_mdcat::split_frontmatter(&input);
+    let with_frontmatter_table;
+    let body: &str = if render_options.frontmatter {
+        match frontmatter
+            .and_then(|(format, raw)| pulldown_cmark_mdcat::frontmatter_table_markdown(format, raw))
+        {
+            Some(table) => {
+                with_frontmatter_table = format!("{table}\n{body}");
+                &with_frontmatter_table
+            }
+            None => body,
+        }
+    } else {
+        body
+    };
     let input = match render_options.tabs {
-        Some(tab_width) => expand_tabs(input, tab_width),
-        None => std::borrow::Cow::Borrowed(input),
+        Some(tab_width) => expand_tabs(body, tab_width),
+        None => std::borrow::Cow::Borrowed(body),
     };
     let input = input.as_ref();
     event!(

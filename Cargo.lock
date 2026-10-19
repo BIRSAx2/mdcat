@@ -2858,11 +2858,13 @@ dependencies = [
  "resvg",
  "rustix 0.38.44",
  "serde_json",
+ "serde_yaml",
  "similar-asserts",
  "syntect",
  "temp-env",
  "terminal_size",
  "textwrap",
+ "toml",
  "tracing",
  "two-face",
  "unicodeit",
@@ -4299,6 +4301,7 @@ version = "0.8.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dc1beb996b9d83529a9e75c17a1686767d148d70663143c7854d8b4a09ced362"
 dependencies = [
+ "indexmap",
  "serde",
  "serde_spanned",
  "toml_datetime",

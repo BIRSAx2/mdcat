@@ -52,11 +52,13 @@ use syntect::parsing::SyntaxSet;
 use tracing::instrument;
 use url::Url;
 
+pub use crate::frontmatter::{frontmatter_table_markdown, split_frontmatter, FrontmatterFormat};
 pub use crate::resources::ResourceUrlHandler;
 pub use crate::terminal::capabilities::TerminalCapabilities;
 pub use crate::terminal::{TerminalProgram, TerminalSize};
 pub use crate::theme::Theme;
 
+mod frontmatter;
 #[cfg(feature = "ratatui")]
 pub mod ratatui;
 mod references;
@@ -154,30 +156,10 @@ pub fn markdown_options(smart_punctuation: bool) -> Options {
 /// `...` line. TOML frontmatter is a `+++` block closed by another `+++` line. A leading UTF-8
 /// byte order mark and trailing whitespace on the delimiter lines are ignored. If no valid
 /// frontmatter block is found, return the input unchanged.
+///
+/// See [`split_frontmatter`] to inspect the stripped frontmatter instead of discarding it.
 pub fn strip_frontmatter(input: &str) -> &str {
-    let body = input.strip_prefix('\u{feff}').unwrap_or(input);
-    let (first_line, mut rest) = match body.find('\n') {
-        Some(i) => (&body[..i], &body[i + 1..]),
-        None => return input,
-    };
-    let closers: &[&str] = match first_line.trim_end() {
-        "---" => &["---", "..."],
-        "+++" => &["+++"],
-        _ => return input,
-    };
-
-    while !rest.is_empty() {
-        let (line, next) = match rest.find('\n') {
-            Some(i) => (&rest[..i], &rest[i + 1..]),
-            None => (rest, ""),
-        };
-        if closers.contains(&line.trim_end()) {
-            return next;
-        }
-        rest = next;
-    }
-
-    input
+    frontmatter::split_frontmatter(input).0
 }
 
 /// Expand literal tab characters in `input` to spaces, using a tab stop width of `tab_width`.

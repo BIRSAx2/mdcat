@@ -222,6 +222,12 @@ pub struct CommonArgs {
     /// `~/.config/mdcat/config.toml`.
     #[arg(long)]
     pub emoji: bool,
+    /// Render YAML/TOML frontmatter as a table instead of stripping it. Off by default, to
+    /// avoid silently changing existing output. Has no effect if the frontmatter isn't a flat
+    /// key-value mapping, or fails to parse; in that case it's stripped as usual. Also settable
+    /// via `defaults.frontmatter` in `~/.config/mdcat/config.toml`.
+    #[arg(long)]
+    pub frontmatter: bool,
     /// Print a sample rendered with every built-in theme, to help pick one, and exit.
     #[arg(long)]
     pub list_themes: bool,

@@ -16,6 +16,9 @@ margin = true
 smart_punctuation = true
 # Render GitHub-style emoji shortcodes, e.g. :+1: (same as --emoji).
 emoji = true
+# Render YAML/TOML frontmatter as a table instead of stripping it (same as --frontmatter).
+# Falls back to stripping if the frontmatter isn't a flat key-value mapping.
+frontmatter = true
 # Maximum number of columns to wrap output to (same as --columns). Omit to use the terminal
 # width, capped at 80.
 columns = 100

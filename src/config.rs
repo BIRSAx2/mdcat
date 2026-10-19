@@ -41,6 +41,8 @@ pub struct Defaults {
     pub smart_punctuation: Option<bool>,
     /// Default for `--emoji`.
     pub emoji: Option<bool>,
+    /// Default for `--frontmatter`.
+    pub frontmatter: Option<bool>,
     /// Default for `--columns`.
     pub columns: Option<u16>,
     /// Default for `--full-width`.
@@ -472,6 +474,7 @@ mod tests {
         assert_eq!(config.defaults.margin, None);
         assert_eq!(config.defaults.smart_punctuation, None);
         assert_eq!(config.defaults.emoji, None);
+        assert_eq!(config.defaults.frontmatter, None);
         assert_eq!(config.defaults.columns, None);
         assert_eq!(config.defaults.full_width, None);
         assert_eq!(config.defaults.local_only, None);

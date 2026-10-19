@@ -9,6 +9,10 @@ Use `cargo release` to create a new release.
 ## [Unreleased]
 
 ### Added
+- `--frontmatter`/`defaults.frontmatter` in `~/.config/mdcat/config.toml` renders YAML/TOML
+  frontmatter as a `Key`/`Value` table instead of stripping it. Off by default, to avoid silently
+  changing existing output. Falls back to stripping, as before, if the frontmatter isn't a flat
+  key-value mapping or fails to parse (see [#53]).
 - Auto-detect Sixel support on terminals mdcat doesn't otherwise recognize from
   `$TERM`/`$TERM_PROGRAM`, by sending a Primary Device Attributes (DA1) query and checking for
   Sixel graphics (extension `4`) in the response -- the standards-documented way to detect Sixel
@@ -80,6 +84,7 @@ Use `cargo release` to create a new release.
 [#48]: https://github.com/BIRSAx2/mdcat/issues/48
 [#50]: https://github.com/BIRSAx2/mdcat/issues/50
 [#52]: https://github.com/BIRSAx2/mdcat/issues/52
+[#53]: https://github.com/BIRSAx2/mdcat/issues/53
 [#55]: https://github.com/BIRSAx2/mdcat/issues/55
 [#56]: https://github.com/BIRSAx2/mdcat/issues/56
 

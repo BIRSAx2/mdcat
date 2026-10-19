@@ -137,6 +137,74 @@ mod cli {
     }
 
     #[test]
+    fn frontmatter_is_stripped_by_default() {
+        let mut child = cargo_mdcat()
+            .args(["--no-colour", "-"])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .unwrap();
+        write!(
+            child.stdin.take().unwrap(),
+            "---\ntitle: My Post\n---\n\n# Hello\n"
+        )
+        .unwrap();
+        let output = child.wait_with_output().unwrap();
+        let stdout = std::str::from_utf8(&output.stdout).unwrap();
+        assert!(output.status.success());
+        assert!(
+            !stdout.contains("title") && !stdout.contains("My Post"),
+            "frontmatter should be stripped by default: {stdout:?}"
+        );
+    }
+
+    #[test]
+    fn frontmatter_flag_renders_a_table() {
+        let mut child = cargo_mdcat()
+            .args(["--no-colour", "--frontmatter", "-"])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .unwrap();
+        write!(
+            child.stdin.take().unwrap(),
+            "---\ntitle: My Post\n---\n\n# Hello\n"
+        )
+        .unwrap();
+        let output = child.wait_with_output().unwrap();
+        let stdout = std::str::from_utf8(&output.stdout).unwrap();
+        assert!(output.status.success());
+        assert!(
+            stdout.contains("title") && stdout.contains("My Post"),
+            "expected a frontmatter table: {stdout:?}"
+        );
+        assert!(stdout.contains("Hello"));
+    }
+
+    #[test]
+    fn frontmatter_flag_falls_back_to_stripping_non_mapping_frontmatter() {
+        let mut child = cargo_mdcat()
+            .args(["--no-colour", "--frontmatter", "-"])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .unwrap();
+        write!(
+            child.stdin.take().unwrap(),
+            "---\njust a scalar string\n---\n\n# Hello\n"
+        )
+        .unwrap();
+        let output = child.wait_with_output().unwrap();
+        let stdout = std::str::from_utf8(&output.stdout).unwrap();
+        assert!(output.status.success());
+        assert!(
+            !stdout.contains("scalar"),
+            "non-mapping frontmatter should fall back to stripping: {stdout:?}"
+        );
+        assert!(stdout.contains("Hello"));
+    }
+
+    #[test]
     fn without_tabs_flag_tabs_pass_through_unchanged() {
         let mut child = cargo_mdcat()
             .args(["--no-colour", "-"])
