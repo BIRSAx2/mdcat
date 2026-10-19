@@ -8,6 +8,8 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+## [2.19.0] – 2026-10-19
+
 ### Added
 - `--frontmatter`/`defaults.frontmatter` in `~/.config/mdcat/config.toml` renders YAML/TOML
   frontmatter as a `Key`/`Value` table instead of stripping it. Off by default, to avoid silently
@@ -1129,7 +1131,8 @@ Use `cargo release` to create a new release.
 - Support ordered and unordered lists, with nest.
 - Show links, with references grouped by section.
 
-[Unreleased]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.18.0...HEAD
+[Unreleased]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.19.0...HEAD
+[2.19.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.18.0...mdcat-2.19.0
 [2.18.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.17.0...mdcat-2.18.0
 [2.17.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.16.1...mdcat-2.17.0
 [2.16.1]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.16.0...mdcat-2.16.1
