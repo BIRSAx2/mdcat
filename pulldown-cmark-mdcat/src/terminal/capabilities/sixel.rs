@@ -16,10 +16,13 @@ use crate::terminal::size::TerminalSize;
 pub struct SixelProtocol;
 
 impl SixelProtocol {
-    fn load_image(mime: MimeData) -> io::Result<image::DynamicImage> {
+    fn load_image(mime: MimeData, terminal_size: TerminalSize) -> io::Result<image::DynamicImage> {
         match mime.mime_type_essence() {
             Some("image/svg+xml") => {
-                let png = crate::resources::svg::render_svg_to_png(&mime.data)?;
+                let png = crate::resources::svg::render_svg_to_png_for_terminal(
+                    &mime.data,
+                    terminal_size,
+                )?;
 
                 image::load_from_memory_with_format(&png, image::ImageFormat::Png)
                     .map_err(io::Error::other)
@@ -89,7 +92,7 @@ impl crate::resources::InlineImageProtocol for SixelProtocol {
         terminal_size: TerminalSize,
     ) -> io::Result<()> {
         let mime = resource_handler.read_resource(url)?;
-        let image = SixelProtocol::load_image(mime)?;
+        let image = SixelProtocol::load_image(mime, terminal_size)?;
 
         let image = if let Some(downsized) = fit_image_to_terminal(&image, terminal_size) {
             downsized

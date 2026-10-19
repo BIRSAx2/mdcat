@@ -336,3 +336,66 @@ fn mermaid_unparsable_diagram_falls_back_to_literal_source() {
 
     assert!(output.contains("not a mermaid diagram at all {{{"));
 }
+
+/// Regression test for a local SVG image rendering as an actual inline image (not falling back
+/// to a text link) across every protocol that renders SVG, confirming the full pipeline from
+/// markdown through resource loading, SVG rasterization, and protocol-specific encoding stays
+/// intact.
+#[test]
+#[cfg(feature = "svg")]
+fn svg_image_renders_as_inline_image_on_every_svg_capable_protocol() {
+    let cwd = std::env::current_dir().expect("Require working directory");
+    // `cwd` for a package's integration tests is the package root (`pulldown-cmark-mdcat/`),
+    // whose parent is the workspace root; go through the parent rather than joining a literal
+    // `..` segment, since `Path::canonicalize` would resolve that but on Windows also adds a
+    // `\\?\`-prefixed verbatim path, which `Url::from_file_path` below doesn't need and
+    // shouldn't have to handle.
+    let svg_path = cwd
+        .parent()
+        .expect("pulldown-cmark-mdcat must have a parent directory")
+        .join("sample/rust-logo.svg");
+    assert!(svg_path.exists(), "{svg_path:?} must exist");
+    // Image destinations are resolved as URLs, not native OS paths (see `resolve_reference`),
+    // so this must be a `file://` URL rather than `svg_path.display()`: a native Windows path
+    // uses backslashes, which aren't valid URL path separators.
+    let svg_url = url::Url::from_file_path(&svg_path)
+        .unwrap_or_else(|()| panic!("{svg_path:?} must be an absolute path"));
+    let markdown = format!("![Rust logo]({svg_url})\n");
+
+    // One marker per protocol identifying its inline-image escape sequence; each only appears
+    // if `write_inline_image` actually ran, rather than the image falling back to a link.
+    for (name, capabilities, marker) in [
+        (
+            "kitty",
+            TerminalProgram::Kitty.capabilities(),
+            "\u{1b}_Ga=T,t=d,I=1,f=32",
+        ),
+        (
+            "iterm2",
+            TerminalProgram::ITerm2.capabilities(),
+            "\u{1b}]1337;File=",
+        ),
+        (
+            "sixel-via-foot",
+            TerminalProgram::Foot.capabilities(),
+            "\u{1b}[?8452h",
+        ),
+    ] {
+        let settings = Settings {
+            terminal_capabilities: capabilities,
+            terminal_size: TerminalSize::default(),
+            theme: Theme::default(),
+            syntax_set: syntax_set(),
+            syntax_theme: None,
+        };
+        let output = render_markdown_to_string(&markdown, &cwd, &settings);
+        assert!(
+            output.contains(marker),
+            "{name}: expected inline-image marker {marker:?} in output, got {output:?}"
+        );
+        assert!(
+            !output.contains("Rust logo]("),
+            "{name}: image fell back to a text link instead of rendering inline"
+        );
+    }
+}

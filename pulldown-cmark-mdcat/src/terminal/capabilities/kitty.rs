@@ -207,7 +207,10 @@ impl KittyGraphicsProtocol {
 
         let image = if let Some("image/svg+xml") = mime_data.mime_type_essence() {
             event!(Level::DEBUG, "Rendering mime data to SVG");
-            let png_data = crate::resources::svg::render_svg_to_png(&mime_data.data)?;
+            let png_data = crate::resources::svg::render_svg_to_png_for_terminal(
+                &mime_data.data,
+                terminal_size,
+            )?;
             image::load_from_memory_with_format(&png_data, ImageFormat::Png)?
         } else {
             let image_format = mime_data

@@ -61,7 +61,6 @@ impl InlineImageProtocol for ITerm2Protocol {
         writer: &mut dyn Write,
         resource_handler: &dyn ResourceUrlHandler,
         url: &url::Url,
-        #[cfg_attr(not(feature = "image-processing"), allow(unused_variables))]
         terminal_size: crate::TerminalSize,
     ) -> Result<()> {
         let mime_data = resource_handler.read_resource(url)?;
@@ -86,7 +85,10 @@ impl InlineImageProtocol for ITerm2Protocol {
                     name.push_str(".png");
                     Cow::Owned(name)
                 }),
-                Cow::Owned(svg::render_svg_to_png(&mime_data.data)?),
+                Cow::Owned(svg::render_svg_to_png_for_terminal(
+                    &mime_data.data,
+                    terminal_size,
+                )?),
             )
         } else {
             event!(Level::DEBUG, "Rendering mime data literally");
