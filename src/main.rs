@@ -373,14 +373,14 @@ fn main() {
     let paginating_with_lessi =
         args.paginate() && resolved_pager_basename().ok().flatten().as_deref() == Some("lessi");
 
-    let terminal = if args.no_colour {
-        TerminalProgram::Dumb
+    let (terminal, terminal_was_auto_detected) = if args.no_colour {
+        (TerminalProgram::Dumb, false)
     } else if args.ansi_only || (args.paginate() && !paginating_with_lessi) {
-        TerminalProgram::Ansi
+        (TerminalProgram::Ansi, false)
     } else if paginating_with_lessi || std::io::IsTerminal::is_terminal(&std::io::stdout()) {
-        TerminalProgram::detect()
+        (TerminalProgram::detect(), true)
     } else {
-        TerminalProgram::Dumb
+        (TerminalProgram::Dumb, false)
     };
 
     let terminal_capabilities = {
@@ -388,6 +388,17 @@ fn main() {
         if terminal != TerminalProgram::Dumb && (!args.paginate() || paginating_with_lessi) {
             if let Some(choice) = image_protocol {
                 caps.image = choice.to_image_capability();
+            } else if terminal_was_auto_detected
+                && terminal == TerminalProgram::Ansi
+                && pulldown_cmark_mdcat::terminal::sixel_probe::detect_sixel_via_device_attributes(
+                    100,
+                ) == Some(true)
+            {
+                // $TERM/$TERM_PROGRAM didn't identify a known terminal, but it may still
+                // support Sixel graphics; ask it directly via a Primary Device Attributes
+                // (DA1) query rather than assuming no image support (see GH-56).
+                use pulldown_cmark_mdcat::terminal::capabilities::{sixel, ImageCapability};
+                caps.image = Some(ImageCapability::Sixel(sixel::SixelProtocol));
             }
         }
         caps

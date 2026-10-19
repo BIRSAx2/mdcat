@@ -68,6 +68,9 @@ Once a file is selected, `mdpick` renders it exactly as `mdless` would, paginati
 In iTerm2, kitty, WezTerm, and Ghostty mdcat prints inline images.
 mdcat supports most standard pixel formats by default.
 
+On `foot` and `xterm` mdcat also prints images via the Sixel protocol.
+For any other terminal that `$TERM`/`$TERM_PROGRAM` doesn't identify, mdcat asks the terminal itself whether it supports Sixel graphics, via a Primary Device Attributes (DA1) query, before falling back to no inline images.
+
 mdcat silently ignores images larger than 100 MiB, under the assumption that images of that size cannot reasonably be rendered in a terminal.
 
 === Math support

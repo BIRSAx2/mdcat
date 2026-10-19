@@ -8,6 +8,19 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+### Added
+- Auto-detect Sixel support on terminals mdcat doesn't otherwise recognize from
+  `$TERM`/`$TERM_PROGRAM`, by sending a Primary Device Attributes (DA1) query and checking for
+  Sixel graphics (extension `4`) in the response -- the standards-documented way to detect Sixel
+  support, rather than relying solely on terminal-identity heuristics. Only runs once at startup,
+  for an interactive terminal mdcat couldn't otherwise identify, and only if no `--image-protocol`
+  was given (see [#56]).
+
+### Fixed
+- SVG images now rasterize at the resolution needed to fill their terminal cell area, instead of
+  always at their native size and then (sometimes) blurrily upscaled. A small SVG (e.g. a 24x24
+  icon) previously stayed tiny, or lost quality when stretched to fill a row (see [#55]).
+
 ## [2.18.0] – 2026-10-01
 
 ### Added
@@ -67,6 +80,8 @@ Use `cargo release` to create a new release.
 [#48]: https://github.com/BIRSAx2/mdcat/issues/48
 [#50]: https://github.com/BIRSAx2/mdcat/issues/50
 [#52]: https://github.com/BIRSAx2/mdcat/issues/52
+[#55]: https://github.com/BIRSAx2/mdcat/issues/55
+[#56]: https://github.com/BIRSAx2/mdcat/issues/56
 
 ## [2.15.0] – 2026-08-03
 

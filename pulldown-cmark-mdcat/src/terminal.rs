@@ -13,6 +13,8 @@ mod size;
 
 pub mod capabilities;
 mod detect;
+#[cfg(feature = "sixel")]
+pub mod sixel_probe;
 
 pub use self::detect::TerminalProgram;
 #[cfg(any(test, feature = "ratatui"))]
