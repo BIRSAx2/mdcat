@@ -10,8 +10,9 @@
 
 mod cli {
     use std::ffi::OsStr;
-    use std::io::{Read, Write};
+    use std::io::{BufRead, BufReader, Read, Write};
     use std::process::{Command, Output, Stdio};
+    use std::time::Duration;
 
     fn cargo_mdcat() -> Command {
         Command::new(env!("CARGO_BIN_EXE_mdcat"))
@@ -422,6 +423,146 @@ mod cli {
         );
 
         std::fs::remove_dir_all(&config_dir).unwrap();
+    }
+
+    #[test]
+    fn stream_config_default_is_used_and_overridable() {
+        let config_dir = std::env::temp_dir().join(format!(
+            "mdcat-cli-test-config-{}-{}",
+            std::process::id(),
+            "stream_config_default_is_used_and_overridable"
+        ));
+        std::fs::create_dir_all(config_dir.join("mdcat")).unwrap();
+        std::fs::write(
+            config_dir.join("mdcat/config.toml"),
+            "[defaults]\nstream = true\n",
+        )
+        .unwrap();
+
+        // A reference link only resolves without streaming, since its definition is in a later
+        // block.
+        let streamed = |extra_args: &[&str]| {
+            let mut child = cargo_mdcat()
+                .args(["--no-colour"])
+                .args(extra_args)
+                .arg("-")
+                .env("XDG_CONFIG_HOME", &config_dir)
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .spawn()
+                .unwrap();
+            write!(
+                child.stdin.take().unwrap(),
+                "[text][ref]\n\n[ref]: https://example.com/ref\n"
+            )
+            .unwrap();
+            let output = child.wait_with_output().unwrap();
+            assert!(
+                output.status.success(),
+                "{extra_args:?} failed: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+            String::from_utf8(output.stdout)
+                .unwrap()
+                .contains("[text][ref]")
+        };
+
+        assert!(streamed(&[]), "config default should stream");
+        assert!(!streamed(&["--no-stream"]), "--no-stream should override");
+        assert!(!streamed(&["--toc"]), "--toc should turn off the default");
+        assert!(!streamed(&["--stream", "--no-stream"]), "last flag wins");
+        assert!(streamed(&["--no-stream", "--stream"]), "last flag wins");
+        assert!(
+            !streamed(&["--stream", "--no-stream", "--toc"]),
+            "an overridden --stream should not conflict with --toc"
+        );
+
+        std::fs::remove_dir_all(&config_dir).unwrap();
+    }
+
+    /// Render `markdown` from standard input with `--no-colour` and `extra_args`.
+    fn render_stdin(markdown: &str, extra_args: &[&str]) -> String {
+        let mut child = cargo_mdcat()
+            .arg("--no-colour")
+            .args(extra_args)
+            .arg("-")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .unwrap();
+        write!(child.stdin.take().unwrap(), "{markdown}").unwrap();
+        let output = child.wait_with_output().unwrap();
+        assert!(output.status.success());
+        String::from_utf8(output.stdout).unwrap()
+    }
+
+    #[test]
+    fn stream_renders_like_whole_input() {
+        // Links check that reference numbers carry on from block to block.
+        let markdown = "# Heading\n\nA [link](https://example.com/one).\n\n\
+            ```rust\nfn main() {\n\n}\n```\n\n\
+            - item\n- item with [another link](https://example.com/two)\n\n\
+            | a | b |\n|---|---|\n| 1 | 2 |\n\n> A quote\n";
+        similar_asserts::assert_eq!(
+            render_stdin(markdown, &["--stream"]),
+            render_stdin(markdown, &[])
+        );
+    }
+
+    #[test]
+    fn stream_renders_frontmatter_like_whole_input() {
+        // Blank lines inside the frontmatter check that it stays in the first block.
+        let documents = [
+            "---\ntitle: My Post\n\ndraft: false\n---\n# Hello\n\nText\n",
+            "\u{feff}--- \ntitle: My Post\n\ndraft: false\n...\t\n\n# Hello\n\nText\n",
+            "+++\ntitle = \"My Post\"\n\ndraft = false\n+++\n\n# Hello\n\nText\n",
+        ];
+        for markdown in documents {
+            let stripped = render_stdin(markdown, &[]);
+            assert!(!stripped.contains("My Post"), "{stripped:?}");
+            similar_asserts::assert_eq!(render_stdin(markdown, &["--stream"]), stripped);
+
+            let table = render_stdin(markdown, &["--frontmatter"]);
+            assert!(table.contains("My Post"), "{table:?}");
+            similar_asserts::assert_eq!(
+                render_stdin(markdown, &["--stream", "--frontmatter"]),
+                table
+            );
+        }
+    }
+
+    #[test]
+    fn stream_renders_blocks_before_input_ends() {
+        let mut child = cargo_mdcat()
+            .args(["--no-colour", "--stream", "-"])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let mut stdin = child.stdin.take().unwrap();
+        let stdout = BufReader::new(child.stdout.take().unwrap());
+        let (sender, lines) = std::sync::mpsc::channel();
+        std::thread::spawn(move || {
+            stdout
+                .lines()
+                .map_while(Result::ok)
+                .try_for_each(|line| sender.send(line))
+        });
+
+        // The second block begins, which completes the first block.
+        write!(stdin, "First block\n\nSecond block\n").unwrap();
+        let first_block_rendered =
+            std::iter::from_fn(|| lines.recv_timeout(Duration::from_secs(30)).ok())
+                .any(|line| line.trim() == "First block");
+        assert!(
+            first_block_rendered,
+            "first block not rendered while input is still open"
+        );
+
+        drop(stdin);
+        assert!(child.wait().unwrap().success());
+        assert!(lines.iter().any(|line| line.trim() == "Second block"));
     }
 
     #[test]

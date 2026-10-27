@@ -36,6 +36,7 @@ Then it
   `~/.config/mdcat/config.toml` (see [config.toml.example](./config.toml.example)),
 - can render typographic punctuation (curly quotes, en/em dashes, an ellipsis) with `--smart-punctuation`,
 - can watch a file and re-render it on every save with `--watch`, for a live preview while editing,
+- can render input block by block as it arrives with `--stream`, to follow Markdown while a program writes it,
 - can fuzzy-find a Markdown file to render, via `mdpick` (see below), if you have [fzf] installed.
 
 | Terminal                               | Basic syntax | Syntax highlighting | Images | Math  | Jump marks |
@@ -110,6 +111,12 @@ To get a live preview while editing:
 
 ```console
 $ mdcat --watch sample.md
+```
+
+To render Markdown block by block while a program writes it:
+
+```console
+$ some-program | mdcat --stream
 ```
 
 See [sample/math.md](./sample/math.md) for math examples, [sample/mermaid.md](./sample/mermaid.md) for Mermaid

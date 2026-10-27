@@ -8,6 +8,15 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+### Added
+- `--stream`/`defaults.stream` in `~/.config/mdcat/config.toml` renders the input block by block
+  as it arrives, instead of after reading all of it, e.g. to follow Markdown while a program
+  writes it. A block ends at a blank line followed by a line that is not indented, outside of
+  fenced code blocks and frontmatter. Frontmatter is stripped, or rendered as a table with
+  `--frontmatter`, as without `--stream`. Reference links and footnotes only resolve against
+  definitions in the same block. `--no-stream`, `--toc`, and `--watch` turn off
+  `defaults.stream`.
+
 ## [2.19.0] – 2026-10-19
 
 ### Added

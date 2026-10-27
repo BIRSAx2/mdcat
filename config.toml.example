@@ -19,6 +19,10 @@ emoji = true
 # Render YAML/TOML frontmatter as a table instead of stripping it (same as --frontmatter).
 # Falls back to stripping if the frontmatter isn't a flat key-value mapping.
 frontmatter = true
+# Render the input block by block as it arrives (same as --stream). Reference links and
+# footnotes then only resolve against definitions in the same block. --no-stream, --toc, and
+# --watch turn it off.
+stream = false
 # Maximum number of columns to wrap output to (same as --columns). Omit to use the terminal
 # width, capped at 80.
 columns = 100

@@ -182,6 +182,24 @@ Defaults to `auto`, which detects dark or light mode from the terminal, unless `
     Watch the input file and re-render on every change.
     Requires exactly one FILE argument, and does not work with standard input or `--paginate`.
 
+[[stream-option]]--stream::
+    Render the input block by block as it arrives, instead of after reading all of it, e.g. to follow Markdown while a program writes it.
++
+A block ends at a blank line followed by a line that is not indented, outside of fenced code blocks and frontmatter; indented lines, e.g. another paragraph of a list item, continue the block before.
+mdcat renders each block when the first line of the next block arrives, and the last block at the end of the input.
++
+Frontmatter is part of the first block, and mdcat strips it, or renders it as a table with <<frontmatter-option,`--frontmatter`>>, as without `--stream`.
+If the first line of the input is a `---` or `+++` delimiter which no closing delimiter follows, all of the input is one block, which mdcat renders at the end of the input.
++
+mdcat parses each block on its own, so reference links and footnotes only resolve against definitions in the same block, and list items which blank lines separate render as separate lists.
+Conflicts with `--toc` and `--watch`.
+
+--no-stream::
+    Read all of the input before rendering it.
++
+This is the default, unless the configuration file sets `stream`.
+`--toc` and `--watch` also turn off a `stream` default from the configuration file.
+
 --toc::
     Print a table of contents generated from the document's headings before its content.
 +
@@ -256,6 +274,10 @@ Each key sets the default value for a CLI flag, used only when that flag isn't p
 
 `frontmatter`::
     Default for <<frontmatter-option,`--frontmatter`>>.
+
+`stream`::
+    Default for <<stream-option,`--stream`>>.
+    `--no-stream`, `--toc`, and `--watch` turn it off.
 
 `columns`::
     Default for <<columns-option,`--columns`>>.
