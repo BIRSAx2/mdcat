@@ -12,23 +12,10 @@ ignore = [
     "RUSTSEC-2024-0436",
     # ttf-parser is unmaintained but no upgrade path exists; comes through resvg and ratex-render
     "RUSTSEC-2026-0192",
-    # quick-xml 0.39.x has quadratic attribute-dedup (RUSTSEC-2026-0194) and unbounded namespace
-    # resolver allocation (RUSTSEC-2026-0195); fix requires >= 0.41.0, but plist 1.9.0 (the latest,
-    # pulled in by syntect) still pins 0.39.x — no upgrade path available yet.
-    "RUSTSEC-2026-0194",
-    "RUSTSEC-2026-0195",
-    # crossbeam-epoch's fmt::Display invalid-pointer-deref bug; pulled in transitively via
-    # rayon (image -> exr/ravif) for sixel/image support. No direct dependency, and the fix
-    # (crossbeam-epoch >= 0.9.20) is not yet picked up by rayon-core 1.13.0.
-    "RUSTSEC-2026-0204",
     # rustybuzz is unmaintained; pulled in transitively via resvg -> usvg for SVG image
     # support. No direct dependency and no upgrade path (harfrust migration not yet
     # available in resvg).
     "RUSTSEC-2026-0206",
-    # cgmath is unmaintained; pulled in transitively via merman-render -> roughr-merman ->
-    # svg_path_ops for Mermaid diagram layout. No direct dependency and no upgrade path
-    # available yet.
-    "RUSTSEC-2026-0196",
     # unsafe-libyaml is unmaintained; pulled in transitively via merman-core -> serde_yaml for
     # Mermaid diagram parsing. No direct dependency and no safe upgrade available.
     "RUSTSEC-2024-0449",
