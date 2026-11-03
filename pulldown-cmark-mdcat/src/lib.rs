@@ -456,6 +456,20 @@ mod tests {
         .unwrap();
     }
 
+    #[test]
+    fn definition_list_in_list_item_does_not_panic() {
+        let output =
+            render_definition_list("- a list item with some text\n  :tada: and the second line\n")
+                .unwrap();
+        assert!(output.contains("a list item with some text"));
+        assert!(output.contains("tada: and the second line"));
+    }
+
+    #[test]
+    fn definition_list_after_text_in_ordered_list_item_does_not_panic() {
+        render_definition_list("1. Term\n   : Description\n\n2. Next\n").unwrap();
+    }
+
     mod layout {
         use super::render_string_dumb;
         use insta::assert_snapshot;

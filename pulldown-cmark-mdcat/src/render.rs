@@ -711,6 +711,14 @@ pub fn write_event<'a, W: Write>(
                 .and_data(data)
                 .ok()
         }
+        (Stacked(stack, Inline(ListItem(kind, _), attrs)), Start(Tag::DefinitionList)) => {
+            writeln!(writer)?;
+            stack
+                .push(Inline(ListItem(kind, ItemBlock), attrs.clone()))
+                .current(Inline(Definition(Term, StartItem), attrs))
+                .and_data(data)
+                .ok()
+        }
         (Stacked(stack, Inline(ListItem(kind, _), attrs)), Start(Table(alignments))) => {
             writeln!(writer)?;
             let current_table = CurrentTable {
