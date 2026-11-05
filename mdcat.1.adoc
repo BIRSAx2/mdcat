@@ -182,6 +182,29 @@ Defaults to `auto`, which detects dark or light mode from the terminal, unless `
     Watch the input file and re-render on every change.
     Requires exactly one FILE argument, and does not work with standard input or `--paginate`.
 
+[[stream-option]]--stream::
+    Render the input block by block as it arrives, instead of after reading all of it, e.g. to follow Markdown while a program writes it.
++
+A block ends at a blank line followed by a line that is not indented, outside of fenced code blocks, HTML blocks which only an end tag or marker closes, e.g. `<pre>` or comments, and frontmatter; indented lines, e.g. another paragraph of a list item, continue the block before.
+mdcat renders each block when the first line of the next block arrives, and the last block at the end of the input.
++
+Frontmatter is part of the first block, and mdcat strips it, or renders it as a table with <<frontmatter-option,`--frontmatter`>>, as without `--stream`.
+If a blank line follows a `---` or `+++` delimiter on the first line of the input, or no closing delimiter follows within 80 lines, mdcat renders the delimiter and the lines after it as Markdown, e.g. as a thematic break, even if a closing delimiter follows later; without `--stream`, mdcat strips all up to that closing delimiter as frontmatter.
++
+mdcat parses each block on its own.
+Thus a reference link or image, e.g. `[text][label]`, `[label][]`, `[label]`, or `![alt][label]`, and a footnote reference, e.g. `[^1]`, only resolve against a definition in the same block; with a definition in an earlier or a later block, they render as literal text.
+Definitions are usually in blocks of their own, e.g. at the end of the input, so most references and footnote references render as literal text with `--stream`; footnote definitions still render as numbered notes.
++
+Also, in a list in which blank lines separate only some items, the items which no blank line separates render without blank lines between them.
++
+Conflicts with `--toc` and `--watch`.
+
+--no-stream::
+    Read all of the input before rendering it.
++
+This is the default, unless the configuration file sets `stream`.
+`--toc` and `--watch` also turn off a `stream` default from the configuration file.
+
 --toc::
     Print a table of contents generated from the document's headings before its content.
 +
@@ -256,6 +279,10 @@ Each key sets the default value for a CLI flag, used only when that flag isn't p
 
 `frontmatter`::
     Default for <<frontmatter-option,`--frontmatter`>>.
+
+`stream`::
+    Default for <<stream-option,`--stream`>>.
+    `--no-stream`, `--toc`, and `--watch` turn it off.
 
 `columns`::
     Default for <<columns-option,`--columns`>>.

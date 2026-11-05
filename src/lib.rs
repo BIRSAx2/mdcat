@@ -12,13 +12,14 @@
 #![deny(warnings, missing_docs, clippy::all)]
 #![forbid(unsafe_code)]
 
+use std::borrow::Cow;
 use std::fs::File;
 use std::io::stdin;
-use std::io::{self, prelude::*, BufWriter};
+use std::io::{self, prelude::*, BufReader, BufWriter, LineWriter};
 use std::path::PathBuf;
 
 use anyhow::{Context, Result};
-use pulldown_cmark::Parser;
+use pulldown_cmark::{Event, Parser};
 use pulldown_cmark_mdcat::resources::{
     DispatchingResourceHandler, FileResourceHandler, ResourceUrlHandler,
 };
@@ -40,6 +41,8 @@ pub mod config;
 pub mod output;
 /// Resource handling for mdca.
 pub mod resources;
+/// Splitting input into blocks, for streaming.
+mod stream;
 /// Table of contents generation.
 pub mod toc;
 
@@ -98,21 +101,44 @@ impl<W: Write> Write for MarginWriter<W> {
 /// If `filename` is `-` read from standard input, otherwise try to open and
 /// read the given file.
 pub fn read_input<T: AsRef<str>>(filename: T) -> Result<(PathBuf, String)> {
-    let cd = std::env::current_dir()?;
+    let (base_dir, mut source) = open_input(filename.as_ref())?;
     let mut buffer = String::new();
+    source.read_to_string(&mut buffer)?;
+    Ok((base_dir, buffer))
+}
 
-    if filename.as_ref() == "-" {
-        stdin().read_to_string(&mut buffer)?;
-        Ok((cd, buffer))
+/// Open input for `filename`, along with the base directory for the input.
+///
+/// If `filename` is `-` open standard input, otherwise try to open the given file.
+fn open_input(filename: &str) -> Result<(PathBuf, Box<dyn BufRead>)> {
+    let cd = std::env::current_dir()?;
+
+    if filename == "-" {
+        Ok((cd, Box::new(stdin().lock())))
     } else {
-        let mut source = File::open(filename.as_ref())?;
-        source.read_to_string(&mut buffer)?;
+        let source = BufReader::new(File::open(filename)?);
         let base_dir = cd
-            .join(filename.as_ref())
+            .join(filename)
             .parent()
             .map(|p| p.to_path_buf())
             .unwrap_or(cd);
-        Ok((base_dir, buffer))
+        Ok((base_dir, Box::new(source)))
+    }
+}
+
+/// Remove frontmatter from the start of `input`.
+///
+/// If `render_frontmatter` is true, put a table of the frontmatter in its place, unless the
+/// frontmatter isn't a flat key-value mapping, or fails to parse (see
+/// [`pulldown_cmark_mdcat::frontmatter_table_markdown`]).
+fn replace_frontmatter(input: &str, render_frontmatter: bool) -> Cow<'_, str> {
+    let (body, frontmatter) = pulldown_cmark_mdcat::split_frontmatter(input);
+    match frontmatter
+        .filter(|_| render_frontmatter)
+        .and_then(|(format, raw)| pulldown_cmark_mdcat::frontmatter_table_markdown(format, raw))
+    {
+        Some(table) => Cow::Owned(format!("{table}\n{body}")),
+        None => Cow::Borrowed(body),
     }
 }
 
@@ -144,6 +170,13 @@ pub struct RenderOptions {
     /// If `Some`, expand literal tabs in the input to spaces using that tab stop width before
     /// parsing (see [`pulldown_cmark_mdcat::expand_tabs`]).
     pub tabs: Option<u16>,
+    /// Render the input block by block as it is read, instead of reading all of it first.
+    ///
+    /// A block ends at a blank line followed by a line that is not indented, outside of fenced
+    /// code blocks and frontmatter.  Reference links and footnotes only resolve against
+    /// definitions in the same block, and `toc` has no effect, as a table of contents needs the
+    /// whole document.
+    pub stream: bool,
 }
 
 /// Process a single file.
@@ -157,25 +190,14 @@ pub fn process_file(
     output: &mut Output,
     render_options: RenderOptions,
 ) -> Result<()> {
+    if render_options.stream {
+        return stream_file(filename, settings, resource_handler, output, render_options);
+    }
     let (base_dir, input) = read_input(filename)?;
-    let (body, frontmatter) = pulldown_cmark_mdcat::split_frontmatter(&input);
-    let with_frontmatter_table;
-    let body: &str = if render_options.frontmatter {
-        match frontmatter
-            .and_then(|(format, raw)| pulldown_cmark_mdcat::frontmatter_table_markdown(format, raw))
-        {
-            Some(table) => {
-                with_frontmatter_table = format!("{table}\n{body}");
-                &with_frontmatter_table
-            }
-            None => body,
-        }
-    } else {
-        body
-    };
+    let body = replace_frontmatter(&input, render_options.frontmatter);
     let input = match render_options.tabs {
-        Some(tab_width) => expand_tabs(body, tab_width),
-        None => std::borrow::Cow::Borrowed(body),
+        Some(tab_width) => expand_tabs(&body, tab_width),
+        None => Cow::Borrowed(body.as_ref()),
     };
     let input = input.as_ref();
     event!(
@@ -205,7 +227,82 @@ pub fn process_file(
         Box::new(parser)
     };
     let env = Environment::for_local_directory(&base_dir)?;
+    let sink = BufWriter::new(output.writer());
+    render_events(
+        parser,
+        settings,
+        &env,
+        resource_handler,
+        sink,
+        render_options.margin,
+    )
+}
 
+/// Process a single file like [`process_file`], but render each block of the input as soon as
+/// it is read.
+fn stream_file(
+    filename: &str,
+    settings: &Settings,
+    resource_handler: &dyn ResourceUrlHandler,
+    output: &mut Output,
+    render_options: RenderOptions,
+) -> Result<()> {
+    let (base_dir, input) = open_input(filename)?;
+    event!(
+        Level::TRACE,
+        "Streaming input, using {} as base directory",
+        base_dir.display()
+    );
+    let options = markdown_options(render_options.smart_punctuation);
+    let mut read_error = None;
+    let events = stream::Blocks::new(input)
+        // Stop at the first read error, but render all blocks before it.
+        .map_while(|block| block.map_err(|error| read_error = Some(error)).ok())
+        .enumerate()
+        .flat_map(|(index, block)| {
+            // Only the start of the input can hold frontmatter, and the first block always holds
+            // all of it.
+            let block = if index == 0 {
+                replace_frontmatter(&block, render_options.frontmatter)
+            } else {
+                Cow::Borrowed(block.as_str())
+            };
+            let block = expand_tabs(&block, render_options.tabs.unwrap_or(0));
+            let parser = Parser::new_ext(&block, options);
+            let events: Box<dyn Iterator<Item = Event>> = if render_options.emoji {
+                Box::new(substitute_emoji(parser))
+            } else {
+                Box::new(parser)
+            };
+            // Take ownership of the events, since the block goes away after this closure.
+            events.map(Event::into_static).collect::<Vec<_>>()
+        });
+    let env = Environment::for_local_directory(&base_dir)?;
+    // Write each line as soon as it is rendered.
+    let sink = LineWriter::new(output.writer());
+    render_events(
+        events,
+        settings,
+        &env,
+        resource_handler,
+        sink,
+        render_options.margin,
+    )?;
+    match read_error {
+        Some(error) => Err(error.into()),
+        None => Ok(()),
+    }
+}
+
+/// Render Markdown `events` to `sink`, with a two-space left margin if `margin` is true.
+fn render_events<'e, W: Write>(
+    events: impl Iterator<Item = Event<'e>>,
+    settings: &Settings,
+    env: &Environment,
+    resource_handler: &dyn ResourceUrlHandler,
+    mut sink: W,
+    margin: bool,
+) -> Result<()> {
     let ignore_broken_pipe = |error: io::Error| {
         if error.kind() == io::ErrorKind::BrokenPipe {
             event!(Level::TRACE, "Ignoring broken pipe");
@@ -216,18 +313,17 @@ pub fn process_file(
         }
     };
 
-    let mut sink = BufWriter::new(output.writer());
     writeln!(sink).or_else(ignore_broken_pipe)?;
-    if render_options.margin {
+    if margin {
         let mut padded = MarginWriter::new(&mut sink);
-        pulldown_cmark_mdcat::push_tty(settings, &env, resource_handler, &mut padded, parser)
+        pulldown_cmark_mdcat::push_tty(settings, env, resource_handler, &mut padded, events)
             .and_then(|_| {
                 event!(Level::TRACE, "Finished rendering, flushing output");
                 padded.flush()
             })
             .or_else(ignore_broken_pipe)?;
     } else {
-        pulldown_cmark_mdcat::push_tty(settings, &env, resource_handler, &mut sink, parser)
+        pulldown_cmark_mdcat::push_tty(settings, env, resource_handler, &mut sink, events)
             .or_else(ignore_broken_pipe)?;
     }
     writeln!(sink).or_else(ignore_broken_pipe)?;

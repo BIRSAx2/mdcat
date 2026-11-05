@@ -347,6 +347,13 @@ fn main() {
     let local_only = args.local_only || defaults.and_then(|d| d.local_only).unwrap_or(false);
     let fail_fast = args.fail_fast || defaults.and_then(|d| d.fail_fast).unwrap_or(false);
     let toc = args.toc;
+    // Like an explicit --no-stream, --toc and --watch turn off a stream default from the config
+    // file, since they conflict with --stream.
+    let stream = args.stream
+        || (!args.no_stream
+            && !args.toc
+            && !args.watch
+            && defaults.and_then(|d| d.stream).unwrap_or(false));
     let image_protocol = match args.image_protocol {
         Some(choice) => Some(choice),
         None => match defaults.and_then(|d| d.image_protocol.as_deref()) {
@@ -368,6 +375,7 @@ fn main() {
         frontmatter,
         toc,
         tabs,
+        stream,
     };
 
     // lessi handles kitty/sixel image escapes without corrupting scrollback (see GH-45),

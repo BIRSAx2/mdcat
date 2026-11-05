@@ -208,6 +208,17 @@ pub struct CommonArgs {
     /// Watch the input file and re-render on change. Requires a single file argument.
     #[arg(short, long)]
     pub watch: bool,
+    /// Render the input block by block as it arrives, instead of after reading all of it, e.g. to
+    /// follow Markdown while a program writes it. A block ends at a blank line followed by a line
+    /// that is not indented, outside of code blocks. Reference links and footnotes only resolve
+    /// against definitions in the same block. Also settable via `defaults.stream` in
+    /// `~/.config/mdcat/config.toml`.
+    #[arg(long, conflicts_with_all = ["toc", "watch"], overrides_with = "no_stream")]
+    pub stream: bool,
+    /// Read all of the input before rendering it (default). Overrides `defaults.stream` in
+    /// `~/.config/mdcat/config.toml`, and an earlier --stream.
+    #[arg(long)]
+    pub no_stream: bool,
     /// Add a two-space left margin to all output. Reduces the effective render width accordingly.
     /// Also settable via `defaults.margin` in `~/.config/mdcat/config.toml`.
     #[arg(long)]
