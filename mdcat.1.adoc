@@ -192,6 +192,7 @@ Frontmatter is part of the first block, and mdcat strips it, or renders it as a 
 If a blank line follows a `---` or `+++` delimiter on the first line of the input, or no closing delimiter follows within 80 lines, mdcat renders the delimiter and the lines after it as Markdown, e.g. as a thematic break, even if a closing delimiter follows later; without `--stream`, mdcat strips all up to that closing delimiter as frontmatter.
 +
 mdcat parses each block on its own, so reference links and footnotes only resolve against definitions in the same block, and list items which blank lines separate render as separate lists.
+Thus in a list in which blank lines separate only some items, the items which no blank line separates render without blank lines between them, whereas without `--stream` all items of such a list have blank lines between them.
 Conflicts with `--toc` and `--watch`.
 
 --no-stream::

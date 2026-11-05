@@ -145,7 +145,9 @@ fn is_blank(line: &str) -> bool {
 ///
 /// Parsed on its own, each block renders almost the same as within the whole input: reference
 /// links and footnotes only resolve against definitions in the same block, and list items which
-/// blank lines separate become separate lists.
+/// blank lines separate become separate lists.  Thus in a list in which blank lines separate only
+/// some items, the items which no blank line separates render as a tight list, i.e. without blank
+/// lines between them, although CommonMark makes the whole list loose.
 pub struct Blocks<R> {
     reader: R,
     /// Lines to process before reading more lines: the first line of the next block, which was
