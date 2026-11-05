@@ -15,6 +15,60 @@ enum Fence {
     Code(char, usize),
     /// Frontmatter of the given format at the start of the input.
     Frontmatter(FrontmatterFormat),
+    /// An HTML block of CommonMark types 1 to 5, e.g. `<pre>` or a comment, which only a line
+    /// with the given end tag or marker closes.
+    Html(&'static str),
+}
+
+/// The tags which open an HTML block of CommonMark type 1, and the end tags which close it.
+const RAW_TAGS: [(&str, &str); 4] = [
+    ("pre", "</pre>"),
+    ("script", "</script>"),
+    ("style", "</style>"),
+    ("textarea", "</textarea>"),
+];
+
+/// The end tag or marker of the HTML block of CommonMark types 1 to 5 which `line` opens, if any.
+///
+/// Like pulldown-cmark, which mdcat parses Markdown with, and unlike CommonMark, only the end tag
+/// in lower case which matches the start tag closes a block of type 1, e.g. neither `</PRE>` nor
+/// `</script>` closes `<pre>`.
+fn html_block_end(line: &str) -> Option<&'static str> {
+    let markers = [("<!--", "-->"), ("<?", "?>"), ("<![CDATA[", "]]>")];
+    if let Some(&(_, end)) = markers.iter().find(|(start, _)| line.starts_with(start)) {
+        return Some(end);
+    }
+    if line.starts_with("<!") && line.as_bytes().get(2).is_some_and(u8::is_ascii_alphabetic) {
+        return Some(">");
+    }
+    let name = line.strip_prefix('<')?;
+    RAW_TAGS.iter().find_map(|&(tag, end)| {
+        let rest = name
+            .get(..tag.len())
+            .filter(|start| start.eq_ignore_ascii_case(tag))
+            .map(|_| &name[tag.len()..])?;
+        matches!(rest.chars().next(), None | Some(' ' | '\t' | '>')).then_some(end)
+    })
+}
+
+/// The fence which `line` opens, if it starts an HTML block of CommonMark types 1 to 5 which does
+/// not end on the same line.
+///
+/// Like CommonMark, only accept up to three spaces of indentation, so that an indented code block
+/// never opens a fence.  This misses HTML blocks inside list items with more indentation, and
+/// after list item and block quote markers; this is safe, because a line which is not indented
+/// after a blank line ends these containers, and thus the HTML blocks in them, too.
+///
+/// A start tag or marker inside an HTML block of type 6 or 7, e.g. `<pre>` inside `<div>`, still
+/// opens a fence.  This only delays rendering, unless the end tag is missing or inside a later
+/// fenced code block.
+fn html_block(line: &str) -> Option<Fence> {
+    let html = line.trim_start_matches(' ');
+    if line.len() - html.len() > 3 {
+        return None;
+    }
+    let end = html_block_end(html)?;
+    (!line.contains(end)).then_some(Fence::Html(end))
 }
 
 /// The fence character, the fence length, and the info string, if `line` is a code fence.
@@ -46,7 +100,8 @@ fn next_fence(fence: Option<Fence>, line: &str, at_start: bool) -> Option<Fence>
         // The info string of a backtick fence cannot contain backticks.
         None => code_fence(line)
             .filter(|&(c, _, info)| c == '~' || !info.contains('`'))
-            .map(|(c, length, _)| Fence::Code(c, length)),
+            .map(|(c, length, _)| Fence::Code(c, length))
+            .or_else(|| html_block(line)),
         Some(Fence::Code(c, length)) => match code_fence(line) {
             Some((closing, closing_length, "")) if closing == c && closing_length >= length => None,
             _ => fence,
@@ -58,6 +113,8 @@ fn next_fence(fence: Option<Fence>, line: &str, at_start: bool) -> Option<Fence>
         }
         Some(Fence::Frontmatter(FrontmatterFormat::Toml)) if delimiter == "+++" => None,
         Some(Fence::Frontmatter(_)) => fence,
+        Some(Fence::Html(end)) if line.contains(end) => None,
+        Some(Fence::Html(_)) => fence,
     }
 }
 
@@ -71,7 +128,8 @@ fn is_blank(line: &str) -> bool {
 /// A block ends at a blank line which is followed by a line that is not indented, since such a
 /// line normally starts a new top-level Markdown block, whereas indented lines continue the
 /// block before, e.g. with another paragraph of a list item.  Blank lines inside fenced code
-/// blocks and inside frontmatter at the start of the input never end a block.
+/// blocks, inside HTML blocks which only an end tag or marker closes, e.g. `<pre>` or comments,
+/// and inside frontmatter at the start of the input never end a block.
 ///
 /// Parsed on its own, each block renders almost the same as within the whole input: reference
 /// links and footnotes only resolve against definitions in the same block, and list items which
@@ -203,6 +261,84 @@ mod tests {
         assert_eq!(
             blocks("```inline``` code\n\nText\n"),
             ["```inline``` code\n\n", "Text\n"]
+        );
+    }
+
+    #[test]
+    fn html_block_continues_after_blank_line() {
+        assert_eq!(
+            blocks("<pre>x\n\ny</pre>\n\nText\n"),
+            ["<pre>x\n\ny</pre>\n\n", "Text\n"]
+        );
+        let html = [
+            "<!--\nhidden\n\nstill hidden\n-->\n\n",
+            "<?php\n\n?>\n\n",
+            "<!DOCTYPE\n\nhtml>\n\n",
+            "<![CDATA[\n\n]]>\n\n",
+            "<script type=\"x\">\n\n</script>\n\n",
+            "<style>\n\n</style>\n\n",
+            "<textarea\n\n</textarea>\n\n",
+        ];
+        for html in html {
+            assert_eq!(blocks(&format!("{html}Text\n")), [html, "Text\n"]);
+        }
+    }
+
+    #[test]
+    fn only_matching_lower_case_end_tag_closes_html_block() {
+        // pulldown-cmark ignores the case of the start tag, but not of the end tag, and only
+        // accepts the end tag which matches the start tag.
+        let html = "<PRE>\na\n\n</PRE>\n\n</Pre>\n\n</script>\n\nb\n</pre>\n\n";
+        assert_eq!(blocks(&format!("{html}Text\n")), [html, "Text\n"]);
+    }
+
+    #[test]
+    fn html_block_can_end_on_its_first_line() {
+        assert_eq!(
+            blocks("<pre>x</pre>\n\n<!-- x -->\n\n<!-->\n\nText\n"),
+            ["<pre>x</pre>\n\n", "<!-- x -->\n\n", "<!-->\n\n", "Text\n"]
+        );
+    }
+
+    #[test]
+    fn html_block_interrupts_paragraph() {
+        let html = "Text\n<!--\na\n\nb\n-->\n\n";
+        assert_eq!(blocks(&format!("{html}Text\n")), [html, "Text\n"]);
+    }
+
+    #[test]
+    fn only_raw_tags_open_html_block() {
+        // A tag which only starts with a raw tag name, and HTML blocks of types 6 and 7, end at a
+        // blank line.
+        assert_eq!(
+            blocks("<prelude>\n\n<div>\na\n\nb\n</div>\n"),
+            ["<prelude>\n\n", "<div>\na\n\n", "b\n</div>\n"]
+        );
+    }
+
+    #[test]
+    fn indented_code_does_not_open_html_block() {
+        assert_eq!(
+            blocks("    <pre>\n\nText\n\n\t<!--\n\nText\n"),
+            ["    <pre>\n\n", "Text\n\n\t<!--\n\n", "Text\n"]
+        );
+        let html = "   <pre>\n\n</pre>\n\n";
+        assert_eq!(blocks(&format!("{html}Text\n")), [html, "Text\n"]);
+    }
+
+    #[test]
+    fn code_block_does_not_open_html_block() {
+        assert_eq!(
+            blocks("```\n<pre>\n```\n\nText\n"),
+            ["```\n<pre>\n```\n\n", "Text\n"]
+        );
+    }
+
+    #[test]
+    fn html_block_does_not_open_code_block() {
+        assert_eq!(
+            blocks("<!--\n```\n-->\n\nText\n"),
+            ["<!--\n```\n-->\n\n", "Text\n"]
         );
     }
 

@@ -185,7 +185,7 @@ Defaults to `auto`, which detects dark or light mode from the terminal, unless `
 [[stream-option]]--stream::
     Render the input block by block as it arrives, instead of after reading all of it, e.g. to follow Markdown while a program writes it.
 +
-A block ends at a blank line followed by a line that is not indented, outside of fenced code blocks and frontmatter; indented lines, e.g. another paragraph of a list item, continue the block before.
+A block ends at a blank line followed by a line that is not indented, outside of fenced code blocks, HTML blocks which only an end tag or marker closes, e.g. `<pre>` or comments, and frontmatter; indented lines, e.g. another paragraph of a list item, continue the block before.
 mdcat renders each block when the first line of the next block arrives, and the last block at the end of the input.
 +
 Frontmatter is part of the first block, and mdcat strips it, or renders it as a table with <<frontmatter-option,`--frontmatter`>>, as without `--stream`.
