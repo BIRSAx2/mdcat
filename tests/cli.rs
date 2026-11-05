@@ -517,6 +517,13 @@ mod cli {
             "---\ntitle: My Post\n\ndraft: false\n---\n# Hello\n\nText\n",
             "\u{feff}--- \ntitle: My Post\n\ndraft: false\n...\t\n\n# Hello\n\nText\n",
             "+++\ntitle = \"My Post\"\n\ndraft = false\n+++\n\n# Hello\n\nText\n",
+            // The longest frontmatter, with the closing delimiter on line 80.
+            &format!(
+                "---\ntitle: My Post\n{}---\n# Hello\n\nText\n",
+                (1..=77)
+                    .map(|n| format!("key{n}: {n}\n"))
+                    .collect::<String>()
+            ),
         ];
         for markdown in documents {
             let stripped = render_stdin(markdown, &[]);
@@ -530,6 +537,32 @@ mod cli {
                 table
             );
         }
+    }
+
+    #[test]
+    fn stream_renders_leading_thematic_break_like_whole_input() {
+        let markdown = "---\n\n# Title\n\nText\n";
+        let rendered = render_stdin(markdown, &[]);
+        assert!(rendered.contains("Title"), "{rendered:?}");
+        similar_asserts::assert_eq!(render_stdin(markdown, &["--stream"]), rendered);
+    }
+
+    #[test]
+    fn stream_renders_leading_thematic_break_before_later_delimiter() {
+        // Without --stream, all up to the second thematic break is frontmatter, which mdcat
+        // strips.  With --stream, the blank line after the first thematic break shows that it does
+        // not open frontmatter, before the input which follows is read.
+        let markdown = "---\n\nText\n\n---\n\nMore\n";
+        let whole = render_stdin(markdown, &[]);
+        assert!(
+            !whole.contains("Text") && whole.contains("More"),
+            "{whole:?}"
+        );
+        let streamed = render_stdin(markdown, &["--stream"]);
+        assert!(
+            streamed.contains("Text") && streamed.contains("More"),
+            "{streamed:?}"
+        );
     }
 
     #[test]

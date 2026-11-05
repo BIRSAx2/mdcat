@@ -4,7 +4,8 @@
 
 //! Split Markdown input into blocks, to render each block as soon as it is read.
 
-use std::io::{BufRead, Result};
+use std::collections::VecDeque;
+use std::io::{BufRead, Error, Result};
 
 use pulldown_cmark_mdcat::FrontmatterFormat;
 
@@ -118,6 +119,13 @@ fn next_fence(fence: Option<Fence>, line: &str, at_start: bool) -> Option<Fence>
     }
 }
 
+/// The maximum number of lines of frontmatter, including its delimiters.
+///
+/// If no closing delimiter follows the opening delimiter within this many lines, the input does
+/// not start with frontmatter, but e.g. with a thematic break, and a block can end before the
+/// whole input was read.
+const FRONTMATTER_MAX_LINES: usize = 80;
+
 /// Whether `line` is blank, i.e. contains only spaces and tabs.
 fn is_blank(line: &str) -> bool {
     line.trim_matches([' ', '\t', '\r', '\n']).is_empty()
@@ -131,14 +139,20 @@ fn is_blank(line: &str) -> bool {
 /// blocks, inside HTML blocks which only an end tag or marker closes, e.g. `<pre>` or comments,
 /// and inside frontmatter at the start of the input never end a block.
 ///
+/// An opening frontmatter delimiter which a blank line follows, or which no closing delimiter
+/// follows within [`FRONTMATTER_MAX_LINES`] lines, does not open frontmatter, but e.g. a thematic
+/// break, even if a closing delimiter follows later.
+///
 /// Parsed on its own, each block renders almost the same as within the whole input: reference
 /// links and footnotes only resolve against definitions in the same block, and list items which
 /// blank lines separate become separate lists.
 pub struct Blocks<R> {
     reader: R,
-    /// The first line of the next block, or the error from reading it, which was read to find
-    /// the end of the current block.
-    next_line: Option<Result<String>>,
+    /// Lines to process before reading more lines: the first line of the next block, which was
+    /// read to find the end of the current block, or the lines of frontmatter which did not close.
+    pending: VecDeque<String>,
+    /// The error from reading the line after the pending lines.
+    error: Option<Error>,
     /// Whether no line was read yet, i.e. whether frontmatter can begin.
     at_start: bool,
 }
@@ -148,13 +162,20 @@ impl<R: BufRead> Blocks<R> {
     pub fn new(reader: R) -> Self {
         Self {
             reader,
-            next_line: None,
+            pending: VecDeque::new(),
+            error: None,
             at_start: true,
         }
     }
 
-    /// Read the next line, which is empty at the end of the input.
-    fn read_line(&mut self) -> Result<String> {
+    /// The next pending line, or else the next line read, which is empty at the end of the input.
+    fn next_line(&mut self) -> Result<String> {
+        if let Some(line) = self.pending.pop_front() {
+            return Ok(line);
+        }
+        if let Some(error) = self.error.take() {
+            return Err(error);
+        }
         let mut line = String::new();
         self.reader.read_line(&mut line)?;
         Ok(line)
@@ -166,14 +187,15 @@ impl<R: BufRead> Iterator for Blocks<R> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut block = String::new();
+        let mut lines = 0;
         let mut fence = None;
         let mut after_blank_line = false;
         loop {
-            let line = match self.next_line.take().unwrap_or_else(|| self.read_line()) {
+            let line = match self.next_line() {
                 Ok(line) => line,
                 // Return what was read before the error first.
                 Err(error) if !block.is_empty() => {
-                    self.next_line = Some(Err(error));
+                    self.error = Some(error);
                     return Some(Ok(block));
                 }
                 Err(error) => return Some(Err(error)),
@@ -186,13 +208,28 @@ impl<R: BufRead> Iterator for Blocks<R> {
                 && !is_blank(&line)
                 && !line.starts_with([' ', '\t'])
             {
-                self.next_line = Some(Ok(line));
+                self.pending.push_front(line);
                 return Some(Ok(block));
             }
             fence = next_fence(fence, &line, self.at_start);
             self.at_start = false;
             after_blank_line = is_blank(&line);
             block.push_str(&line);
+            lines += 1;
+            if matches!(fence, Some(Fence::Frontmatter(_)))
+                && ((lines == 2 && after_blank_line) || lines == FRONTMATTER_MAX_LINES)
+            {
+                // This is no frontmatter, so split its lines into blocks like any other lines.
+                // Since `at_start` is false now, the opening delimiter does not open frontmatter
+                // again.
+                for line in block.split_inclusive('\n').rev() {
+                    self.pending.push_front(line.to_owned());
+                }
+                block.clear();
+                lines = 0;
+                fence = None;
+                after_blank_line = false;
+            }
         }
     }
 }
@@ -369,6 +406,49 @@ mod tests {
             blocks(&format!("{frontmatter}Text\r\n")),
             [frontmatter, "Text\r\n"]
         );
+    }
+
+    #[test]
+    fn blank_line_after_opening_delimiter_ends_frontmatter() {
+        assert_eq!(
+            blocks("---\n\nText\n\nMore\n"),
+            ["---\n\n", "Text\n\n", "More\n"]
+        );
+    }
+
+    #[test]
+    fn frontmatter_has_at_most_80_lines() {
+        let body = "a: 1\n\n".repeat(39);
+        // The closing delimiter on line 80 closes frontmatter.
+        let frontmatter = format!("---\n{body}---\n\n");
+        assert_eq!(
+            blocks(&format!("{frontmatter}Text\n")),
+            [frontmatter.as_str(), "Text\n"]
+        );
+        // The closing delimiter on line 81 does not, so the lines split into blocks.
+        let mut expected = vec!["---\na: 1\n\n"];
+        expected.extend(["a: 1\n\n"; 38]);
+        expected.push("b: 2\n---\n");
+        assert_eq!(blocks(&format!("---\n{body}b: 2\n---\n")), expected);
+    }
+
+    #[test]
+    fn unclosed_frontmatter_renders_before_input_ends() {
+        let mut input = format!("---\n{}", "x\n\n".repeat(40)).into_bytes();
+        input.extend(b"Invalid \xff\n");
+        let mut blocks = Blocks::new(&input[..]);
+        assert_eq!(blocks.next().unwrap().unwrap(), "---\nx\n\n");
+    }
+
+    #[test]
+    fn fences_continue_after_frontmatter_ends() {
+        assert_eq!(
+            blocks("---\n\n```\na\n\nb\n```\n\nText\n"),
+            ["---\n\n", "```\na\n\nb\n```\n\n", "Text\n"]
+        );
+        // A code block from line 2 to beyond line 80.
+        let code = format!("---\n```\n{}d\n```\n\n", "c\n\n".repeat(39));
+        assert_eq!(blocks(&format!("{code}Text\n")), [code.as_str(), "Text\n"]);
     }
 
     #[test]
