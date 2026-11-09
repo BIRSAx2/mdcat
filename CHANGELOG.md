@@ -8,6 +8,10 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+### Added
+- Release binaries for macOS on Apple Silicon (`aarch64-apple-darwin`). They only need
+  libraries that are part of macOS, not from Homebrew.
+
 ## [2.20.0] – 2026-11-10
 
 ### Added
