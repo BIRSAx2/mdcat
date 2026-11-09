@@ -188,10 +188,84 @@ mod implementation {
 
     static FONTS: OnceLock<Arc<fontdb::Database>> = OnceLock::new();
 
+    const SANS_SERIF_FALLBACKS: &[&str] = &[
+        "Helvetica",
+        "Liberation Sans",
+        "Arimo",
+        "DejaVu Sans",
+        "Noto Sans",
+        "Cantarell",
+        "Ubuntu",
+        "Roboto",
+        "Segoe UI",
+        "Verdana",
+    ];
+    const SERIF_FALLBACKS: &[&str] = &[
+        "Georgia",
+        "Liberation Serif",
+        "Tinos",
+        "DejaVu Serif",
+        "Noto Serif",
+    ];
+    const MONOSPACE_FALLBACKS: &[&str] = &[
+        "Menlo",
+        "Consolas",
+        "Liberation Mono",
+        "Cousine",
+        "DejaVu Sans Mono",
+        "Noto Sans Mono",
+    ];
+
+    /// The installed family to use for `generic`, if fontdb's default for it isn't installed.
+    ///
+    /// fontdb defaults to Arial, Times New Roman, and Courier New, which aren't installed on most
+    /// Linux systems.  Text in a generic family which resolves to no font is dropped from the
+    /// rendered image.
+    fn replacement_family(
+        db: &fontdb::Database,
+        generic: fontdb::Family,
+        fallbacks: &[&str],
+    ) -> Option<String> {
+        let resolves = |family| {
+            let query = fontdb::Query {
+                families: &[family],
+                ..Default::default()
+            };
+            db.query(&query).is_some()
+        };
+        if resolves(generic) {
+            return None;
+        }
+        fallbacks
+            .iter()
+            .find(|name| resolves(fontdb::Family::Name(name)))
+            .map(|name| (*name).to_owned())
+            .or_else(|| {
+                db.faces()
+                    .find_map(|face| face.families.first().map(|(name, _)| name.clone()))
+            })
+    }
+
+    fn configure_generic_families(db: &mut fontdb::Database) {
+        if let Some(family) =
+            replacement_family(db, fontdb::Family::SansSerif, SANS_SERIF_FALLBACKS)
+        {
+            db.set_sans_serif_family(family);
+        }
+        if let Some(family) = replacement_family(db, fontdb::Family::Serif, SERIF_FALLBACKS) {
+            db.set_serif_family(family);
+        }
+        if let Some(family) = replacement_family(db, fontdb::Family::Monospace, MONOSPACE_FALLBACKS)
+        {
+            db.set_monospace_family(family);
+        }
+    }
+
     fn parse_svg(svg: &[u8]) -> Result<Tree, RenderSvgError> {
         let fonts = FONTS.get_or_init(|| {
             let mut fontdb = fontdb::Database::new();
             fontdb.load_system_fonts();
+            configure_generic_families(&mut fontdb);
             Arc::new(fontdb)
         });
         let options = usvg::Options {
@@ -230,6 +304,52 @@ mod implementation {
     pub fn native_size(svg: &[u8]) -> Option<(u32, u32)> {
         let size = parse_svg(svg).ok()?.size().to_int_size();
         Some((size.width(), size.height()))
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        fn resolves(db: &fontdb::Database, family: fontdb::Family) -> bool {
+            let query = fontdb::Query {
+                families: &[family],
+                ..Default::default()
+            };
+            db.query(&query).is_some()
+        }
+
+        #[test]
+        fn generic_families_resolve_when_defaults_are_not_installed() {
+            let mut db = fontdb::Database::new();
+            db.load_system_fonts();
+            db.set_sans_serif_family("No Such Sans");
+            db.set_serif_family("No Such Serif");
+            db.set_monospace_family("No Such Mono");
+
+            configure_generic_families(&mut db);
+
+            assert!(resolves(&db, fontdb::Family::SansSerif));
+            assert!(resolves(&db, fontdb::Family::Serif));
+            assert!(resolves(&db, fontdb::Family::Monospace));
+        }
+
+        #[test]
+        fn installed_default_family_is_kept() {
+            let mut db = fontdb::Database::new();
+            db.load_system_fonts();
+            let Some(family) = db
+                .faces()
+                .find_map(|face| face.families.first().map(|(name, _)| name.clone()))
+            else {
+                return;
+            };
+            db.set_sans_serif_family(family);
+
+            assert_eq!(
+                replacement_family(&db, fontdb::Family::SansSerif, SANS_SERIF_FALLBACKS),
+                None
+            );
+        }
     }
 }
 
