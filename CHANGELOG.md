@@ -8,6 +8,10 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+### Fixed
+- The man page in the release archives is the file `mdcat.1` again, not a directory
+  `mdcat.1/` with the man page in it (since 2.6.1).
+
 ## [2.20.0] – 2026-11-10
 
 ### Added
