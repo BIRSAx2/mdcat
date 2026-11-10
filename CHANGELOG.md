@@ -17,6 +17,11 @@ Use `cargo release` to create a new release.
   and footnotes only resolve against definitions in the same block, and otherwise render as
   literal text. `--no-stream`, `--toc`, and `--watch` turn off `defaults.stream`.
 
+### Fixed
+- No longer panics on a definition list inside a list item (see [#58]).
+- SVG images that name a generic font family (e.g. `sans-serif` or `monospace`) now fall back to
+  an installed font instead of rendering their text without a font (see [#60]).
+
 ## [2.19.0] – 2026-10-19
 
 ### Added
@@ -98,6 +103,8 @@ Use `cargo release` to create a new release.
 [#53]: https://github.com/BIRSAx2/mdcat/issues/53
 [#55]: https://github.com/BIRSAx2/mdcat/issues/55
 [#56]: https://github.com/BIRSAx2/mdcat/issues/56
+[#58]: https://github.com/BIRSAx2/mdcat/issues/58
+[#60]: https://github.com/BIRSAx2/mdcat/issues/60
 
 ## [2.15.0] – 2026-08-03
 
