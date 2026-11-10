@@ -8,6 +8,8 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+## [2.20.0] – 2026-11-10
+
 ### Added
 - `--stream`/`defaults.stream` in `~/.config/mdcat/config.toml` renders the input block by block
   as it arrives, instead of after reading all of it, e.g. to follow Markdown while a program
@@ -1147,7 +1149,8 @@ Use `cargo release` to create a new release.
 - Support ordered and unordered lists, with nest.
 - Show links, with references grouped by section.
 
-[Unreleased]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.19.0...HEAD
+[Unreleased]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.20.0...HEAD
+[2.20.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.19.0...mdcat-2.20.0
 [2.19.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.18.0...mdcat-2.19.0
 [2.18.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.17.0...mdcat-2.18.0
 [2.17.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.16.1...mdcat-2.17.0
