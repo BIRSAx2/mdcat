@@ -27,12 +27,14 @@ jobs:
       attestations: write
     strategy:
       matrix:
-        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest]
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, windows-latest]
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
           - os: ubuntu-24.04-arm
             target: aarch64-unknown-linux-gnu
+          - os: macos-latest
+            target: aarch64-apple-darwin
           - os: windows-latest
             target: x86_64-pc-windows-msvc
     steps:
@@ -44,9 +46,31 @@ jobs:
         with:
           path: ./artifacts
       - run: mv artifacts/mdcat.1 .
+      # The curl crate links OpenSSL on macOS too, but calls no OpenSSL function there, as it uses
+      # the libcurl of macOS.  The OpenSSL from Homebrew on the runner is not on other Macs, so
+      # link it statically, which puts no OpenSSL code into the binary.
+      - run: echo 'OPENSSL_STATIC=1' >>"${GITHUB_ENV}"
+        if: ${{ contains(matrix.target, 'apple') }}
       - run: cargo build --locked --target '${{ matrix.target }}' --release
       - run: strip 'target/${{ matrix.target }}/release/mdcat'
         if: ${{ !contains(matrix.target, 'windows') }}
+      # macOS on Apple Silicon only runs signed binaries.  Current Apple strip keeps the ad-hoc
+      # signature of the linker valid; sign again anyway, so that a runner image with a strip
+      # that does not keep it still makes a binary that runs.  Then verify the signature, and
+      # check that the binary only links libraries which are part of macOS.
+      - name: Sign and check macOS binary
+        if: ${{ contains(matrix.target, 'apple') }}
+        shell: bash
+        run: |
+          bin='target/${{ matrix.target }}/release/mdcat'
+          codesign --force --sign - "${bin}"
+          codesign --verify --verbose "${bin}"
+          otool -L "${bin}"
+          if otool -L "${bin}" | tail -n +2 | grep -Ev '^[[:space:]]+(/usr/lib/|/System/Library/)'; then
+            echo '::error::mdcat links libraries which are not part of macOS'
+            exit 1
+          fi
+          "${bin}" --version
       - id: version
         shell: bash
         run: |

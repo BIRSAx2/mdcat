@@ -150,6 +150,7 @@ $ ln -s "$(command -v mdcat)" ~/.local/bin/mdpick
 
 - [Release binaries](https://github.com/BIRSAx2/mdcat/releases/) built on Github Actions.
   - These binaries are built from Git source on Github Actions; you find provenance attestations at <https://github.com/BIRSAx2/mdcat/attestations>.
+  - The macOS binary is ad-hoc signed, but not notarized, so macOS blocks it if you download it with a browser. Download it with `curl`, or remove the quarantine attribute with `xattr -d com.apple.quarantine mdcat`.
 - Package managers — `mdcat` is available from several package managers:
 
   | Package manager | Command |
