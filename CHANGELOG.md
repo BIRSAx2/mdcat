@@ -13,6 +13,9 @@ Use `cargo release` to create a new release.
   binary was built on Ubuntu 26.04 (the new `ubuntu-latest`), whose compiler emitted AVX
   instructions for the bundled curl. Release binaries are now built on Ubuntu 24.04 again (see
   [#63]).
+- The man page in the release archives is now the file `mdcat.1`, not a directory `mdcat.1/` with
+  the man page in it, as it was since 2.6.1. Packagers that read `mdcat.1/mdcat.1` from the archive
+  need to read `mdcat.1` instead.
 
 ## [2.20.0] – 2026-11-10
 
