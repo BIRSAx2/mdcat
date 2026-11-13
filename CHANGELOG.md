@@ -9,8 +9,13 @@ Use `cargo release` to create a new release.
 ## [Unreleased]
 
 ### Fixed
-- The man page in the release archives is the file `mdcat.1` again, not a directory
-  `mdcat.1/` with the man page in it (since 2.6.1).
+- The x86_64 Linux release binary crashed with `Illegal instruction` on CPUs without AVX. The 2.20.0
+  binary was built on Ubuntu 26.04 (the new `ubuntu-latest`), whose compiler emitted AVX
+  instructions for the bundled curl. Release binaries are now built on Ubuntu 24.04 again (see
+  [#63]).
+- The man page in the release archives is now the file `mdcat.1`, not a directory `mdcat.1/` with
+  the man page in it, as it was since 2.6.1. Packagers that read `mdcat.1/mdcat.1` from the archive
+  need to read `mdcat.1` instead.
 
 ## [2.20.0] – 2026-11-10
 
@@ -111,6 +116,7 @@ Use `cargo release` to create a new release.
 [#56]: https://github.com/BIRSAx2/mdcat/issues/56
 [#58]: https://github.com/BIRSAx2/mdcat/issues/58
 [#60]: https://github.com/BIRSAx2/mdcat/issues/60
+[#63]: https://github.com/BIRSAx2/mdcat/issues/63
 
 ## [2.15.0] – 2026-08-03
 
