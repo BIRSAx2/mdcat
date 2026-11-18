@@ -65,7 +65,7 @@ Once a file is selected, `mdpick` renders it exactly as `mdless` would, paginati
 
 === Image support
 
-In iTerm2, kitty, WezTerm, and Ghostty mdcat prints inline images.
+In iTerm2, kitty, WezTerm, Ghostty, and Rex mdcat prints inline images.
 mdcat supports most standard pixel formats by default.
 
 On `foot` and `xterm` mdcat also prints images via the Sixel protocol.
@@ -97,7 +97,7 @@ Mermaid.
 
 === SVG support
 
-In iTerm2, kitty, WezTerm, and Ghostty mdcat renders SVG images into pixel graphics using the https://github.com/RazrFalcon/resvg[resvg] library.
+In iTerm2, kitty, WezTerm, Ghostty, and Rex mdcat renders SVG images into pixel graphics using the https://github.com/RazrFalcon/resvg[resvg] library.
 Currently this library only supports SVG 1, and only the static subset thereof; see https://github.com/RazrFalcon/resvg#svg-support[SVG support] for details.
 While this is sufficient for most simple SVG images, complex SVG images may fail to render or render incompletely.
 
@@ -348,6 +348,7 @@ It understands the following values.
     * `wezterm`: WezTerm.  Note that WezTerm sets `$TERM` to `xterm-256color` by default, and only uses `wezterm` for `$TERM` if explicitly configured to do so.
     * `xterm-kitty`: kitty
     * `xterm-ghostty`: Ghostty
+    * `xterm-rex`: Rex
 +
 For all other values `mdcat` proceeds to check `$TERM_PROGRAM`.
 
@@ -359,6 +360,7 @@ TERM_PROGRAM::
     * `WezTerm`: WezTerm
     * `vscode`: VSCode integrated terminal.
     * `ghostty`: Ghostty
+    * `rex`: Rex
 +
 For all other values `mdcat` ends terminal detection and assumes that the terminal is only capable of standard ANSI formatting.
 
@@ -427,6 +429,7 @@ https://iterm2.com/documentation-escape-codes.html[Marks].
 * https://github.com/kovidgoyal/kitty[kitty]: Inline images (https://sw.kovidgoyal.net/kitty/graphics-protocol.html[kitty Graphics protocol]).
 * https://wezfurlong.org/wezterm/[WezTerm]: Inline images (kitty graphics protocol, see above).
 * https://mitchellh.com/ghostty[Ghostty]: Inline images (kitty graphics protocol, see above).
+* https://superlogical.com[Rex]: Inline images (kitty graphics protocol, see above).
 
 == Bugs
 

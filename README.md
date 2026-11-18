@@ -49,6 +49,7 @@ Then it
 | [WezTerm]                              |      ✓       |          ✓          |   ✓²   |  ✓³   |            |
 | [VSCode]                               |      ✓       |          ✓          |        |  ✓³   |            |
 | [Ghostty]                              |      ✓       |          ✓          |   ✓²   |  ✓³   |            |
+| [Rex]                                  |      ✓       |          ✓          |   ✓²   |  ✓³   |            |
 | [foot]⁴                                |      ✓       |          ✓          |   ✓²   | ✓³‧⁵  |            |
 | [xterm]⁴                               |      ✓       |          ✓          |   ✓²   | ✓³‧⁵  |            |
 
@@ -79,6 +80,7 @@ Not supported:
 [SVG support]: https://github.com/RazrFalcon/resvg#svg-support
 [VSCode]: https://code.visualstudio.com/
 [Ghostty]: https://mitchellh.com/ghostty
+[Rex]: https://superlogical.com
 [foot]: https://codeberg.org/dnkl/foot
 [xterm]: https://invisible-island.net/xterm/xterm.html
 [fzf]: https://github.com/junegunn/fzf
