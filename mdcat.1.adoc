@@ -326,7 +326,7 @@ Each entry is a table with any of:
     * `fg`: foreground colour.
     * `bg`: background colour.
     * `modifiers`: a list of `bold`, `dimmed`, `italic`, `underline`, `blink`, `invert`, `hidden`, `strikethrough`.
-    * `text`: for `h2`-`h6`, the marker written before the heading text (default `━━ `, `── `, `┄ `, `╌ `, `· `); for `alert_note`-`alert_caution`, the icon and label written for that alert (default `ℹ NOTE`, `◆ TIP`, `★ IMPORTANT`, `⚠ WARNING`, `✖ CAUTION`). Ignored for other style names.
+    * `text`: for `h1_text` and `h2`-`h6`, the marker written before the heading text (default none, `━━ `, `── `, `┄ `, `╌ `, `· `; the H1 marker follows the heading's one-column padding and is drawn in the `h1_text` style); for `alert_note`-`alert_caution`, the icon and label written for that alert (default `ℹ NOTE`, `◆ TIP`, `★ IMPORTANT`, `⚠ WARNING`, `✖ CAUTION`). Ignored for other style names.
 +
 A colour value is a `#rrggbb` hex code, an ANSI colour name (`black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `white`, or the `bright-` prefixed variant of any of these), or a name defined in `[theme.palette]`.
 +

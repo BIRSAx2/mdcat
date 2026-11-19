@@ -386,6 +386,9 @@ pub fn write_start_heading<W: Write>(
         HeadingLevel::H1 => {
             writeln!(writer)?;
             write_styled(writer, capabilities, &theme.h1_prefix_style, " ")?;
+            if !theme.h1_marker.is_empty() {
+                write_styled(writer, capabilities, &theme.h1_text_style, &theme.h1_marker)?;
+            }
             theme.h1_text_style
         }
         HeadingLevel::H2 => {

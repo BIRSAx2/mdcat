@@ -244,6 +244,31 @@ fn emoji_shortcode_renders_when_enabled_but_not_in_code() {
 }
 
 #[test]
+fn h1_marker_is_written_before_the_heading_text() {
+    let render_h1 = |theme: Theme| {
+        let settings = Settings {
+            terminal_capabilities: TerminalProgram::Dumb.capabilities(),
+            terminal_size: TerminalSize::default(),
+            theme,
+            syntax_set: syntax_set(),
+            syntax_theme: None,
+        };
+        let cwd = std::env::current_dir().expect("Require working directory");
+        render_markdown_to_string("# Title\n", &cwd, &settings)
+    };
+
+    let with_marker = render_h1(Theme {
+        h1_marker: "⣿⣿⣿ ".to_string(),
+        ..Theme::default()
+    });
+    assert!(with_marker.contains(" ⣿⣿⣿ Title "), "{with_marker:?}");
+
+    let without_marker = render_h1(Theme::default());
+    assert!(without_marker.contains(" Title "), "{without_marker:?}");
+    assert!(!without_marker.contains('⣿'));
+}
+
+#[test]
 fn inline_math_kitty_placement_does_not_move_cursor() {
     let settings = Settings {
         terminal_capabilities: TerminalProgram::Kitty.capabilities(),

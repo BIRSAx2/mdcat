@@ -11,6 +11,8 @@ Use `cargo release` to create a new release.
 ### Added
 - Detect the Rex terminal (`$TERM_PROGRAM` is `rex`, or `$TERM` is `xterm-rex`) and show images
   inline in it with the kitty graphics protocol, as in Ghostty.
+- `text` in the `h1_text` style of `[theme.styles]` sets the marker written before H1 headings,
+  like it does for `h2` to `h6` (see [#65](https://github.com/BIRSAx2/mdcat/issues/65)).
 
 ## [2.20.1] – 2026-11-13
 

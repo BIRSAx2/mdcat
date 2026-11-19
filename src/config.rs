@@ -288,6 +288,9 @@ pub fn apply_theme(config: &ThemeConfig, base: Theme) -> Result<Theme> {
             "h1_text" => {
                 let style = resolve(theme.h1_text_style)?;
                 theme = theme.with_h1(style);
+                if let Some(text) = &style_config.text {
+                    theme.h1_marker = text.clone();
+                }
             }
             other => bail!(
                 "Unknown style {other:?} in config file; see the mdcat manpage for valid names"
@@ -442,6 +445,28 @@ mod tests {
         assert_eq!(theme.h2_marker, "» ");
         // Other markers are untouched.
         assert_eq!(theme.h3_marker, "── ");
+    }
+
+    #[test]
+    fn overrides_h1_marker_text() {
+        let toml = r##"
+            [styles]
+            h1_text = { fg = "bright-white", text = "⣿⣿⣿ " }
+        "##;
+        let config: ThemeConfig = toml::from_str(toml).unwrap();
+        let theme = apply_theme(&config, Theme::dark()).unwrap();
+        assert_eq!(theme.h1_marker, "⣿⣿⣿ ");
+    }
+
+    #[test]
+    fn h1_without_text_leaves_marker_at_default() {
+        let toml = r##"
+            [styles]
+            h1_text = { fg = "bright-white" }
+        "##;
+        let config: ThemeConfig = toml::from_str(toml).unwrap();
+        let theme = apply_theme(&config, Theme::dark()).unwrap();
+        assert_eq!(theme.h1_marker, "");
     }
 
     #[test]

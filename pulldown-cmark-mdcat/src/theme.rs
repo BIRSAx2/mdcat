@@ -114,6 +114,9 @@ pub struct Theme {
     pub h1_prefix_style: Style,
     /// Style for H1 heading text (fg + bg color).
     pub h1_text_style: Style,
+    /// Marker written before H1 heading text, after the background-colored padding space, in
+    /// `h1_text_style` (default empty).
+    pub h1_marker: String,
 }
 
 impl Theme {
@@ -237,6 +240,7 @@ impl Theme {
             alert_caution_label,
             h1_prefix_style,
             h1_text_style,
+            h1_marker: String::new(),
         }
     }
 
@@ -304,6 +308,7 @@ impl Theme {
             alert_caution_label,
             h1_prefix_style,
             h1_text_style,
+            h1_marker: String::new(),
         }
     }
 
@@ -357,6 +362,7 @@ impl Theme {
             alert_caution_label,
             h1_prefix_style,
             h1_text_style,
+            h1_marker: String::new(),
         }
     }
 
@@ -410,6 +416,7 @@ impl Theme {
             alert_caution_label,
             h1_prefix_style,
             h1_text_style,
+            h1_marker: String::new(),
         }
     }
 
@@ -463,6 +470,7 @@ impl Theme {
             alert_caution_label,
             h1_prefix_style,
             h1_text_style,
+            h1_marker: String::new(),
         }
     }
 
@@ -516,6 +524,7 @@ impl Theme {
             alert_caution_label,
             h1_prefix_style,
             h1_text_style,
+            h1_marker: String::new(),
         }
     }
 
@@ -569,6 +578,7 @@ impl Theme {
             alert_caution_label,
             h1_prefix_style,
             h1_text_style,
+            h1_marker: String::new(),
         }
     }
 
@@ -622,6 +632,7 @@ impl Theme {
             alert_caution_label,
             h1_prefix_style,
             h1_text_style,
+            h1_marker: String::new(),
         }
     }
 
@@ -675,6 +686,7 @@ impl Theme {
             alert_caution_label,
             h1_prefix_style,
             h1_text_style,
+            h1_marker: String::new(),
         }
     }
 
@@ -686,6 +698,7 @@ impl Theme {
             mermaid_palette: MermaidPalette::Generic,
             h1_prefix_style,
             h1_text_style,
+            h1_marker: String::new(),
             ..Self::solarized_dark()
         }
     }
