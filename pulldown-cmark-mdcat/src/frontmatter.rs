@@ -74,10 +74,7 @@ pub fn frontmatter_table_markdown(format: FrontmatterFormat, raw: &str) -> Optio
                 .collect()
         }
         FrontmatterFormat::Toml => {
-            let value: toml::Value = raw.parse().ok()?;
-            let toml::Value::Table(table) = value else {
-                return None;
-            };
+            let table: toml::Table = raw.parse().ok()?;
             table
                 .into_iter()
                 .map(|(key, value)| (key, toml_value_to_string(&value)))

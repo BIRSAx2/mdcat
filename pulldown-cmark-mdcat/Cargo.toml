@@ -26,7 +26,7 @@ name = "ratatui"
 required-features = ["ratatui-demo"]
 
 [dependencies]
-base64 = { version = "0.22.1", default-features = false, features = ["std"] }
+base64 = { version = "0.23.1", default-features = false, features = ["std"] }
 anstyle = { version = "1.0.7", default-features = false }
 mime = { workspace = true }
 pulldown-cmark = { workspace = true }
@@ -34,7 +34,7 @@ syntect = { workspace = true, features = ["parsing", "regex-fancy"] }
 textwrap = { version = "0.16.1", default-features = false, features = ["unicode-linebreak", "unicode-width"] }
 tracing = { workspace = true }
 url = { workspace = true }
-gethostname = "0.5.0"
+gethostname = "1.1.0"
 
 # Optional for svg support
 resvg = { version = "0.43.0", optional = true, default-features = false, features = ["text", "system-fonts", "memmap-fonts"] }
@@ -47,7 +47,7 @@ ratex-parser = "0.1.11"
 ratex-layout = "0.1.11"
 ratex-render = { version = "0.1.11", features = ["embed-fonts"] }
 ratex-types = "0.1.11"
-icy_sixel = { version = "0.5.0", optional = true }
+icy_sixel = { version = "0.7.0", optional = true }
 xterm-query = { version = "0.6.1", optional = true }
 ratatui = { version = "0.30", optional = true, default-features = false }
 ratatui-image = { version = "11.0", optional = true, default-features = false, features = ["image-defaults", "crossterm"] }
@@ -55,7 +55,7 @@ two-face = { version = "0.5.1", optional = true, default-features = false, featu
 merman = { version = "=0.7.0", features = ["render", "ascii"] }
 serde_json = "1"
 gh-emoji = "1.0.9"
-toml = { version = "0.8.23", default-features = false, features = ["parse", "preserve_order"] }
+toml = { version = "1.2.1", default-features = false, features = ["parse", "serde", "preserve_order"] }
 serde_yaml = "0.9"
 
 [dev-dependencies]
@@ -70,10 +70,10 @@ regex = { version = "1.10.6", default-features = false }
 syntect = { workspace = true, features = ["plist-load", "dump-create"] }
 
 [target.'cfg(unix)'.dependencies]
-rustix = { version = "0.38.34", default-features = false, features = ["std", "termios", "system"] }
+rustix = { version = "1.1.6", default-features = false, features = ["std", "termios", "system"] }
 
 [target.'cfg(windows)'.dependencies]
-terminal_size = "0.3.0"
+terminal_size = "0.4.4"
 
 [package.metadata.release]
 release = true

@@ -27,7 +27,7 @@ pulldown-cmark-mdcat = { workspace = true, default-features = true }
 serde = { version = "1.0.210", default-features = false, features = ["derive"] }
 shell-words = { version = "1.1.0", default-features = false, features = ["std"] }
 syntect = { workspace = true }
-toml = { version = "0.8.19", default-features = false, features = ["parse"] }
+toml = { version = "1.2.1", default-features = false, features = ["parse", "serde"] }
 two-face = "0.5.1"
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.18", default-features = false, features = ["env-filter", "std", "fmt", "ansi"] }
@@ -71,7 +71,7 @@ rust-version = "1.95"
 [workspace.dependencies]
 mime = { version = "0.3.17", default-features = false }
 pulldown-cmark = { version = "0.13.4", default-features = false }
-similar-asserts = "1.6.0"
+similar-asserts = "2.0.0"
 syntect = { version = "5.2.0", default-features = false, features = ["regex-fancy"] }
 tracing = { version = "0.1.40", default-features = false, features = ["attributes"]  }
 insta = { version = "1.40.0", features = ["glob", "filters"] }
