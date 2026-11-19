@@ -19,6 +19,10 @@ ignore = [
     # unsafe-libyaml is unmaintained; pulled in transitively via merman-core -> serde_yaml for
     # Mermaid diagram parsing. No direct dependency and no safe upgrade available.
     "RUSTSEC-2024-0449",
+    # chrono is unmaintained; pulled in transitively via merman 0.7 for Mermaid diagram
+    # rendering. No direct dependency and no safe upgrade. merman 0.10 no longer depends on
+    # it, but needs a migration of the Mermaid integration (its feature set changed).
+    "RUSTSEC-2026-0543",
 ]
 
 [licenses]
