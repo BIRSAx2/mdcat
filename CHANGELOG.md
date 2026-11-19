@@ -14,6 +14,13 @@ Use `cargo release` to create a new release.
 - `text` in the `h1_text` style of `[theme.styles]` sets the marker written before H1 headings,
   like it does for `h2` to `h6` (see [#65](https://github.com/BIRSAx2/mdcat/issues/65)).
 
+### Changed
+- Sixel images use a slightly different colour palette, closer to the original image, after the
+  update to icy_sixel 0.7.
+
+### Security
+- Update `libz-sys` to 1.1.33, for the zlib heap buffer overflow in RUSTSEC-2026-0544.
+
 ## [2.20.1] – 2026-11-13
 
 ### Fixed
