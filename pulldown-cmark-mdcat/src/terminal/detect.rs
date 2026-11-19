@@ -44,6 +44,13 @@ pub enum TerminalProgram {
     ///
     /// See <https://mitchellh.com/ghostty> for more information.
     Ghostty,
+    /// Rex.
+    ///
+    /// Rex is a terminal and multiplexer built on libghostty, with the same image and hyperlink
+    /// support as Ghostty.
+    ///
+    /// See <https://superlogical.com> for more information.
+    Rex,
     /// foot.
     ///
     /// See <https://codeberg.org/dnkl/foot> for mor information.
@@ -64,6 +71,7 @@ impl Display for TerminalProgram {
             TerminalProgram::WezTerm => "WezTerm",
             TerminalProgram::VSCode => "vscode",
             TerminalProgram::Ghostty => "ghostty",
+            TerminalProgram::Rex => "rex",
             TerminalProgram::Foot => "foot",
             TerminalProgram::Xterm => "xterm",
         };
@@ -83,6 +91,7 @@ impl TerminalProgram {
             Some("wezterm") => Some(Self::WezTerm),
             Some("xterm-kitty") => Some(Self::Kitty),
             Some("xterm-ghostty") => Some(Self::Ghostty),
+            Some("xterm-rex") => Some(Self::Rex),
             Some("foot") => Some(Self::Foot),
             _ => None,
         }
@@ -93,6 +102,7 @@ impl TerminalProgram {
             Some("WezTerm") => Some(Self::WezTerm),
             Some("iTerm.app") => Some(Self::ITerm2),
             Some("ghostty") => Some(Self::Ghostty),
+            Some("rex") => Some(Self::Rex),
             Some("vscode") => Some(Self::VSCode),
             _ => None,
         }
@@ -122,6 +132,8 @@ impl TerminalProgram {
     /// - [`TerminalProgram::ITerm2`] if `$TERM_PROGRAM` is `iTerm.app`.
     /// - [`TerminalProgram::Ghostty`] if `$TERM` is `xterm-ghostty`.
     /// - [`TerminalProgram::Ghostty`] if `$TERM_PROGRAM` is `ghostty`.
+    /// - [`TerminalProgram::Rex`] if `$TERM` is `xterm-rex`.
+    /// - [`TerminalProgram::Rex`] if `$TERM_PROGRAM` is `rex`.
     /// - [`TerminalProgram::Ansi`] otherwise.
     pub fn detect() -> Self {
         Self::detect_term()
@@ -147,7 +159,8 @@ impl TerminalProgram {
             TerminalProgram::WezTerm => ansi
                 .with_image_capability(ImageCapability::Kitty(self::kitty::KittyGraphicsProtocol)),
             TerminalProgram::VSCode => ansi,
-            TerminalProgram::Ghostty => ansi
+            // Rex is built on libghostty, so it supports what Ghostty supports.
+            TerminalProgram::Ghostty | TerminalProgram::Rex => ansi
                 .with_image_capability(ImageCapability::Kitty(self::kitty::KittyGraphicsProtocol)),
             #[cfg(feature = "sixel")]
             TerminalProgram::Foot => {
@@ -167,6 +180,7 @@ impl TerminalProgram {
 
 #[cfg(test)]
 mod tests {
+    use crate::terminal::capabilities::ImageCapability;
     use crate::terminal::TerminalProgram;
 
     use temp_env::with_vars;
@@ -239,6 +253,38 @@ mod tests {
             ],
             || assert_eq!(TerminalProgram::detect(), TerminalProgram::Ghostty),
         )
+    }
+
+    #[test]
+    pub fn detect_term_rex() {
+        with_vars(
+            vec![("TERM", Some("xterm-rex")), ("TERM_PROGRAM", None)],
+            || assert_eq!(TerminalProgram::detect(), TerminalProgram::Rex),
+        )
+    }
+
+    #[test]
+    pub fn detect_term_program_rex() {
+        with_vars(
+            vec![
+                ("TERM", Some("xterm-256color")),
+                ("TERM_PROGRAM", Some("rex")),
+            ],
+            || assert_eq!(TerminalProgram::detect(), TerminalProgram::Rex),
+        )
+    }
+
+    #[test]
+    pub fn rex_has_kitty_image_capability() {
+        assert!(matches!(
+            TerminalProgram::Rex.capabilities().image,
+            Some(ImageCapability::Kitty(_))
+        ));
+    }
+
+    #[test]
+    pub fn rex_display_name() {
+        assert_eq!(TerminalProgram::Rex.to_string(), "rex");
     }
 
     #[test]

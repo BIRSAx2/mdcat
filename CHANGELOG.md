@@ -8,6 +8,10 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+### Added
+- Detect the Rex terminal (`$TERM_PROGRAM` is `rex`, or `$TERM` is `xterm-rex`) and show images
+  inline in it with the kitty graphics protocol, as in Ghostty.
+
 ## [2.20.1] – 2026-11-13
 
 ### Fixed
