@@ -8,6 +8,8 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+## [2.20.2] – 2026-11-19
+
 ### Added
 - Detect the Rex terminal (`$TERM_PROGRAM` is `rex`, or `$TERM` is `xterm-rex`) and show images
   inline in it with the kitty graphics protocol, as in Ghostty.
@@ -1174,7 +1176,8 @@ Use `cargo release` to create a new release.
 - Support ordered and unordered lists, with nest.
 - Show links, with references grouped by section.
 
-[Unreleased]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.20.1...HEAD
+[Unreleased]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.20.2...HEAD
+[2.20.2]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.20.1...mdcat-2.20.2
 [2.20.1]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.20.0...mdcat-2.20.1
 [2.20.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.19.0...mdcat-2.20.0
 [2.19.0]: https://github.com/BIRSAx2/mdcat/compare/mdcat-2.18.0...mdcat-2.19.0
