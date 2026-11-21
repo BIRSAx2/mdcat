@@ -8,13 +8,13 @@ input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/115-indented_cod
 
 
 
-[33mfoo
-[0m
+[33mfoo[0m
+
 
 [1m[34m━━ [0m[1m[34mHeading[0m
 
 
-[33mfoo
-[0m
+[33mfoo[0m
+
 
 [32m════════════════════════════════════════════════════════════════════════════════[0m

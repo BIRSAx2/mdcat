@@ -6,5 +6,4 @@ input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/257-list_items.m
 • one
 
 
-[33m two
-[0m
+[33m two[0m

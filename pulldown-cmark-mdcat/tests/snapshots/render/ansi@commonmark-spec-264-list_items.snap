@@ -6,8 +6,7 @@ input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/264-list_items.m
 • Foo
 
 
-    [33mbar
-[0m    [33m
-[0m    [33m
-[0m    [33mbaz
-[0m
+    [33mbar[0m
+    
+    
+    [33mbaz[0m

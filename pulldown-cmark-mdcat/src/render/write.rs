@@ -50,6 +50,26 @@ pub fn write_styled<W: Write, S: AsRef<str>>(
     }
 }
 
+/// Write each line of `text` in `style`, with the line endings outside of the style.
+///
+/// A line ending written while a background colour is active makes the terminal paint the
+/// next row in that colour, across the full width, when the line ending scrolls the screen.
+pub fn write_styled_lines<W: Write, S: AsRef<str>>(
+    writer: &mut W,
+    capabilities: &TerminalCapabilities,
+    style: &Style,
+    text: S,
+) -> Result<()> {
+    for line in text.as_ref().split_inclusive('\n') {
+        let contents = line.trim_end_matches(['\r', '\n']);
+        if !contents.is_empty() {
+            write_styled(writer, capabilities, style, contents)?;
+        }
+        write!(writer, "{}", &line[contents.len()..])?;
+    }
+    Ok(())
+}
+
 #[allow(clippy::too_many_arguments)]
 fn write_remaining_lines<W: Write>(
     writer: &mut W,

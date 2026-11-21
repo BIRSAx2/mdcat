@@ -1067,7 +1067,7 @@ pub fn write_event<'a, W: Write>(
             );
             for line in LinesWithEndings::from(&text) {
                 write_indent(writer, indent)?;
-                write_styled(writer, &settings.terminal_capabilities, &style, line)?;
+                write_styled_lines(writer, &settings.terminal_capabilities, &style, line)?;
                 if !line.ends_with('\n') {
                     writeln!(writer)?;
                 }
@@ -1109,7 +1109,7 @@ pub fn write_event<'a, W: Write>(
             for (n, line) in LinesWithEndings::from(&text).enumerate() {
                 let line_indent = if n == 0 { initial_indent } else { indent };
                 write_indent(writer, line_indent)?;
-                write_styled(writer, &settings.terminal_capabilities, &style, line)?;
+                write_styled_lines(writer, &settings.terminal_capabilities, &style, line)?;
             }
             stack
                 .current(
@@ -1126,7 +1126,7 @@ pub fn write_event<'a, W: Write>(
         (Stacked(stack, HtmlBlock(attrs)), Html(html)) => {
             write_indent(writer, attrs.initial_indent)?;
             // TODO: Split html into lines and properly account for initial indent
-            write_styled(writer, &settings.terminal_capabilities, &attrs.style, html)?;
+            write_styled_lines(writer, &settings.terminal_capabilities, &attrs.style, html)?;
             stack
                 .current(
                     HtmlBlockAttrs {
@@ -1213,7 +1213,7 @@ pub fn write_event<'a, W: Write>(
                 for line in LinesWithEndings::from(&text) {
                     write!(writer, "{}", prefix)?;
                     write_indent(writer, indent)?;
-                    write_styled(
+                    write_styled_lines(
                         writer,
                         &settings.terminal_capabilities,
                         &settings.theme.mermaid_style,
@@ -1227,7 +1227,7 @@ pub fn write_event<'a, W: Write>(
                 for line in LinesWithEndings::from(&source) {
                     write!(writer, "{}", prefix)?;
                     write_indent(writer, indent)?;
-                    write_styled(
+                    write_styled_lines(
                         writer,
                         &settings.terminal_capabilities,
                         &settings.theme.code_style,
