@@ -4,6 +4,5 @@ expression: "render_to_string(markdown_file, &ansi_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/008-tabs.md
 ---
 
-[33mfoo
-[0m[33mbar
-[0m
+[33mfoo[0m
+[33mbar[0m

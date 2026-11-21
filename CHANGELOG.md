@@ -8,6 +8,12 @@ Use `cargo release` to create a new release.
 
 ## [Unreleased]
 
+### Fixed
+- A `code`, `html_block` or `mermaid` style with a background colour in `[theme.styles]` no longer
+  paints a full-width row in that colour after a line of a code block without syntax highlighting,
+  an HTML block or a Mermaid text diagram. The line ending was written inside the style, so the
+  terminal filled the next row with the background colour when the output scrolled the screen.
+
 ## [2.20.2] – 2026-11-19
 
 ### Added

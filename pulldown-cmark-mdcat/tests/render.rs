@@ -268,6 +268,55 @@ fn h1_marker_is_written_before_the_heading_text() {
     assert!(!without_marker.contains('⣿'));
 }
 
+/// A line ending written while a background colour is active makes the terminal paint the
+/// next row in that colour, across the full width, when the line ending scrolls the screen.
+#[test]
+fn block_line_endings_are_written_outside_of_the_style() {
+    let background = anstyle::Style::new().bg_color(Some(anstyle::AnsiColor::Blue.into()));
+    let settings = Settings {
+        terminal_capabilities: TerminalProgram::Ansi.capabilities(),
+        terminal_size: TerminalSize::default(),
+        theme: Theme {
+            code_style: background,
+            html_block_style: background,
+            mermaid_style: background,
+            ..Theme::default()
+        },
+        syntax_set: syntax_set(),
+        syntax_theme: None,
+    };
+    let cwd = std::env::current_dir().expect("Require working directory");
+
+    for markdown in [
+        "```\ncode\n\nmore code\n```\n",
+        "> ```\n> quoted code\n> ```\n",
+        "<div>\nhtml\n</div>\n",
+        "```mermaid\nflowchart TD\n    A[Start] --> B[Done]\n```\n",
+        "```mermaid\nnot a mermaid diagram at all {{{\n```\n",
+    ] {
+        let output = render_markdown_to_string(markdown, &cwd, &settings);
+        assert!(output.contains("\u{1b}[44m"), "{output:?}");
+
+        // Follow the SGR sequences, and require the style to be reset at each line ending.
+        let mut styled = false;
+        let mut rest = output.as_str();
+        while let Some(pos) = rest.find(['\u{1b}', '\n']) {
+            let (_, tail) = rest.split_at(pos);
+            rest = if let Some(sgr) = tail.strip_prefix("\u{1b}[") {
+                let (parameters, after) = sgr.split_once('m').expect("Unterminated SGR sequence");
+                styled = parameters != "0";
+                after
+            } else {
+                assert!(
+                    tail.starts_with('\u{1b}') || !styled,
+                    "Line ending inside of a style in {output:?}"
+                );
+                &tail[1..]
+            };
+        }
+    }
+}
+
 #[test]
 fn inline_math_kitty_placement_does_not_move_cursor() {
     let settings = Settings {

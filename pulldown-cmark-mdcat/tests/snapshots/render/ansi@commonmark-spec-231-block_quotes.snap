@@ -4,7 +4,6 @@ expression: "render_to_string(markdown_file, &ansi_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/231-block_quotes.md
 ---
 
-[33m> # Foo
-[0m[33m> bar
-[0m[33m> baz
-[0m
+[33m> # Foo[0m
+[33m> bar[0m
+[33m> baz[0m

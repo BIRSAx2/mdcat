@@ -6,10 +6,10 @@ input_file: pulldown-cmark-mdcat/tests/markdown/samples/code_blocks.md
 Code blocks without syntax highlighting:
 
 
-[33mSome plain
-[0m[33mcode block
-[0m[33m   fooo
-[0m
+[33mSome plain[0m
+[33mcode block[0m
+[33m   fooo[0m
+
 
 Or with syntax highlighting, eg, Rust:
 

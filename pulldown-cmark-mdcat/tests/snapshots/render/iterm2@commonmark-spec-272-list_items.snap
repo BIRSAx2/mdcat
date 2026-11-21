@@ -4,11 +4,10 @@ expression: "render_to_string(markdown_file, &iterm2_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/272-list_items.md
 ---
 
-[33mindented code
-[0m
+[33mindented code[0m
+
 
 paragraph
 
 
-[33mmore code
-[0m
+[33mmore code[0m

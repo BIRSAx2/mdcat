@@ -4,10 +4,9 @@ expression: "render_to_string(markdown_file, &iterm2_settings)"
 input_file: pulldown-cmark-mdcat/tests/markdown/commonmark-spec/289-list_items.md
 ---
 
-[33m1.  A paragraph
-[0m[33m    with two lines.
-[0m[33m
-[0m[33m        indented code
-[0m[33m
-[0m[33m    > A block quote.
-[0m
+[33m1.  A paragraph[0m
+[33m    with two lines.[0m
+
+[33m        indented code[0m
+
+[33m    > A block quote.[0m
